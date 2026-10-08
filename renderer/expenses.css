@@ -1,0 +1,439 @@
+/* ============================================================
+   ОФОРМЛЕНИЕ ЭКРАНА «РАСХОДЫ»
+   ============================================================
+   Перенесено из макета Main App/screens/02-rashody.html как есть.
+
+   Все правила заключены в область .scr-expenses намеренно. У двух
+   экранов разные варианты одних и тех же элементов: у «Расходов»
+   таблица живёт внутри панели и получает свои отступы, показатель
+   набран кеглем 22, подсказка столбца уже — 180 пикселей вместо 250.
+   Без области эти значения переписали бы «Обзор».
+
+   Полоса периода в макете входила в липкую шапку. В приложении шапка
+   общая и лежит вне экрана, поэтому полоса липнет к её нижней грани
+   сама — отсюда top:var(--head-h).
+   ============================================================ */
+.scr-expenses .period-bar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:10px var(--pad);border-bottom:1px solid var(--border);
+  background:var(--surface);
+  position:sticky;top:var(--head-h);z-index:15;
+}
+.scr-expenses .period-bar .spacer{flex:1;}
+.scr-expenses .period-name{font-size:13px;font-weight:600;letter-spacing:-.005em;}
+.scr-expenses .period-meta{font-family:var(--font-mono);font-size:11px;color:var(--text-3);}
+
+.scr-expenses .btn-sm{background:var(--bg);color:var(--text-2);border:1px solid var(--border);
+  padding:5px 11px;font-size:12px;border-radius:var(--r-sm);}
+.scr-expenses .btn-sm:hover{background:var(--surface);color:var(--text);}
+.scr-expenses .btn-step{width:28px;height:26px;padding:0;justify-content:center;border-radius:var(--r-sm);
+  background:var(--bg);color:var(--text-2);border:1px solid var(--border);}
+.scr-expenses .btn-step:hover:not(:disabled){background:var(--bg);color:var(--text);border-color:var(--border-strong);}
+.scr-expenses .btn-step:disabled{color:var(--text-3);opacity:.5;cursor:default;}
+/* ============================================================
+   ОБЩИЕ ЭЛЕМЕНТЫ
+   ============================================================ */
+.scr-expenses .sec-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.scr-expenses .sec-head .spacer{flex:1;}
+.scr-expenses .sec-title{font-size:13px;font-weight:600;letter-spacing:-.005em;}
+.scr-expenses .sec-sub{font-size:12px;line-height:16px;color:var(--text-3);margin-top:3px;}
+.scr-expenses .title-row{display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.scr-expenses .sec-sub .badge{margin-right:3px;vertical-align:1px;}
+.scr-expenses .lbl{font-size:12px;font-weight:500;color:var(--text-3);}
+.scr-expenses .info{width:14px;height:14px;border-radius:50%;flex:none;
+  border:1px solid var(--border-strong);color:var(--text-3);
+  font-size:9px;font-weight:600;line-height:1;font-style:normal;
+  display:inline-flex;align-items:center;justify-content:center;cursor:help;vertical-align:1px;}
+.scr-expenses .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--r-sm);
+  font-size:11px;line-height:16px;font-weight:500;white-space:nowrap;}
+.scr-expenses .badge--fact{background:var(--surface-2);color:var(--text-2);}
+.scr-expenses .badge--est{background:var(--surface-2);color:var(--text-2);}
+.scr-expenses .badge--forecast{background:var(--accent-soft);color:var(--accent-hover);}
+.scr-expenses .badge--partial{background:var(--warning-bg);color:var(--warning);}
+.scr-expenses .badge--muted{background:var(--surface-2);color:var(--text-3);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .scr-expenses .badge--forecast{color:var(--accent);}
+}
+.scr-expenses .dot{width:7px;height:7px;border-radius:50%;flex:none;}
+.scr-expenses .c-pos{color:var(--positive);}
+.scr-expenses .c-neg{color:var(--danger);}
+.scr-expenses .c-warn{color:var(--warning);}
+.scr-expenses .note{font-size:12px;line-height:17px;color:var(--text-3);margin-top:14px;}
+.scr-expenses .note-warn{display:flex;align-items:flex-start;gap:8px;margin-top:12px;
+  font-size:12px;line-height:17px;color:var(--warning);}
+.scr-expenses .note-warn .dot{margin-top:5px;background:var(--warning);}
+.scr-expenses .seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;flex:none;background:var(--bg);}
+.scr-expenses .seg button{padding:4px 10px;border:none;background:transparent;cursor:pointer;
+  font-family:var(--font-mono);font-size:11px;line-height:16px;color:var(--text-3);
+  transition:background var(--t-fast) ease,color var(--t-fast) ease;white-space:nowrap;}
+.scr-expenses .seg button + button{border-left:1px solid var(--border);}
+.scr-expenses .seg button:hover{background:var(--surface);color:var(--text-2);}
+.scr-expenses .seg button.is-active, .scr-expenses .seg button.is-active:hover{background:var(--text);color:var(--bg);}
+.scr-expenses .seg--text button{font-family:var(--font-sans);font-size:12px;padding:4px 12px;}
+.scr-expenses .seg button.has-ic{display:inline-flex;align-items:center;gap:6px;}
+.scr-expenses .legend{display:flex;flex-wrap:wrap;gap:6px 14px;}
+.scr-expenses .legend-static{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);}
+.scr-expenses .legend-sq{width:9px;height:9px;border-radius:2px;flex:none;background:var(--accent);}
+.scr-expenses .legend-dash{width:16px;height:0;border-top:1.5px dashed var(--text-3);flex:none;}
+/* Сетка секций: фон-подложка даёт волосяные линии между ячейками
+   при любом переносе — не нужно чинить border-left на краях ряда. */
+.scr-expenses .grid{display:grid;gap:1px;background:var(--border);border-top:1px solid var(--border);}
+.scr-expenses .grid > *{background:var(--bg);padding:22px var(--pad);min-width:0;}
+.scr-expenses .grid--5{grid-template-columns:repeat(5,minmax(0,1fr));}
+.scr-expenses .grid--4{grid-template-columns:repeat(4,minmax(0,1fr));}
+.scr-expenses .grid--4 > *{padding:18px 20px;}
+.scr-expenses .grid--5 > *{padding:18px 20px;}
+.scr-expenses .grid--2{grid-template-columns:repeat(2,minmax(0,1fr));}
+.scr-expenses .grid--3{grid-template-columns:repeat(3,minmax(0,1fr));}
+.scr-expenses .sec{padding:22px var(--pad);border-top:1px solid var(--border);}
+/* ============================================================
+   РЯД ПОКАЗАТЕЛЕЙ
+   ============================================================ */
+.scr-expenses .metric{display:flex;flex-direction:column;gap:8px;}
+.scr-expenses .metric-head{display:flex;align-items:flex-start;gap:6px;}
+.scr-expenses .metric-head .spacer{flex:1;}
+.scr-expenses .metric-head .lbl{white-space:normal;}
+.scr-expenses .metric-val{font-family:var(--font-mono);font-size:22px;font-weight:500;line-height:1.1;
+  letter-spacing:-.025em;white-space:nowrap;}
+.scr-expenses .metric-sub{font-size:12px;line-height:16px;color:var(--text-3);}
+.scr-expenses .metric-foot{margin-top:auto;padding-top:6px;}
+.scr-expenses .split-bar{display:flex;height:5px;border-radius:99px;overflow:hidden;background:var(--surface-2);margin-top:4px;}
+.scr-expenses .split-bar i{display:block;height:100%;}
+.scr-expenses .split-legend{display:flex;flex-direction:column;gap:5px;margin-top:10px;}
+.scr-expenses .split-legend .row{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-2);}
+.scr-expenses .split-legend .row .spacer{flex:1;}
+.scr-expenses .split-legend .row .v{font-family:var(--font-mono);font-size:11px;color:var(--text-3);}
+/* ============================================================
+   КАТЕГОРИИ И СТРУКТУРА
+   ============================================================ */
+/* В общем оформлении у таблицы есть min-width:800px — он нужен
+   «Обзору», где таблица идёт во всю ширину окна. Здесь таблица живёт
+   в половинной колонке, и этот минимум выталкивал колонки «Ср. чек» и
+   «Доля» за край панели. */
+.scr-expenses .tbl{width:100%;border-collapse:collapse;min-width:0;}
+.scr-expenses .tbl th{text-align:left;padding:8px 10px;font-size:12px;font-weight:500;color:var(--text-3);
+  white-space:nowrap;border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:var(--bg);z-index:1;}
+.scr-expenses .tbl td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.scr-expenses .tbl th:first-child, .scr-expenses .tbl td:first-child{padding-left:0;}
+.scr-expenses .tbl th:last-child, .scr-expenses .tbl td:last-child{padding-right:0;}
+.scr-expenses .tbl tbody tr{transition:background var(--t-fast) ease;}
+.scr-expenses .tbl tbody tr:hover{background:var(--surface);}
+.scr-expenses .tbl .r{text-align:right;}
+/* Итог держим приклеенным к низу прокрутки — иначе он уезжает
+   из видимой области вместе с последними категориями */
+.scr-expenses .tbl tfoot td{padding:10px;border-top:1px solid var(--border-strong);border-bottom:none;
+  font-weight:600;font-size:13px;white-space:nowrap;
+  position:sticky;bottom:0;background:var(--bg);}
+.scr-expenses .tbl td.num, .scr-expenses .tbl td .num{white-space:nowrap;}
+.scr-expenses .cat-scroll{max-height:330px;overflow-y:auto;}
+.scr-expenses .cat-cell{display:flex;align-items:center;gap:8px;min-width:0;}
+.scr-expenses .cat-cell span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* Полоска и процент стоят рядом, а не друг на друге: при absolute
+   заливка перечёркивала цифры */
+.scr-expenses .share-cell{display:flex;align-items:center;gap:8px;}
+.scr-expenses .share-track{flex:1;min-width:0;height:4px;border-radius:99px;background:var(--surface-2);overflow:hidden;}
+.scr-expenses .share-track i{display:block;height:100%;border-radius:99px;opacity:.75;}
+.scr-expenses .share-val{width:36px;text-align:right;flex:none;}
+/* Плиточная диаграмма: площадь плитки — доля категории.
+   Площадь сравнивается глазом точнее, чем угол сектора, и все
+   категории видны сразу, без свёртки мелких в «Прочее». */
+/* Высота подобрана по раскладке: на 400px каждая из 14 плиток получает
+   хотя бы процент, двенадцать — название, а пропорции ближе всего
+   к квадрату. На плоском холсте мелкие категории сплющиваются и текст
+   в них перестаёт помещаться. */
+/* overflow:hidden — последняя страховка: что бы ни случилось с
+   округлениями, за границы блока мозаика не выйдет. */
+.scr-expenses .tmap{position:relative;width:100%;height:400px;overflow:hidden;}
+@media (max-width:1180px){
+  .scr-expenses .tmap{height:440px;}
+}
+.scr-expenses .tmap-tile{position:absolute;border-radius:var(--r-sm);overflow:hidden;
+  padding:7px 9px;cursor:default;
+  display:flex;flex-direction:column;gap:2px;
+  transition:filter var(--t-fast) ease,outline-color var(--t-fast) ease;
+  outline:2px solid transparent;outline-offset:-2px;}
+.scr-expenses .tmap-tile.is-hot{filter:brightness(1.12);outline-color:var(--text);}
+.scr-expenses .tmap-nm{font-size:12px;font-weight:500;line-height:15px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.scr-expenses .tmap-sum{font-family:var(--font-mono);font-size:11px;line-height:15px;opacity:.85;white-space:nowrap;}
+.scr-expenses .tmap-pct{font-family:var(--font-mono);font-size:11px;line-height:15px;opacity:.85;white-space:nowrap;}
+.scr-expenses .tmap-tile.is-tiny{padding:3px 4px;align-items:center;justify-content:center;}
+/* Плитка, в которую собраны мелкие категории: без своего цвета и с
+   пунктиром по краю — видно, что это не одна статья, а остаток. */
+.scr-expenses .tmap-tile.is-rest{outline:1px dashed var(--border-strong);outline-offset:-3px;}
+.scr-expenses .tmap-tile.is-tiny .tmap-pct{font-size:10px;opacity:.95;}
+/* ============================================================
+   ТОП-5
+   ============================================================ */
+.scr-expenses .top5{display:flex;flex-direction:column;}
+.scr-expenses .top5 .row{display:flex;align-items:center;gap:14px;padding:11px 0;
+  border-bottom:1px solid var(--border);transition:background var(--t-fast) ease;}
+.scr-expenses .top5 .row:last-child{border-bottom:none;}
+.scr-expenses .rank{width:20px;height:20px;border-radius:var(--r-sm);flex:none;
+  background:var(--surface-2);color:var(--text-3);
+  font-family:var(--font-mono);font-size:11px;
+  display:flex;align-items:center;justify-content:center;}
+.scr-expenses .top5 .desc{flex:1;min-width:0;}
+.scr-expenses .top5 .d1{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.scr-expenses .top5 .d2{display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  font-size:12px;color:var(--text-3);margin-top:3px;}
+.scr-expenses .top5 .sum{text-align:right;flex:none;}
+.scr-expenses .top5 .s1{font-family:var(--font-mono);font-size:14px;font-weight:500;white-space:nowrap;}
+.scr-expenses .top5 .s2{font-family:var(--font-mono);font-size:11px;color:var(--text-3);margin-top:2px;white-space:nowrap;}
+/* ============================================================
+   ПАРЕТО
+   ============================================================ */
+.scr-expenses .chart-wrap{position:relative;width:100%;overflow-x:auto;}
+.scr-expenses .chart-wrap svg{display:block;}
+/* Подсказка столбца Парето. Мышь она не ловит — как и подсказка на
+   «Тратах по дням»: иначе курсор упирается в неё и не доходит до
+   соседнего столбца. */
+.scr-expenses .pt{
+  position:absolute;width:210px;z-index:6;pointer-events:none;
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);
+  box-shadow:var(--shadow-lg);padding:9px 11px;text-align:left;
+  opacity:0;transition:opacity var(--t-fast) ease;
+}
+.scr-expenses .pt.is-on{opacity:1;}
+.scr-expenses .pt .t-nm{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;}
+.scr-expenses .pt .t-sum{font-family:var(--font-mono);font-size:14px;margin-top:6px;}
+.scr-expenses .pt .t-meta{font-size:11px;line-height:15px;color:var(--text-3);margin-top:4px;}
+
+/* ============================================================
+   ПРИВЫЧКИ И РЕШЕНИЯ
+   ============================================================ */
+/* minmax(0,1fr), а не 1fr: иначе неразрывные суммы внутри ячеек
+   раздувают колонки, и правая вылезает за край блока */
+.scr-expenses .qd{display:grid;grid-template-columns:76px minmax(0,1fr) minmax(0,1fr);
+  gap:1px;background:var(--border);border:1px solid var(--border);
+  border-radius:var(--r-md);overflow:hidden;}
+.scr-expenses .qd > div{background:var(--bg);min-width:0;}
+.scr-expenses .qd-corner{background:var(--surface) !important;}
+.scr-expenses .qd-colh, .scr-expenses .qd-rowh{background:var(--surface) !important;padding:8px 12px;
+  display:flex;flex-direction:column;justify-content:center;gap:2px;}
+.scr-expenses .qd-colh{text-align:center;align-items:center;}
+.scr-expenses .qd-colh b, .scr-expenses .qd-rowh b{font-size:12px;font-weight:600;}
+.scr-expenses .qd-colh span, .scr-expenses .qd-rowh span{font-family:var(--font-mono);font-size:10px;color:var(--text-3);}
+/* Высота клетки закреплена: в одном периоде в квадрант попадает две
+   категории, в другом девять, и блок прыгал бы при каждом
+   переключении. Лишнее уезжает в прокрутку внутри клетки. */
+.scr-expenses .qd-cell{padding:12px 14px;display:flex;flex-direction:column;gap:6px;height:228px;}
+.scr-expenses .qd-cell.is-lead{background:var(--accent-soft) !important;}
+.scr-expenses .qd-cell.is-empty{align-items:flex-start;justify-content:center;background:var(--surface) !important;}
+.scr-expenses .qd-top{display:flex;align-items:baseline;gap:8px;}
+.scr-expenses .qd-nm{font-size:12px;font-weight:600;}
+.scr-expenses .qd-sh{font-family:var(--font-mono);font-size:11px;color:var(--text-3);margin-left:auto;}
+.scr-expenses .qd-sum{font-family:var(--font-mono);font-size:19px;font-weight:500;letter-spacing:-.02em;}
+.scr-expenses .qd-meta{font-size:11px;line-height:15px;color:var(--text-3);}
+.scr-expenses .qd-list{display:flex;flex-direction:column;gap:3px;margin-top:2px;
+  flex:1;min-height:0;overflow-y:auto;}
+.scr-expenses .qd-i{display:flex;align-items:center;gap:7px;font-size:12px;min-width:0;}
+.scr-expenses .qd-i .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-2);}
+.scr-expenses .qd-i .spacer{flex:1;}
+.scr-expenses .qd-i .amt{font-family:var(--font-mono);font-size:11px;white-space:nowrap;}
+.scr-expenses .qd-i .n{font-family:var(--font-mono);font-size:10px;color:var(--text-3);white-space:nowrap;}
+.scr-expenses .qd-hint{font-size:11px;line-height:15px;color:var(--text-3);padding-top:4px;flex:none;}
+.scr-expenses .qd-verdict{display:flex;align-items:flex-start;gap:9px;margin-top:14px;
+  font-size:12px;line-height:17px;color:var(--text-2);}
+.scr-expenses .qd-verdict .dot{margin-top:5px;background:var(--accent);}
+.scr-expenses .qd-verdict b{font-weight:600;color:var(--text);}
+/* ============================================================
+   ОБЯЗАТЕЛЬНОЕ ПРОТИВ ДИСКРЕЦИОННОГО
+   ============================================================ */
+.scr-expenses .stack{display:flex;height:26px;border-radius:var(--r-sm);overflow:hidden;background:var(--surface-2);}
+.scr-expenses .stack i{display:flex;align-items:center;justify-content:center;height:100%;
+  font-family:var(--font-mono);font-size:11px;color:#fff;font-style:normal;}
+.scr-expenses .tb{display:flex;flex-direction:column;gap:12px;margin-top:16px;}
+.scr-expenses .tb-row{display:flex;flex-direction:column;gap:5px;}
+.scr-expenses .tb-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+.scr-expenses .tb-head .nm{font-size:13px;font-weight:500;}
+.scr-expenses .tb-head .hint{font-size:11px;color:var(--text-3);}
+.scr-expenses .tb-head .spacer{flex:1;}
+.scr-expenses .tb-head .sum{font-family:var(--font-mono);font-size:13px;font-weight:500;white-space:nowrap;}
+.scr-expenses .tb-head .sh{font-family:var(--font-mono);font-size:11px;color:var(--text-3);white-space:nowrap;}
+.scr-expenses .tb-bar{display:flex;height:5px;border-radius:99px;overflow:hidden;background:var(--surface-2);gap:1px;}
+.scr-expenses .tb-bar i{display:block;height:100%;}
+/* Обычный абзац, а не флекс: длинный перечень категорий переносился
+   целым куском и выталкивал счётчик операций на отдельную строку —
+   с осиротевшей точкой-разделителем в начале. */
+.scr-expenses .tb-meta{display:block;font-size:11px;line-height:15px;color:var(--text-3);}
+.scr-expenses .tb-meta .num{color:var(--text-2);}
+/* ============================================================
+   ТРАТЫ ПО ДНЯМ
+   ============================================================ */
+.scr-expenses .bars-wrap{display:flex;}
+.scr-expenses .bars-axis{width:46px;flex:none;position:relative;height:170px;margin-top:24px;}
+.scr-expenses .bars-axis span{position:absolute;right:10px;transform:translateY(-50%);
+  font-family:var(--font-mono);font-size:10px;color:var(--text-3);white-space:nowrap;}
+.scr-expenses .bars-plot{flex:1;min-width:0;position:relative;padding-top:24px;}
+.scr-expenses .bars-grid{position:absolute;top:24px;left:0;right:0;height:170px;pointer-events:none;}
+.scr-expenses .bars-grid i{position:absolute;left:0;right:0;height:1px;background:var(--border);}
+.scr-expenses .bars-grid i.zero{background:var(--border-strong);}
+.scr-expenses .bars-avg{position:absolute;left:0;right:0;border-top:1px dashed var(--text-3);pointer-events:none;}
+.scr-expenses .bars-avg b{position:absolute;right:0;top:-10px;background:var(--bg);
+  border:1px solid var(--border);border-radius:var(--r-sm);
+  padding:1px 6px;font-family:var(--font-mono);font-size:10px;font-weight:400;color:var(--text-2);white-space:nowrap;}
+.scr-expenses .bars{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;height:170px;align-items:end;position:relative;}
+.scr-expenses .bar-col{display:flex;align-items:flex-end;justify-content:center;height:100%;position:relative;}
+.scr-expenses .bar{width:100%;max-width:28px;border-radius:2px 2px 0 0;min-height:2px;
+  background:var(--accent);opacity:.62;transition:opacity var(--t-fast) ease;}
+.scr-expenses .bar-col.is-weekend .bar{opacity:.3;}
+.scr-expenses .bar-col.is-max .bar{background:var(--danger);opacity:.8;}
+.scr-expenses .bar-col.is-zero .bar{background:var(--border-strong);opacity:.5;}
+.scr-expenses .bar-col:hover .bar{opacity:1;}
+.scr-expenses .bar.is-clipped{border-radius:0;
+  -webkit-mask-image:linear-gradient(to top,#000 calc(100% - 14px),transparent 100%);
+  mask-image:linear-gradient(to top,#000 calc(100% - 14px),transparent 100%);}
+.scr-expenses .bar-over{position:absolute;top:-20px;left:50%;transform:translateX(-50%);white-space:nowrap;
+  font-family:var(--font-mono);font-size:10px;line-height:14px;color:var(--text-2);pointer-events:none;}
+.scr-expenses .bars-labels{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin-top:8px;}
+.scr-expenses .bars-labels div{text-align:center;font-family:var(--font-mono);font-size:10px;line-height:14px;color:var(--text-3);}
+.scr-expenses .bars-labels div small{display:block;font-family:var(--font-sans);font-size:10px;color:var(--text-3);opacity:.75;}
+.scr-expenses .bars-labels.is-dense div small{display:none;}
+/* Подсказка стоит НАД графиком и не ловит мышь. Пока она висела поверх
+   столбцов, курсор упирался в неё и не мог дойти до соседнего дня. */
+.scr-expenses .tip{position:absolute;bottom:100%;left:50%;width:180px;margin-bottom:26px;
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);
+  box-shadow:var(--shadow-lg);padding:9px 11px;z-index:6;text-align:left;
+  opacity:0;visibility:hidden;transition:opacity var(--t-fast) ease;transform:translateX(-50%);
+  pointer-events:none;}
+.scr-expenses .bar-col:hover .tip{opacity:1;visibility:visible;}
+.scr-expenses .tip.at-left{left:0;transform:none;}
+.scr-expenses .tip.at-right{left:auto;right:0;transform:none;}
+/* Сверху не помещается — уходит под шкалу дат, но не на столбцы. */
+.scr-expenses .bars.tips-down .tip{bottom:auto;top:100%;margin-bottom:0;margin-top:40px;}
+.scr-expenses .tip .t-date{font-size:12px;font-weight:600;}
+.scr-expenses .tip .t-sum{font-family:var(--font-mono);font-size:13px;margin-top:5px;color:var(--text-2);}
+/* ============================================================
+   ПОВЕДЕНЧЕСКИЕ СРЕЗЫ
+   ============================================================ */
+.scr-expenses .wd-bars{display:grid;grid-template-columns:repeat(7,1fr);align-items:end;height:150px;gap:5px;}
+.scr-expenses .wd-col{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;height:100%;}
+.scr-expenses .wd-col .v{font-family:var(--font-mono);font-size:10px;color:var(--text-3);white-space:nowrap;}
+.scr-expenses .wd-col .b{width:100%;max-width:34px;border-radius:2px 2px 0 0;background:var(--accent);opacity:.55;transition:opacity var(--t-fast) ease;}
+.scr-expenses .wd-col.is-max .b{background:var(--danger);opacity:.75;}
+.scr-expenses .wd-col:hover .b{opacity:1;}
+.scr-expenses .wd-labels{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:8px;}
+.scr-expenses .wd-labels div{text-align:center;font-size:11px;color:var(--text-3);}
+.scr-expenses .wk{display:flex;flex-direction:column;gap:16px;}
+.scr-expenses .wk-group .gt{font-size:11px;color:var(--text-3);margin-bottom:8px;}
+.scr-expenses .wk-row{display:flex;align-items:center;gap:10px;margin-top:7px;}
+.scr-expenses .wk-row .k{font-size:12px;width:64px;flex:none;line-height:15px;}
+.scr-expenses .wk-row .k .cap{font-family:var(--font-mono);font-size:10px;color:var(--text-3);}
+.scr-expenses .wk-row .track{flex:1;height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;min-width:0;}
+.scr-expenses .wk-row .track i{display:block;height:100%;border-radius:99px;background:var(--accent);opacity:.6;}
+.scr-expenses .wk-row.is-we .track i{background:var(--cat-2);opacity:.75;}
+.scr-expenses .wk-row .v{font-family:var(--font-mono);font-size:12px;width:66px;text-align:right;flex:none;white-space:nowrap;}
+/* Одна общая сетка на все строки. Колонка с диапазоном подстраивается
+   под самую длинную подпись, шкала забирает остаток и при нехватке
+   места сжимается первой. Раньше подпись сидела в жёстких 104
+   пикселях, «10 000 – 30 000 ₽» ломалась на две строки, и эта строка
+   выходила выше соседних. */
+.scr-expenses .levels{
+  display:grid;grid-template-columns:max-content minmax(40px,1fr) max-content max-content;
+  align-items:center;gap:7px 10px;font-size:12px;
+}
+.scr-expenses .levels .row{display:contents;}
+.scr-expenses .levels .row > span:first-child{color:var(--text-2);white-space:nowrap;}
+.scr-expenses .levels .row.is-zero > span:first-child{color:var(--text-3);}
+.scr-expenses .levels .track{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;min-width:0;}
+.scr-expenses .levels .track i{display:block;height:100%;border-radius:99px;background:var(--accent);opacity:.55;}
+.scr-expenses .levels .n{font-family:var(--font-mono);font-size:11px;width:44px;text-align:right;}
+.scr-expenses .levels .p{font-family:var(--font-mono);font-size:11px;width:34px;text-align:right;color:var(--text-3);}
+/* ============================================================
+   ВСЕ ОПЕРАЦИИ
+   ============================================================ */
+.scr-expenses .ops-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+.scr-expenses .ops-search{display:flex;align-items:center;gap:8px;height:32px;padding:0 11px;
+  flex:1;min-width:240px;max-width:400px;
+  border:1px solid var(--border);border-radius:var(--r-md);
+  background:var(--bg);color:var(--text-3);
+  transition:border-color var(--t-fast) ease;}
+.scr-expenses .ops-search:focus-within{border-color:var(--accent);}
+.scr-expenses .ops-search input{border:none;outline:none;background:transparent;flex:1;min-width:0;
+  font-family:var(--font-sans);font-size:13px;color:var(--text);}
+.scr-expenses .ops-filters{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.scr-expenses .chip{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 11px;
+  border-radius:99px;border:1px solid var(--border);background:var(--bg);
+  font-family:var(--font-sans);font-size:12px;color:var(--text-2);cursor:pointer;
+  transition:background var(--t-fast) ease,border-color var(--t-fast) ease,color var(--t-fast) ease;}
+.scr-expenses .chip:hover{background:var(--surface);color:var(--text);}
+.scr-expenses .chip.is-active{background:var(--accent-fill);border-color:var(--accent-fill);color:var(--accent-fg);}
+.scr-expenses .chip .x{opacity:.75;font-size:13px;line-height:1;}
+.scr-expenses .ops-body{max-height:420px;overflow-y:auto;}
+.scr-expenses .ops-body .tbl th{font-size:11px;}
+.scr-expenses .ops-body .tbl td{padding:8px 10px;font-size:13px;}
+.scr-expenses .tag{display:inline-flex;align-items:center;padding:1px 7px;border-radius:var(--r-sm);
+  font-size:11px;line-height:16px;font-weight:500;white-space:nowrap;margin-left:6px;}
+.scr-expenses .tag--reg{background:var(--surface-2);color:var(--text-2);}
+.scr-expenses .tag--late{background:var(--warning-bg);color:var(--warning);}
+.scr-expenses .tag--spont{background:var(--danger-bg);color:var(--danger);}
+.scr-expenses .ops-foot{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  padding-top:14px;margin-top:4px;border-top:1px solid var(--border);}
+.scr-expenses .ops-foot .spacer{flex:1;}
+.scr-expenses .ops-foot .v{font-family:var(--font-mono);font-size:13px;font-weight:500;}
+/* Перевод между своими счетами денег не меняет — сумма в строке
+   набрана приглушённо, чтобы её не читали как трату. */
+.scr-expenses .sum-cell.c-mute{color:var(--text-3);}
+/* ============================================================
+   ВЫПАДАЮЩИЕ ПАНЕЛИ — период и фильтры списка
+   ============================================================ */
+.scr-expenses .pop-host{position:relative;}
+.scr-expenses .pop{
+  position:absolute;top:calc(100% + 6px);left:0;z-index:40;min-width:240px;
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);
+  box-shadow:var(--shadow-lg);padding:12px;
+}
+.scr-expenses .pop.at-right{left:auto;right:0;}
+.scr-expenses .pop-title{font-size:12px;font-weight:600;margin-bottom:9px;}
+.scr-expenses .pop-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.scr-expenses .pop-row label{font-size:12px;color:var(--text-3);width:34px;flex:none;}
+.scr-expenses .pop input{
+  flex:1;min-width:0;height:30px;padding:0 9px;
+  border:1px solid var(--border);border-radius:var(--r-sm);
+  background:var(--bg);color:var(--text);
+  font-family:var(--font-mono);font-size:12px;outline:none;
+}
+.scr-expenses .pop input:focus{border-color:var(--accent);}
+.scr-expenses .pop-presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.scr-expenses .pop-foot{display:flex;gap:8px;margin-top:10px;}
+.scr-expenses .pop-foot .spacer{flex:1;}
+.scr-expenses .pop-list{max-height:240px;overflow-y:auto;margin:-4px -4px 0;padding:0 4px;}
+.scr-expenses .pop-opt{
+  display:flex;align-items:center;gap:8px;width:100%;padding:6px 6px;border:none;
+  background:none;border-radius:var(--r-sm);cursor:pointer;text-align:left;
+  font-family:var(--font-sans);font-size:12px;color:var(--text-2);
+}
+.scr-expenses .pop-opt:hover{background:var(--surface);color:var(--text);}
+.scr-expenses .pop-opt .box{
+  width:14px;height:14px;flex:none;border-radius:4px;border:1px solid var(--border-strong);
+  display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--accent-fg);
+}
+.scr-expenses .pop-opt.is-on .box{background:var(--accent-fill);border-color:var(--accent-fill);}
+.scr-expenses .pop-opt .n{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-3);}
+.scr-expenses .pop-opt .dot{flex:none;}
+.scr-expenses .chip .cnt{
+  font-family:var(--font-mono);font-size:10px;opacity:.8;
+}
+
+/* ============================================================
+   АДАПТИВ — минимальное окно по ТЗ 1280×800
+   ============================================================ */
+@media (max-width:1400px){
+  .scr-expenses .grid--5{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .scr-expenses .grid--4{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media (max-width:1180px){
+  .scr-expenses .grid--2, .scr-expenses .grid--3{grid-template-columns:minmax(0,1fr);}
+  .scr-expenses .qd{grid-template-columns:64px 1fr 1fr;}
+}
+@media (max-width:900px){
+  .scr-expenses .grid--5{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+/* Набор движения (кадры obRise/obBump/obIn и классы-переключатели)
+   лежит в общем оформлении: он одинаков на всех экранах. */
+
+/* Мало данных: блок не прячется, а приглушается — видна форма будущего
+   ответа, но решений по нему не принимают (макет состояний). */
+.scr-expenses .is-few .wd-bars,.scr-expenses .is-few .wd-labels,.scr-expenses .is-few .wk{opacity:.32;}

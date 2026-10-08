@@ -1,0 +1,578 @@
+/* Оформление экрана перенесено из макета 12-onboarding.html. */
+/* ▼ ПЕРЕНОС ИЗ МАКЕТА — пишется tools/scope-css.js, руками не править */
+.scr-ob .btn-sm{background:var(--bg);color:var(--text-2);border:1px solid var(--border);padding:5px 11px;font-size:12px;border-radius:var(--r-sm);}
+.scr-ob .btn-sm:hover{background:var(--surface);color:var(--text);}
+.scr-ob .btn-sm--acc{background:var(--accent-fill);border-color:var(--accent-fill);color:var(--accent-fg);}
+.scr-ob .btn-sm--acc:hover{background:var(--accent-fill-hover);border-color:var(--accent-fill-hover);color:var(--accent-fg);}
+.scr-ob .btn-link{
+  border:none;background:none;padding:0;cursor:pointer;
+  color:var(--accent-hover);font-family:var(--font-sans);font-size:12px;font-weight:500;
+}
+.scr-ob .btn-link:hover{text-decoration:underline;text-underline-offset:3px;}
+:root[data-theme="dark"] .scr-ob .btn-link{color:var(--accent);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .scr-ob .btn-link{color:var(--accent);}
+}
+.scr-ob .btn[disabled]{opacity:.45;cursor:not-allowed;}
+
+/* ============================================================
+   ОБЩИЕ ЭЛЕМЕНТЫ
+   ============================================================ */
+.scr-ob .sec{padding:22px var(--pad);border-top:1px solid var(--border);}
+.scr-ob .grid{display:grid;gap:1px;background:var(--border);border-top:1px solid var(--border);}
+.scr-ob .grid > *{background:var(--bg);padding:22px var(--pad);min-width:0;}
+.scr-ob .grid--2{grid-template-columns:repeat(2,minmax(0,1fr));}
+.scr-ob .grid--3{grid-template-columns:repeat(3,minmax(0,1fr));}
+.scr-ob .grid--3 > *{padding:18px 20px;}
+.scr-ob .sec-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.scr-ob .sec-head .spacer{flex:1;}
+.scr-ob .sec-title{font-size:13px;font-weight:600;letter-spacing:-.005em;}
+.scr-ob .sec-sub{font-size:12px;line-height:16px;color:var(--text-3);margin-top:3px;max-width:760px;}
+.scr-ob .title-row{display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.scr-ob .lbl{font-size:12px;font-weight:500;color:var(--text-3);}
+.scr-ob .info{
+  width:14px;height:14px;border-radius:50%;flex:none;
+  border:1px solid var(--border-strong);color:var(--text-3);
+  font-size:9px;font-weight:600;line-height:1;font-style:normal;
+  display:inline-flex;align-items:center;justify-content:center;cursor:help;vertical-align:1px;
+}
+.scr-ob .badge{
+  display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--r-sm);
+  font-size:11px;line-height:16px;font-weight:500;white-space:nowrap;
+}
+.scr-ob .badge--fact{background:var(--surface-2);color:var(--text-2);}
+.scr-ob .badge--muted{background:var(--surface-2);color:var(--text-3);}
+.scr-ob .badge--warn{background:var(--warning-bg);color:var(--warning);}
+.scr-ob .badge--ok{background:var(--positive-bg);color:var(--positive);}
+.scr-ob .dot{width:7px;height:7px;border-radius:50%;flex:none;}
+.scr-ob .c-pos{color:var(--positive);} .scr-ob .c-neg{color:var(--danger);} .scr-ob .c-warn{color:var(--warning);}
+.scr-ob .note{font-size:12px;line-height:17px;color:var(--text-3);margin-top:14px;}
+.scr-ob .note-warn{
+  display:flex;align-items:flex-start;gap:9px;flex-wrap:wrap;
+  font-size:12px;line-height:17px;color:var(--text-2);
+  background:var(--warning-bg);border-radius:var(--r-md);padding:11px 13px;
+}
+.scr-ob .note-warn .dot{margin-top:5px;background:var(--warning);}
+.scr-ob .note-warn b{font-weight:600;color:var(--text);}
+
+.scr-ob .inp{
+  width:100%;box-sizing:border-box;
+  border:1px solid var(--border-strong);border-radius:var(--r-sm);background:var(--bg);
+  padding:7px 10px;font-family:var(--font-sans);font-size:13px;line-height:19px;color:var(--text);
+  transition:border-color var(--t-fast) ease,box-shadow var(--t-fast) ease;
+}
+.scr-ob .inp:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+
+.scr-ob .seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;flex:none;background:var(--bg);}
+.scr-ob .seg button{
+  padding:4px 12px;border:none;background:transparent;cursor:pointer;
+  font-family:var(--font-sans);font-size:12px;line-height:16px;color:var(--text-3);
+  transition:background var(--t-fast) ease,color var(--t-fast) ease;white-space:nowrap;
+}
+.scr-ob .seg button + button{border-left:1px solid var(--border);}
+.scr-ob .seg button:hover{background:var(--surface);color:var(--text-2);}
+.scr-ob .seg button.is-active,.scr-ob .seg button.is-active:hover{background:var(--text);color:var(--bg);}
+
+.scr-ob .tbl{width:100%;border-collapse:collapse;}
+.scr-ob .tbl th{
+  text-align:left;padding:9px 10px;font-size:12px;font-weight:500;color:var(--text-3);
+  white-space:nowrap;border-bottom:1px solid var(--border);
+}
+.scr-ob .tbl th:first-child,.scr-ob .tbl td:first-child{padding-left:0;}
+.scr-ob .tbl th:last-child,.scr-ob .tbl td:last-child{padding-right:0;}
+.scr-ob .tbl td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;font-size:13px;}
+.scr-ob .tbl tbody tr{transition:background var(--t-fast) ease;}
+.scr-ob .tbl tbody tr:hover{background:var(--surface);}
+.scr-ob .tbl tbody tr:last-child td{border-bottom:none;}
+.scr-ob .tbl .r{text-align:right;}
+
+/* ============================================================
+   АНИМАЦИИ — шесть наборов кадров плюс докрутка числа на JS.
+   Семь приёмов на весь онбординг, и ни одного про запас.
+   ============================================================ */
+/* 1. Смена экрана. Знак сдвига задаётся переменной --in-y: вперёд экран
+      приходит снизу, назад — сверху. Направление читается телом, а не
+      подписью «шаг 2 из 3». */
+@keyframes obIn{ from{opacity:0;transform:translateY(var(--in-y,10px));} to{opacity:1;transform:none;} }
+/* 2. Лестница: строки списка появляются по очереди, а не пачкой. */
+@keyframes obRise{ from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:none;} }
+/* 3. Галочка рисуется по контуру — рука ставит её, а не штамп. */
+@keyframes obDraw{ from{stroke-dashoffset:1;} to{stroke-dashoffset:0;} }
+/* 4. Вспышка изменившегося числа. Цвет, не размер: размер сдвинул бы соседей. */
+@keyframes obBump{ from{color:var(--accent);} }
+/* 5. Линия наливается слева направо. */
+@keyframes obLine{ from{transform:scaleX(0);} to{transform:scaleX(1);} }
+/* 6. Дыхание точки «идёт расчёт». Единственный цикличный приём в файле. */
+@keyframes obPulse{ 0%,100%{opacity:.35;} 50%{opacity:1;} }
+
+/* ============================================================
+   СЦЕНА
+   ============================================================
+   Высота сцены фиксирована и не зависит от шага. Шаги разной длины,
+   но рамка одна — иначе низ страницы прыгает при каждом «Дальше».
+   Длинный шаг прокручивается внутри себя.                            */
+.scr-ob .ob{
+  position:relative;display:flex;flex-direction:column;
+  height:668px;background:var(--bg);
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  overflow:hidden;
+}
+/* Настоящий первый запуск занимает всё окно: за мастером ещё нет
+   приложения, которое можно было бы затемнить фоном. */
+.scr-ob .ob.is-full{position:fixed;inset:0;z-index:200;height:100vh;border:none;}
+.scr-ob body.is-locked{overflow:hidden;}
+
+.scr-ob .ob-top{
+  display:flex;align-items:center;gap:10px;height:56px;flex:none;
+  padding:0 24px;border-bottom:1px solid var(--border);
+}
+.scr-ob .ob-mark{
+  width:24px;height:24px;border-radius:var(--r-sm);background:var(--accent);
+  display:flex;align-items:center;justify-content:center;flex:none;
+}
+.scr-ob .ob-nm{font-size:13px;font-weight:600;letter-spacing:-.01em;}
+.scr-ob .ob-top .spacer{flex:1;}
+.scr-ob .ob-step-of{font-size:12px;color:var(--text-3);font-family:var(--font-mono);}
+
+.scr-ob .ob-body{flex:1;min-height:0;display:grid;grid-template-columns:252px minmax(0,1fr);
+  gap:1px;background:var(--border);}
+.scr-ob .ob-body.is-solo{grid-template-columns:minmax(0,1fr);}
+.scr-ob .ob-rail{background:var(--bg);display:flex;flex-direction:column;min-height:0;}
+.scr-ob .ob-pane{background:var(--bg);min-width:0;min-height:0;display:flex;flex-direction:column;}
+.scr-ob .ob-pane.is-anim{animation:obIn var(--t-base) var(--ease-out) both;}
+.scr-ob .ob-scroll{flex:1;min-height:0;overflow-y:auto;padding:26px 30px 10px;}
+.scr-ob .ob-foot{
+  flex:none;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:13px 30px;border-top:1px solid var(--border);
+}
+.scr-ob .ob-foot .spacer{flex:1;}
+/* Цена пропуска пишется рядом с кнопкой пропуска, а не прячется. */
+.scr-ob .ob-cost{font-size:11px;line-height:15px;color:var(--warning);max-width:280px;}
+
+/* ============================================================
+   ЛЕСЕНКА ШАГОВ
+   ============================================================ */
+.scr-ob .st{padding:24px 20px 10px;}
+.scr-ob .st-item{position:relative;display:flex;gap:12px;padding-bottom:20px;}
+.scr-ob .st-item:last-child{padding-bottom:6px;}
+.scr-ob .st-mark{
+  width:26px;height:26px;border-radius:50%;flex:none;position:relative;z-index:1;
+  border:1px solid var(--border-strong);background:var(--bg);color:var(--text-3);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:12px;
+  transition:border-color var(--t-base) var(--ease-out),
+             color var(--t-base) var(--ease-out),
+             background var(--t-base) var(--ease-out);
+}
+.scr-ob .st-item.is-now .st-mark{border-color:var(--accent);color:var(--accent);}
+.scr-ob .st-item.is-done .st-mark{border-color:var(--accent);background:var(--accent);color:var(--accent-fg);}
+.scr-ob .st-item.is-done .st-mark svg path{
+  stroke-dasharray:1;stroke-dashoffset:0;
+  animation:obDraw var(--t-slow) var(--ease-out) both;
+}
+.scr-ob .st-line{position:absolute;left:13px;top:29px;height:calc(100% - 33px);width:1px;background:var(--border);}
+.scr-ob .st-line i{
+  position:absolute;inset:0;background:var(--accent);
+  transform:scaleY(0);transform-origin:top;
+  transition:transform var(--t-slow) var(--ease-out);
+}
+.scr-ob .st-item.is-done .st-line i{transform:scaleY(1);}
+.scr-ob .st-txt{min-width:0;padding-top:3px;}
+.scr-ob .st-t{font-size:13px;font-weight:500;color:var(--text-3);transition:color var(--t-base) var(--ease-out);}
+.scr-ob .st-item.is-now .st-t,.scr-ob .st-item.is-done .st-t{color:var(--text);}
+.scr-ob .st-s{font-size:11px;line-height:15px;color:var(--text-3);margin-top:2px;}
+.scr-ob .st-skip{font-size:11px;line-height:15px;color:var(--warning);margin-top:2px;}
+
+/* Итог собирается на глазах: строка появляется, как только её есть чем
+   заполнить. Это не украшение — ради этих чисел и заполняются формы. */
+.scr-ob .rl{margin-top:auto;border-top:1px solid var(--border);padding-bottom:14px;}
+.scr-ob .rl-h{
+  font-size:11px;font-weight:500;color:var(--text-3);
+  padding:13px 20px 3px;letter-spacing:.02em;text-transform:uppercase;
+}
+.scr-ob .rl-row{display:flex;align-items:baseline;gap:10px;padding:7px 20px;}
+.scr-ob .rl-row.is-new{animation:obRise var(--t-base) var(--ease-out) both;}
+.scr-ob .rl-row .k{font-size:12px;line-height:17px;color:var(--text-3);flex:1;min-width:0;}
+.scr-ob .rl-row .v{
+  flex:none;font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--text);
+  white-space:nowrap;word-spacing:-.22em;
+}
+.scr-ob .rl-row .v.is-bump{animation:obBump var(--t-slow) var(--ease-out);}
+.scr-ob .rl-empty{font-size:11px;line-height:16px;color:var(--text-3);padding:6px 20px 4px;}
+
+/* ============================================================
+   ЭКРАН ПРИВЕТСТВИЯ
+   ============================================================ */
+.scr-ob .wl{
+  flex:1;min-height:0;overflow-y:auto;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:34px 30px;
+}
+.scr-ob .wl-mark{
+  width:52px;height:52px;border-radius:var(--r-lg);background:var(--accent);flex:none;
+  display:flex;align-items:center;justify-content:center;margin-bottom:20px;
+}
+.scr-ob .wl-mark svg path{stroke-dasharray:1;animation:obDraw 560ms var(--ease-out) both;animation-delay:120ms;}
+.scr-ob .wl h2{font-size:27px;line-height:33px;font-weight:600;letter-spacing:-.025em;}
+.scr-ob .wl-lead{font-size:15px;line-height:23px;color:var(--text-2);max-width:470px;margin-top:11px;}
+.scr-ob .wl-list{
+  display:flex;gap:1px;background:var(--border);
+  border:1px solid var(--border);margin:26px 0 24px;max-width:640px;width:100%;
+}
+.scr-ob .wl-list > div{background:var(--bg);flex:1;padding:14px 16px;text-align:left;min-width:0;}
+.scr-ob .wl-list .t{font-size:12px;font-weight:600;}
+.scr-ob .wl-list .s{font-size:11px;line-height:16px;color:var(--text-3);margin-top:4px;}
+.scr-ob .wl-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+/* Финансовое приложение обязано сказать, где будут лежать данные,
+   до того как попросит их ввести. */
+.scr-ob .wl-priv{
+  display:flex;align-items:center;gap:7px;
+  font-size:11px;line-height:16px;color:var(--text-3);margin-top:24px;
+}
+
+/* ============================================================
+   ОБЩЕЕ ДЛЯ ШАГОВ
+   ============================================================ */
+.scr-ob .ob-h{font-size:19px;line-height:25px;font-weight:600;letter-spacing:-.02em;}
+.scr-ob .ob-sub{font-size:13px;line-height:19px;color:var(--text-2);margin-top:7px;max-width:580px;}
+.scr-ob .ob-sec{margin-top:22px;}
+.scr-ob .ob-lbl{font-size:11px;font-weight:500;color:var(--text-3);letter-spacing:.02em;text-transform:uppercase;}
+.scr-ob .ob-stagger > *{animation:obRise var(--t-base) var(--ease-out) both;}
+
+/* ---- шаг 1: счета ---- */
+.scr-ob .ac{margin-top:18px;border-top:1px solid var(--border);}
+.scr-ob .ac-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.scr-ob .ac-sw{width:8px;height:8px;border-radius:2px;flex:none;}
+.scr-ob .ac-nm{flex:1;min-width:0;}
+.scr-ob .ac-nm .n{font-size:13px;font-weight:500;}
+.scr-ob .ac-nm .s{font-size:11px;line-height:15px;color:var(--text-3);margin-top:1px;}
+.scr-ob .ac-in{flex:none;width:158px;}
+.scr-ob .ac-in .inp{text-align:right;font-family:var(--font-mono);font-size:13px;word-spacing:-.22em;}
+.scr-ob .ac-x{
+  flex:none;width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;
+  border:none;background:none;color:var(--text-3);cursor:pointer;border-radius:var(--r-sm);
+  transition:background var(--t-fast) ease,color var(--t-fast) ease;
+}
+.scr-ob .ac-x:hover{background:var(--surface);color:var(--danger);}
+/* Кредитка тянет за собой лимит и день выписки — без них не посчитать грейс. */
+.scr-ob .ac-more{
+  display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;
+  padding:12px 14px;background:var(--surface);border-bottom:1px solid var(--border);
+  animation:obRise var(--t-base) var(--ease-out) both;
+}
+.scr-ob .ac-more .f{min-width:0;}
+.scr-ob .ac-more .f .l{font-size:11px;color:var(--text-3);margin-bottom:5px;}
+.scr-ob .ac-more .inp{width:118px;font-family:var(--font-mono);font-size:13px;word-spacing:-.22em;}
+.scr-ob .ac-more .why{flex:1;min-width:180px;font-size:11px;line-height:16px;color:var(--text-3);padding-bottom:6px;}
+.scr-ob .ac-add{margin-top:14px;}
+
+/* ---- шаг 2: категории ---- */
+.scr-ob .cg{margin-top:18px;}
+.scr-ob .cg + .cg{margin-top:16px;}
+.scr-ob .cg-h{display:flex;align-items:baseline;gap:9px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+.scr-ob .cg-h .t{font-size:12px;font-weight:600;}
+.scr-ob .cg-h .s{font-size:11px;line-height:16px;color:var(--text-3);flex:1;min-width:0;}
+.scr-ob .cg-w{display:flex;flex-wrap:wrap;gap:7px;padding:11px 0 0;}
+.scr-ob .ct{
+  display:inline-flex;align-items:center;gap:7px;
+  border:1px solid var(--border);background:var(--bg);color:var(--text-3);
+  border-radius:var(--r-sm);padding:5px 11px 5px 9px;
+  font-family:inherit;font-size:12px;line-height:17px;cursor:pointer;
+  transition:background var(--t-fast) var(--ease-out),
+             border-color var(--t-fast) var(--ease-out),
+             color var(--t-fast) var(--ease-out);
+}
+.scr-ob .ct:hover{background:var(--surface);}
+.scr-ob .ct .sw{
+  width:8px;height:8px;border-radius:2px;flex:none;background:var(--border-strong);
+  transition:background var(--t-fast) var(--ease-out);
+}
+.scr-ob .ct.is-on{border-color:var(--border-strong);color:var(--text);}
+.scr-ob .ct.is-on .sw{background:var(--c,var(--accent));}
+.scr-ob .ct.is-locked{cursor:default;opacity:1;}
+.scr-ob .ct.is-locked:hover{background:var(--bg);}
+.scr-ob .ct .lk{display:flex;color:var(--text-3);flex:none;}
+.scr-ob .cg-add{display:flex;gap:8px;align-items:center;margin-top:16px;max-width:420px;}
+
+/* ---- шаг 3: регулярные ---- */
+.scr-ob .rc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--border);
+  border:1px solid var(--border);margin-top:18px;}
+.scr-ob .rc-col{background:var(--bg);min-width:0;}
+.scr-ob .rc-ch{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);
+  font-size:12px;font-weight:600;}
+.scr-ob .rc-ch .c{margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--text-3);
+  word-spacing:-.22em;white-space:nowrap;}
+.scr-ob .rc-row{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border);}
+.scr-ob .rc-row:last-child{border-bottom:none;}
+.scr-ob .rc-row.is-off .rc-n,.scr-ob .rc-row.is-off .rc-v,.scr-ob .rc-row.is-off .rc-d{opacity:.5;}
+.scr-ob .rc-d{font-family:var(--font-mono);font-size:11px;color:var(--text-3);flex:none;width:52px;
+  word-spacing:-.22em;white-space:nowrap;}
+.scr-ob .rc-n{flex:1;min-width:0;font-size:13px;}
+.scr-ob .rc-n .s{font-size:11px;line-height:15px;color:var(--text-3);}
+.scr-ob .rc-v{flex:none;font-family:var(--font-mono);font-size:12px;word-spacing:-.22em;white-space:nowrap;}
+.scr-ob .tg{
+  width:16px;height:16px;border-radius:4px;flex:none;padding:0;cursor:pointer;
+  border:1px solid var(--border-strong);background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  transition:background var(--t-fast) var(--ease-out),border-color var(--t-fast) var(--ease-out);
+}
+.scr-ob .tg svg{opacity:0;transition:opacity var(--t-fast) var(--ease-out);}
+.scr-ob .tg.is-on{background:var(--accent-fill);border-color:var(--accent-fill);}
+.scr-ob .tg.is-on svg{opacity:1;}
+
+/* ---- экран «готово» ---- */
+.scr-ob .dn{
+  flex:1;min-height:0;overflow-y:auto;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:34px 30px;
+}
+.scr-ob .dn-w{width:100%;max-width:520px;}
+.scr-ob .dn-top{display:flex;align-items:center;gap:11px;}
+.scr-ob .dn-ok{
+  width:30px;height:30px;border-radius:50%;flex:none;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+}
+.scr-ob .dn-ok svg path{stroke-dasharray:1;animation:obDraw var(--t-slow) var(--ease-out) both;}
+.scr-ob .dn h2{font-size:22px;line-height:28px;font-weight:600;letter-spacing:-.02em;}
+.scr-ob .dn-sub{font-size:13px;line-height:19px;color:var(--text-2);margin-top:9px;}
+.scr-ob .dn-rows{margin-top:22px;border-top:1px solid var(--border);}
+.scr-ob .dn-row{display:flex;align-items:baseline;gap:14px;padding:10px 0;border-bottom:1px solid var(--border);}
+.scr-ob .dn-row .k{font-size:13px;line-height:19px;color:var(--text-2);flex:1;min-width:0;}
+.scr-ob .dn-row .k .s{display:block;font-size:11px;line-height:15px;color:var(--text-3);margin-top:1px;}
+.scr-ob .dn-row .v{flex:none;font-family:var(--font-mono);font-size:14px;white-space:nowrap;word-spacing:-.22em;}
+.scr-ob .dn-row.is-key{padding:15px 0 13px;border-bottom:none;}
+.scr-ob .dn-row.is-key .k{font-size:14px;font-weight:500;color:var(--text);}
+.scr-ob .dn-row.is-key .v{font-size:27px;line-height:32px;font-weight:500;letter-spacing:-.02em;color:var(--accent);}
+.scr-ob .dn-bar{height:2px;background:var(--accent);transform-origin:left;animation:obLine var(--t-slow) var(--ease-out) both;}
+.scr-ob .dn-hint{
+  display:flex;align-items:flex-start;gap:9px;margin-top:20px;
+  font-size:12px;line-height:17px;color:var(--text-2);
+}
+.scr-ob .dn-hint .dot{margin-top:5px;background:var(--accent);}
+.scr-ob .dn-hint code{
+  font-family:var(--font-mono);font-size:11px;background:var(--surface-2);
+  border-radius:4px;padding:1px 5px;color:var(--text);
+}
+.scr-ob .dn-btns{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap;}
+
+/* ---- ветка «у меня уже есть выгрузка» ---- */
+.scr-ob .imp-drop{
+  border:1px dashed var(--border-strong);border-radius:var(--r-md);
+  padding:26px;text-align:center;margin-top:18px;cursor:pointer;background:var(--bg);
+  transition:border-color var(--t-fast) ease,background var(--t-fast) ease;
+}
+.scr-ob .imp-drop:hover{border-color:var(--accent);background:var(--surface);}
+.scr-ob .imp-drop .t{font-size:13px;font-weight:500;}
+.scr-ob .imp-drop .s{font-size:11px;line-height:16px;color:var(--text-3);margin-top:5px;}
+.scr-ob .imp-file{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--border);}
+.scr-ob .imp-file .n{font-size:13px;font-weight:500;flex:1;min-width:0;}
+.scr-ob .imp-sum{display:flex;gap:1px;background:var(--border);border:1px solid var(--border);margin-top:16px;}
+.scr-ob .imp-sum > div{background:var(--bg);flex:1;padding:12px 14px;min-width:0;}
+.scr-ob .imp-sum .k{font-size:11px;line-height:15px;color:var(--text-3);}
+.scr-ob .imp-sum .v{font-family:var(--font-mono);font-size:16px;margin-top:3px;word-spacing:-.22em;white-space:nowrap;}
+.scr-ob .imp-wait{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-3);}
+.scr-ob .imp-wait .dot{background:var(--accent);animation:obPulse 1.1s ease-in-out infinite;}
+/* ▲ КОНЕЦ ПЕРЕНОСА ИЗ МАКЕТА */
+
+/* ============================================================
+   ДОБАВЛЕНИЯ К МАКЕТУ
+   ============================================================ */
+.scr-ob[hidden]{display:none;}
+/* Из хвоста стилей макета — после разделов, которые переносятся сами. */
+.scr-ob [hidden]{display:none !important;}
+.scr-ob .ob-cost.is-calm{color:var(--text-3);}
+/* Знак и название GREENFOX вместо квадрата с линией из макета. */
+.scr-ob .ob-mark.brand-fox{width:24px;height:24px;background:none;border-radius:0;}
+.scr-ob .ob-nm.brand-name{font-size:12px;line-height:16px;}
+
+/* Подсказки у «Пропустить шаг» — целые фразы, им нужно больше места, чем в макете. */
+.scr-ob .ob-cost{max-width:380px;}
+/* Длинный текст предупреждения — рядом с точкой, а не строкой ниже. */
+.scr-ob .note-warn > span:not(.dot){flex:1 1 0;min-width:0;}
+.scr-ob .ac-nm .n,.scr-ob .ac-nm .s,.scr-ob .st-t,.scr-ob .st-s,.scr-ob .st-skip{display:block;}
+/* Шапка мастера — за неё таскают окно; слева место под кнопки окна macOS. */
+.scr-ob .ob-top{padding-left:84px;-webkit-app-region:drag;}
+.scr-ob .ob-top button{-webkit-app-region:no-drag;}
+/* Тихая перерисовка — без лестницы: поменялась одна строка, а не экран. */
+.scr-ob .ob-stagger.is-quiet > *{animation:none;}
+/* Дата остатков — над счетами. */
+.scr-ob .ob-date{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px;}
+.scr-ob .ob-date .l{font-size:12px;color:var(--text-2);}
+.scr-ob .ob-date .inp{width:130px;font-family:var(--font-mono);font-size:13px;}
+.scr-ob .ob-date .h{font-size:11px;line-height:15px;color:var(--text-3);flex:1;min-width:220px;}
+/* Строка счёта: название, тип, остаток, «платёжный», убрать. */
+.scr-ob .ac-row.is-edit .ac-nm .inp{width:100%;}
+.scr-ob .ac-ty{flex:none;width:200px;}
+/* Валюта счёта — рядом с остатком; у кредитки — только рубли, знаком. */
+.scr-ob .ac-cur{flex:none;width:66px;}
+.scr-ob .ac-cur .inp{width:100%;}
+.scr-ob .ac-cur.is-na{display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:13px;color:var(--text-3);}
+.scr-ob .ac-ty .inp{width:100%;}
+.scr-ob .ac-in.ac-fixed{text-align:right;font-family:var(--font-mono);font-size:13px;word-spacing:-.22em;white-space:nowrap;color:var(--text-2);}
+.scr-ob .ac-x-sp{flex:none;width:26px;}
+.scr-ob .ac-pay{
+  flex:none;width:112px;display:flex;align-items:center;gap:7px;padding:0;border:none;background:none;cursor:pointer;
+  font-family:inherit;font-size:12px;color:var(--text-2);
+}
+.scr-ob .ac-pay.is-na{cursor:default;color:var(--text-3);font-size:11px;}
+.scr-ob .ac-more .inp{width:118px;}
+/* Своя категория — с типом. */
+.scr-ob .cg-add{max-width:680px;}
+.scr-ob .cg-add #obCatNew{flex:1;min-width:0;}
+.scr-ob .cg-add select{width:160px;flex:none;}
+/* Строка платежа: включатель, число, название с категорией и
+   периодичностью, сумма, убрать. */
+.scr-ob .rc-row.is-edit{gap:8px;align-items:flex-start;padding-top:9px;padding-bottom:9px;}
+.scr-ob .rc-row.is-edit > .tg{margin-top:9px;}
+.scr-ob .rc-row .rc-d{width:58px;}
+.scr-ob .rc-row .rc-d .inp{width:100%;padding-left:8px;padding-right:8px;text-align:center;font-family:var(--font-mono);font-size:12px;}
+.scr-ob .rc-row .rc-n{display:flex;flex-direction:column;gap:5px;min-width:0;}
+.scr-ob .rc-row .rc-n > .inp{width:100%;}
+.scr-ob .rc-t{font-size:13px;line-height:18px;padding-top:2px;}
+.scr-ob .rc-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;}
+.scr-ob .rc-meta .s{font-size:11px;line-height:15px;color:var(--text-3);}
+/* Мелкие выпадающие списки — по размеру подписи, а не поля. */
+.scr-ob .rc-meta select.inp{
+  -webkit-appearance:none;appearance:none;height:24px;width:auto;max-width:100%;padding:0 22px 0 8px;cursor:pointer;
+  font-size:11px;line-height:22px;color:var(--text-2);
+  background:var(--bg) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 10 10'><path d='M2 3.8l3 3 3-3' stroke='%23888' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 7px center;
+}
+.scr-ob .rc-meta select.inp:hover{color:var(--text);}
+.scr-ob .rc-meta .rc-cat{max-width:190px;}
+.scr-ob .rc-a{flex:none;width:104px;}
+.scr-ob .rc-a .inp{width:100%;text-align:right;font-family:var(--font-mono);font-size:12px;word-spacing:-.22em;}
+.scr-ob .rc-row.is-edit .ac-x,.scr-ob .rc-row.is-edit .ac-x-sp{margin-top:5px;}
+.scr-ob .tg.is-fixed{cursor:default;}
+.scr-ob .rc-row.is-off .rc-a .inp,.scr-ob .rc-row.is-off .rc-d .inp{opacity:.6;}
+/* «Добавить» — строкой в конце колонки: поступлений, как и списаний,
+   бывает больше, чем в заготовке. */
+.scr-ob .rc-add{
+  display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;border-top:1px solid var(--border);
+  background:none;cursor:pointer;font-family:inherit;font-size:12px;color:var(--accent-hover);text-align:left;
+  transition:background var(--t-fast) ease;
+}
+.scr-ob .rc-add:hover{background:var(--surface);}
+.scr-ob .rc-add .pl{width:16px;text-align:center;font-size:15px;line-height:1;}
+:root[data-theme="dark"] .scr-ob .rc-add{color:var(--accent);}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .scr-ob .rc-add{color:var(--accent);} }
+.scr-ob .rc-col{display:flex;flex-direction:column;}
+.scr-ob .rc-col .rc-add{margin-top:auto;}
+/* Ошибка шага — над подвалом. */
+.scr-ob .ob-err{margin-top:16px;}
+
+/* ============================================================
+   ДВИЖЕНИЕ МАСТЕРА — по просьбе владельца богаче макета
+   ============================================================
+   Двигаются только прозрачность и сдвиг: их считает видеокарта, кадры
+   не теряются. Размытия и перерисовок под маской больше нет — на Retina
+   они стоили кадров. Смена экранов и появление блоков — в onboard.js
+   (анимации, запущенные явно); здесь — то, что проигрывается по классу:
+   .is-enter у экрана и пути — только при смене экрана, не при каждой
+   перерисовке шага. Ни отскоков, ни пружин. «Уменьшить движение» в
+   системе гасит всё (design.css). */
+@keyframes obRailIn{ from{opacity:0;transform:translateX(-18px);} to{opacity:1;transform:none;} }
+@keyframes obFillY{ from{transform:scaleY(0);} to{transform:scaleY(1);} }
+@keyframes obPing{ from{opacity:.6;transform:scale(1);} to{opacity:0;transform:scale(2.2);} }
+@keyframes obMarkIn{ from{transform:scale(.6);} to{transform:none;} }
+@keyframes obNowRing{ 0%{opacity:0;transform:scale(1);} 35%{opacity:.55;} 100%{opacity:0;transform:scale(1.55);} }
+@keyframes obFade{ from{opacity:0;} to{opacity:1;} }
+@keyframes obShineX{ from{transform:translateX(0);} to{transform:translateX(340%);} }
+@keyframes obPop{ from{transform:scale(.3);} to{transform:none;} }
+@keyframes obFlash{ from{background:var(--accent-soft);} to{background:var(--bg);} }
+@keyframes obFlashRow{ from{background:var(--accent-soft);} to{background:transparent;} }
+@keyframes obNope{ 0%,100%{transform:none;} 25%{transform:translateX(-3px);} 75%{transform:translateX(3px);} }
+@keyframes obRowIn{ from{opacity:0;transform:translateY(-6px);} to{opacity:1;transform:none;} }
+
+/* Из макета: эти анимации стояли прямо на элементах и проигрывались при
+   каждой перерисовке шага — галочки пути рисовались заново, блок
+   кредитки и строки подпрыгивали. Выключены; нужное — ниже, по классам. */
+.scr-ob .ob-pane.is-anim,.scr-ob .ob-stagger > *,.scr-ob .ac-more,.scr-ob .st-item.is-done .st-mark svg path,
+.scr-ob .dn-ok svg path,.scr-ob .dn-bar{animation:none;}
+
+/* Тело мастера — опора для слоя уходящего экрана. */
+.scr-ob .ob-body{position:relative;}
+.scr-ob .ob-ghost{position:absolute;z-index:3;pointer-events:none;overflow:hidden;}
+.scr-ob .ob-ghost > *{box-sizing:border-box;}
+
+/* Путь: шаг пройден — галочка рисуется, кольцо расходится, линия
+   наливается до следующего шага, а он мягко загорается кольцом. */
+.scr-ob .st-mark::after,.scr-ob .st-mark::before{content:'';position:absolute;inset:-1px;border-radius:50%;
+  border:1.5px solid var(--accent);opacity:0;pointer-events:none;}
+.scr-ob .ob-rail.is-enter .st-item.is-just .st-mark{animation:obMarkIn 420ms var(--ease-out) both;}
+.scr-ob .ob-rail.is-enter .st-item.is-just .st-mark svg path{stroke-dasharray:1;animation:obDraw 460ms var(--ease-out) 160ms both;}
+.scr-ob .ob-rail.is-enter .st-item.is-just .st-mark::after{animation:obPing 900ms var(--ease-out) 80ms both;}
+.scr-ob .ob-rail.is-enter .st-item.is-just .st-line i{animation:obFillY 620ms var(--ease-out) 220ms both;}
+.scr-ob .ob-rail.is-enter .st-item.is-now .st-mark::before{animation:obNowRing 900ms var(--ease-out) 460ms both;}
+.scr-ob .ob-body:not(.is-enter) .rl-row.is-new{animation:none;}
+
+/* ============================================================
+   ПРИВЕТСТВИЕ: ЛИСА ИЗ ЧАСТИЦ (renderer/onboard-fx.js)
+   ============================================================
+   Холст — во весь экран под текстом. Место знака — пустой квадрат: точки
+   собираются в нём. Картинка знака видна, только если холст не заработал. */
+.scr-ob .ob-pane.is-welcome{position:relative;overflow:hidden;background:transparent;}
+/* Фон приветствия — отдельным слоем: при уходе он гаснет быстрее точек. */
+.scr-ob .wl-fill{position:absolute;inset:0;z-index:0;background:var(--bg);pointer-events:none;}
+.scr-ob .wl-fx{position:absolute;left:0;top:0;z-index:1;pointer-events:none;}
+.scr-ob .wl{position:relative;z-index:2;}
+.scr-ob .wl-fox{width:clamp(132px, 23vh, 216px);height:clamp(132px, 23vh, 216px);margin-bottom:26px;flex:none;}
+.scr-ob .wl-fox img{display:block;width:100%;height:100%;}
+.scr-ob .ob-pane.is-fx .wl-fox img{visibility:hidden;}
+.scr-ob .wl h2.wl-word{font-size:34px;line-height:40px;font-weight:400;letter-spacing:.04em;white-space:nowrap;}
+.scr-ob .wl-word .lt{display:inline-block;overflow:hidden;vertical-align:top;}
+.scr-ob .wl-word .lt > span{display:inline-block;}
+
+/* ============================================================
+   ИТОГ
+   ============================================================
+   Значок с расходящимися кольцами, строки по очереди (onboard.js), числа
+   докручиваются, полоса наливается и по ней проходит блик. */
+.scr-ob .ob-pane.is-done{position:relative;overflow:hidden;}
+.scr-ob .dn{position:relative;}
+.scr-ob .dn-glow{position:absolute;left:50%;top:50%;width:760px;height:760px;margin:-380px 0 0 -380px;border-radius:50%;
+  background:radial-gradient(closest-side,var(--accent-soft),transparent);pointer-events:none;opacity:.9;}
+.scr-ob .dn-w{position:relative;z-index:1;}
+.scr-ob .dn-ok{position:relative;}
+.scr-ob .dn-ok .ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--accent);opacity:0;pointer-events:none;}
+.scr-ob .ob-pane.is-done.is-enter .dn-ok{animation:obMarkIn 480ms var(--ease-out) 120ms both;}
+.scr-ob .ob-pane.is-done.is-enter .dn-ok svg path{stroke-dasharray:1;animation:obDraw 520ms var(--ease-out) 300ms both;}
+.scr-ob .ob-pane.is-done.is-enter .dn-ok .ring{animation:obPing 1100ms var(--ease-out) 420ms both;}
+.scr-ob .ob-pane.is-done.is-enter .dn-ok .ring.r2{animation-delay:640ms;}
+.scr-ob .dn-bar{position:relative;overflow:hidden;transform-origin:left;}
+.scr-ob .dn-bar i{position:absolute;top:0;bottom:0;left:-40%;width:40%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.8),transparent);}
+.scr-ob .ob-pane.is-done.is-enter .dn-bar{animation:obLine 900ms var(--ease-out) 1250ms both;}
+.scr-ob .ob-pane.is-done.is-enter .dn-bar i{animation:obShineX 1000ms ease-in-out 2050ms both;}
+
+/* Отклики на действия — на месте, без перерисовки экрана. */
+.scr-ob .ct.is-pop{animation:obFlash 700ms ease-out both;}
+.scr-ob .ct.is-pop .sw{animation:obPop 320ms var(--ease-out) both;}
+.scr-ob .ct.is-nope,.scr-ob .ob-err.is-shake{animation:obNope 340ms ease-in-out;}
+.scr-ob .tg.is-on svg path{stroke-dasharray:1;stroke-dashoffset:0;}
+.scr-ob .tg.is-pop{animation:obPop 300ms var(--ease-out) both;}
+.scr-ob .tg.is-pop svg path{animation:obDraw 380ms var(--ease-out) 60ms both;}
+.scr-ob .rc-row.is-lit{animation:obFlashRow 900ms ease-out both;}
+.scr-ob .ac-row.is-fresh,.scr-ob .rc-row.is-fresh{animation:obRowIn 420ms var(--ease-out) both;}
+.scr-ob .ac-row.is-gone,.scr-ob .rc-row.is-gone{
+  height:0 !important;padding-top:0;padding-bottom:0;opacity:0;overflow:hidden;border-bottom-color:transparent;
+  transition:height 200ms ease,padding 200ms ease,opacity 150ms ease;
+}
+
+/* Своя категория у платежа — поле того же размера, что выпадающий список. */
+.scr-ob .rc-meta .rc-newcat{height:24px;width:200px;padding:0 8px;font-size:11px;line-height:22px;}
+/* Сохранённая строка — подпись в одну строку под названием. */
+.scr-ob .rc-row.is-saved{align-items:flex-start;padding-top:10px;padding-bottom:10px;}
+.scr-ob .rc-row.is-saved > .tg{margin-top:2px;}
+.scr-ob .rc-dt{font-family:var(--font-mono);font-size:11px;color:var(--text-3);padding-top:2px;}
+.scr-ob .rc-row.is-saved .rc-v{padding-top:1px;}
+/* Нехватка денег на итоге. */
+.scr-ob .dn-short{margin-top:16px;}
+/* Узкое окно — колонки платежей друг под другом: в двух рядом не
+   поместились бы поле суммы и выбор периода. */
+@media (max-width:1320px){
+  .scr-ob .rc{grid-template-columns:minmax(0,1fr);}
+  /* Узкое окно: название счёта получает место за счёт типа и остатка. */
+  .scr-ob .ac-ty{width:150px;}
+  .scr-ob .ac-cur{width:58px;}
+  .scr-ob .ac-in{width:128px;}
+  .scr-ob .ac-pay{width:104px;}
+}

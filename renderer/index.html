@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none';">
+<title>GREENFOX</title>
+<link rel="stylesheet" href="fonts.css">
+<!-- Мастер первого запуска — до общих стилей: его наборы кадров не
+     перекрывают общие с тем же именем. -->
+<link rel="stylesheet" href="onboard.css">
+<link rel="stylesheet" href="design.css">
+<link rel="stylesheet" href="expenses.css">
+<link rel="stylesheet" href="capital.css">
+<link rel="stylesheet" href="forecast.css">
+<link rel="stylesheet" href="plans.css">
+<link rel="stylesheet" href="calendar.css">
+<link rel="stylesheet" href="payments.css">
+<link rel="stylesheet" href="forms.css">
+<link rel="stylesheet" href="settings.css">
+<link rel="stylesheet" href="assistant.css">
+<link rel="stylesheet" href="comments.css">
+<link rel="stylesheet" href="update.css">
+<link rel="stylesheet" href="splash.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<!-- Заставка при запуске: знак из точек, пока открывается учёт. Уходит сама
+     (renderer/splash.js). -->
+<div class="splash" id="splash" aria-hidden="true">
+  <div class="sp-fill"></div>
+  <div class="wl">
+    <div class="wl-fox"><img src="fox.svg" alt=""></div>
+    <div class="brand-name sp-word">GREENFOX</div>
+    <div class="sp-status" id="spStatus">Открываю учёт…</div>
+  </div>
+</div>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <img class="sb-mark brand-fox" src="fox.svg" width="28" height="28" alt="" aria-hidden="true">
+      <span class="sb-name brand-name">GREENFOX</span>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sb-foot">
+      <div class="sb-status" id="sbStatus"></div>
+      <button class="sb-user" type="button" data-screen="settings">
+        <span class="sb-ava" id="sbAva">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+               stroke-width="1.3" aria-hidden="true"><circle cx="8" cy="8" r="2.4"/>
+          <path d="M8 1.4v1.8M8 12.8v1.8M14.6 8h-1.8M3.2 8H1.4M12.7 3.3l-1.3 1.3M4.6 11.4l-1.3 1.3M12.7 12.7l-1.3-1.3M4.6 4.6 3.3 3.3"/></svg>
+        </span>
+        <span><span class="n" id="sbName">Настройки</span><span class="s" id="sbVersion"></span></span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="head">
+      <div>
+        <h1 id="headTitle">Обзор</h1>
+        <p class="sub" id="headSub">—</p>
+      </div>
+      <span class="spacer"></span>
+      <!-- Бейдж, который принадлежит экрану, а не окну: у «Прогнозов» —
+           «прогноз, если не помечено иначе». -->
+      <span id="headExtra" hidden></span>
+      <!-- Без ключа OpenRouter кнопка неактивна: подсказка при наведении
+           ведёт в настройки. Мостик padding-top держит подсказку, пока мышь
+           переходит с кнопки на неё. -->
+      <span class="asst-wrap is-off" id="asstWrap">
+        <button class="btn btn-quiet" id="headAssistant" aria-disabled="true" aria-describedby="asstTip">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+               stroke-width="1.4" aria-hidden="true"><rect x="1" y="2" width="14" height="10" rx="2.6"/><path d="M4.2 12v2.6L7.2 12" stroke-linejoin="round"/></svg>
+          Ассистент
+        </button>
+        <span class="asst-tip" id="asstTip" role="tooltip"><span class="asst-tip-box">
+          <b>Ассистенту нужен ключ</b>
+          Добавьте ключ OpenRouter в настройках — и ассистент сможет разбирать записи и отвечать по вашим данным.
+          Без него всё остальное работает как обычно.
+          <button type="button" class="asst-go" id="asstGo">Перейти в настройки</button>
+        </span></span>
+      </span>
+      <button class="btn btn-icon" id="themeToggle" title="Переключить тему" aria-label="Переключить тему">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+             stroke-width="1.4" aria-hidden="true"><path d="M13.4 9.2A5.8 5.8 0 0 1 6.8 2.6 5.8 5.8 0 1 0 13.4 9.2Z" stroke-linejoin="round"/></svg>
+      </button>
+      <!-- Меню «Добавить» — из макета окон ввода. Подпись кнопки называет
+           то, что обычно добавляют на открытом экране, а меню одно. -->
+      <div class="scr-forms layer"><div class="dd-wrap">
+        <button class="btn btn-primary" id="headPrimary" aria-haspopup="menu" aria-expanded="false">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span id="headPrimaryText">Добавить операцию</span>
+        </button>
+        <div class="dd" id="addMenu" role="menu">
+          <div class="dd-group">Операции</div>
+          <button type="button" class="dd-item" role="menuitem" data-open="expense">Расход<span class="spacer"></span><span class="kbd">⌘E</span></button>
+          <button type="button" class="dd-item" role="menuitem" data-open="income">Доход<span class="spacer"></span><span class="kbd">⌘I</span></button>
+          <button type="button" class="dd-item" role="menuitem" data-open="transfer">Перевод между своими<span class="spacer"></span><span class="kbd">⌘T</span></button>
+          <div class="dd-sep"></div>
+          <button type="button" class="dd-item" role="menuitem" disabled title="Панель ассистента — отдельный заход">Записать текстом<span class="spacer"></span><span class="kbd">⌘⇧N</span></button>
+          <div class="dd-group">Справочники</div>
+          <button type="button" class="dd-item" role="menuitem" data-open="plan">Плановая покупка</button>
+          <button type="button" class="dd-item" role="menuitem" data-open="recur">Регулярный платёж</button>
+          <button type="button" class="dd-item" role="menuitem" data-open="goal">Цель накопления</button>
+          <button type="button" class="dd-item" role="menuitem" data-open="account">Счёт</button>
+          <button type="button" class="dd-item" role="menuitem" data-open="loan">Кредит или долг</button>
+          <div class="dd-group">Учёт</div>
+          <button type="button" class="dd-item" role="menuitem" data-open="recon">Сверка балансов</button>
+        </div>
+      </div></div>
+    </header>
+    <div id="screen"></div>
+  </main>
+
+</div>
+<div class="toast" id="toast" hidden></div>
+<!-- Плашка «Вышла новая версия» — правый нижний угол, только когда она есть. -->
+<div class="upd" id="updCard" role="status" aria-live="polite" hidden></div>
+<!-- Окна ввода и тост с отменой — поверх любого экрана. -->
+<div class="scr-forms layer" id="fmLayer"></div>
+<!-- Панель ассистента — шторка поверх любого экрана, ⌘J. -->
+<!-- Мастер первого запуска — на всё окно, поверх приложения. -->
+<div class="scr-ob" id="obLayer" hidden>
+  <div class="ob is-full" id="obStage">
+    <div class="ob-top">
+      <img class="ob-mark brand-fox" src="fox.svg" width="24" height="24" alt="" aria-hidden="true">
+      <span class="ob-nm brand-name">GREENFOX</span>
+      <span class="spacer"></span>
+      <span class="ob-step-of" id="obCount"></span>
+      <button type="button" class="btn btn-link" id="obQuit">Пропустить настройку</button>
+    </div>
+    <div class="ob-body" id="obBody"></div>
+  </div>
+</div>
+
+<div class="scr-asst layer" id="asLayer">
+  <div class="asst-dim" id="asDim"></div>
+  <aside class="asst" id="asPanel" role="complementary" aria-label="Ассистент" aria-hidden="true">
+    <div class="asst-head">
+      <h2>Ассистент</h2>
+      <button type="button" class="asst-model" id="asModel" title="Модель — в настройках">
+        <span class="dot"></span><span id="asModelName">…</span>
+        <svg width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden="true"><path d="M2 4l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <span class="spacer"></span>
+      <button type="button" class="link-btn" id="asReset" hidden>Начать заново</button>
+      <button type="button" class="mod-x" id="asClose" aria-label="Закрыть">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="asst-quick" id="asQuick"></div>
+    <div class="asst-feed" id="asFeed"></div>
+    <div class="asst-foot">
+      <div class="asst-box">
+        <textarea id="asInput" placeholder="Спросите или продиктуйте операцию" aria-label="Сообщение ассистенту" rows="1"></textarea>
+        <button type="button" class="asst-send" id="asSend" aria-label="Отправить">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 8h11M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="asst-ctx"><span class="dot"></span><span id="asCtx"></span><span class="spacer"></span>
+        <span id="asSpent"></span></div>
+    </div>
+  </aside>
+</div>
+<script src="fmt.js"></script>
+<script src="motion.js"></script>
+<script src="charts.js"></script>
+<script src="overview.js"></script>
+<script src="expenses.js"></script>
+<script src="capital.js"></script>
+<script src="forecast.js"></script>
+<script src="plans.js"></script>
+<script src="calendar.js"></script>
+<script src="payments.js"></script>
+<script src="forms.js"></script>
+<script src="settings.js"></script>
+<script src="assistant.js"></script>
+<script src="comments.js"></script>
+<script src="update.js"></script>
+<script src="keys.js"></script>
+<script src="onboard-fx.js"></script>
+<script src="onboard.js"></script>
+<script src="splash.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

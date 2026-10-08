@@ -1,0 +1,615 @@
+/* ============================================================
+   ОФОРМЛЕНИЕ
+   ============================================================
+   Перенесено из макета 01-obzor.html без изменений. Ни одного числа
+   из макета здесь нет и быть не может: всё, что видно на экране,
+   приходит из базы.
+   ============================================================ */
+/* ============================================================
+   ТОКЕНЫ — дизайн-система из концепта Figma Make
+   Светлая палитра взята один в один; тёмная выведена из неё
+   с тем же характером: тёплый нейтральный фон, волосяные
+   границы, бирюзовый акцент.
+   ============================================================ */
+:root{
+  --bg:#ffffff;
+  --surface:#f7f7f6;
+  --surface-2:#f0f0ee;
+  --border:#e4e4e0;
+  --border-strong:#c8c8c2;
+  --text:#111110;
+  --text-2:#636360;
+  --text-3:#6f6f6b;
+  --accent:#0d9488;
+  --accent-hover:#0f766e;
+  --accent-fg:#ffffff;
+  --accent-soft:#e6f4f2;
+  /* Заливка кнопок отдельно от акцента: белый на #0d9488 даёт 3,74:1,
+     а текст обязан брать 4,5:1. Для линий и значков порог 3:1, там
+     остаётся исходный акцент. */
+  --accent-fill:#0f766e;
+  --accent-fill-hover:#115e59;
+  --positive:#15803d;
+  --warning:#b45309;
+  --danger:#cf2222;
+  --positive-bg:#f0fdf4;
+  --warning-bg:#fffbeb;
+  --danger-bg:#fef2f2;
+
+  /* сценарии прогноза — нейтральная тройка из концепта:
+     это не «хорошо/плохо», а три модели поведения */
+  --sc-lean:#0d9488;
+  --sc-usual:#6366f1;
+  --sc-free:#f59e0b;
+
+  /* Палитра категорий. Цвета идут в порядке величины категории, поэтому
+     соседние номера обязаны контрастировать — на кольце они окажутся рядом. */
+  --cat-1:#0d9488; --cat-2:#d97706; --cat-3:#2563eb; --cat-4:#db2777;
+  --cat-5:#65a30d; --cat-6:#7c3aed; --cat-7:#0891b2; --cat-8:#9a3412;
+  --cat-9:#4f46e5; --cat-10:#a16207; --cat-11:#475569; --cat-12:#9b9b97;
+
+  /* Кириллицы в DM нет — русский текст рисует системный шрифт.
+     Перечисляем его явно, чтобы на чужой машине выбор не оказался
+     случайным. */
+  --font-sans:'DM Sans',-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;
+  --font-mono:'DM Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
+  --pad:32px;
+  /* Высота шапки: одна на сайдбар и на контент, иначе линия под ними
+     ломается на стыке — блоки набирали разную высоту из своих отступов. */
+  --head-h:72px;
+  /* ----------------------------------------------------------
+     ДВИЖЕНИЕ. Три длительности и одна кривая на всё приложение.
+     Кривая только выходная: интерфейс догоняет решение человека,
+     а не разгоняется вместе с ним. Пружин и отскоков нет ни одного.
+     Раньше по экранам гуляло восемь разных значений — это они.
+     ---------------------------------------------------------- */
+  --ease-out:cubic-bezier(.2,.7,.3,1);
+  --t-fast:140ms;   /* наведение, переключение, поворот шеврона */
+  --t-base:260ms;   /* появление панели или окна, смена раздела */
+  --t-slow:420ms;   /* заливка полосы, сборка итога */
+  --t-count:620ms;  /* докрутка числа */
+  --shadow:0 4px 16px rgba(17,17,16,.06);
+  --shadow-lg:0 8px 28px -4px rgba(17,17,16,.14);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e0e0d;
+    --surface:#181817;
+    --surface-2:#1f1f1d;
+    --border:#292926;
+    --border-strong:#3f3f3b;
+    --text:#f3f3f1;
+    --text-2:#a4a4a0;
+    --text-3:#83837e;
+    --accent:#2dd4bf;
+    --accent-hover:#5eead4;
+    --accent-fg:#08211f;
+    --accent-soft:#12312e;
+    --accent-fill:#2dd4bf;
+    --accent-fill-hover:#5eead4;
+    --positive:#4ade80;
+    --warning:#fbbf24;
+    --danger:#f87171;
+    --positive-bg:#0e2417;
+    --warning-bg:#2a2008;
+    --danger-bg:#2b1313;
+    --sc-lean:#2dd4bf; --sc-usual:#818cf8; --sc-free:#fbbf24;
+    --cat-1:#2dd4bf; --cat-2:#fbbf24; --cat-3:#60a5fa; --cat-4:#f472b6;
+    --cat-5:#a3e635; --cat-6:#a78bfa; --cat-7:#22d3ee; --cat-8:#fb923c;
+    --cat-9:#818cf8; --cat-10:#d6a75a; --cat-11:#94a3b8; --cat-12:#74746f;
+    --shadow:0 4px 16px rgba(0,0,0,.5);
+    --shadow-lg:0 8px 28px -4px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e0e0d;
+  --surface:#181817;
+  --surface-2:#1f1f1d;
+  --border:#292926;
+  --border-strong:#3f3f3b;
+  --text:#f3f3f1;
+  --text-2:#a4a4a0;
+  --text-3:#83837e;
+  --accent:#2dd4bf;
+  --accent-hover:#5eead4;
+  --accent-fg:#08211f;
+  --accent-soft:#12312e;
+  --accent-fill:#2dd4bf;
+  --accent-fill-hover:#5eead4;
+  --positive:#4ade80;
+  --warning:#fbbf24;
+  --danger:#f87171;
+  --positive-bg:#0e2417;
+  --warning-bg:#2a2008;
+  --danger-bg:#2b1313;
+  --sc-lean:#2dd4bf; --sc-usual:#818cf8; --sc-free:#fbbf24;
+  --cat-1:#2dd4bf; --cat-2:#fbbf24; --cat-3:#60a5fa; --cat-4:#f472b6;
+  --cat-5:#a3e635; --cat-6:#a78bfa; --cat-7:#22d3ee; --cat-8:#fb923c;
+  --cat-9:#818cf8; --cat-10:#d6a75a; --cat-11:#94a3b8; --cat-12:#74746f;
+  --shadow:0 4px 16px rgba(0,0,0,.5);
+  --shadow-lg:0 8px 28px -4px rgba(0,0,0,.7);
+}
+
+/* ============================================================
+   БАЗА
+   ============================================================ */
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:var(--font-sans);font-size:14px;line-height:20px;
+  -webkit-font-smoothing:antialiased;
+}
+.num{font-family:var(--font-mono);font-feature-settings:'tnum' 1;letter-spacing:-.01em;}
+/* DM Mono отводит неразрывному пробелу полную ширину знака, и разряды
+   разъезжаются. Поджимаем пробел только в ячейках, где текст — чистое число. */
+.hero-sum .v,.metric-val,.credit-sum,.acc-item .v,
+.sum-cell,.bal-cell,.tot .v,.bars-axis span,.bars-avg b,.bar-over,
+.rates i,.evt-chip .s,.tip .t-sum,.tip .t-row .num{
+  word-spacing:-.22em;white-space:nowrap;
+}
+h1,h2,p{margin:0;}
+button{font-family:inherit;}
+a{color:inherit;text-decoration:none;}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-sm);}
+@media (prefers-reduced-motion: reduce){
+  *{transition-duration:.001ms !important;animation-duration:.001ms !important;}
+}
+
+/* Тонкие скроллбары, как в концепте */
+*{scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent;}
+*::-webkit-scrollbar{width:8px;height:8px;}
+*::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+*::-webkit-scrollbar-thumb:hover{background:var(--border-strong);}
+*::-webkit-scrollbar-track{background:transparent;}
+
+/* ============================================================
+   КАРКАС
+   ============================================================ */
+.app{display:flex;min-height:100vh;align-items:stretch;}
+
+.sidebar{
+  width:224px;flex:none;background:var(--bg);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;z-index:30;
+}
+.sb-logo{
+  display:flex;align-items:center;gap:10px;height:var(--head-h);
+  padding:0 20px;border-bottom:1px solid var(--border);
+}
+.sb-mark{
+  width:28px;height:28px;border-radius:var(--r-md);flex:none;
+  background:var(--accent);display:flex;align-items:center;justify-content:center;
+}
+.sb-name{font-size:14px;font-weight:600;letter-spacing:-.01em;}
+
+.nav{flex:1;display:flex;flex-direction:column;gap:2px;padding:12px 8px;overflow-y:auto;}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:9px 12px;border-radius:var(--r-md);
+  font-size:14px;font-weight:500;color:var(--text-3);
+  cursor:pointer;transition:background var(--t-fast) ease,color var(--t-fast) ease;
+}
+.nav-item .ic{color:var(--text-3);display:flex;flex:none;transition:color var(--t-fast) ease;}
+.nav-item:hover{background:var(--surface);color:var(--text-2);}
+.nav-item:hover .ic{color:var(--text-2);}
+.nav-item.is-active{background:var(--surface);color:var(--text);font-weight:600;}
+.nav-item.is-active .ic{color:var(--accent);}
+.nav-count{
+  margin-left:auto;font-family:var(--font-mono);font-size:11px;line-height:16px;
+  color:var(--text-3);background:var(--surface-2);border-radius:99px;padding:0 7px;
+}
+.nav-item.is-active .nav-count{background:var(--bg);}
+.nav-count.is-warn{color:var(--warning);background:var(--warning-bg);}
+
+.sb-foot{border-top:1px solid var(--border);padding:10px 8px 12px;}
+.sb-status{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 12px 10px;font-size:12px;color:var(--text-3);
+}
+.sb-dot{width:6px;height:6px;border-radius:50%;background:var(--warning);flex:none;}
+.sb-user{
+  text-decoration:none;display:flex;align-items:center;gap:10px;width:100%;
+  padding:8px 12px;border-radius:var(--r-md);
+  background:none;border:none;cursor:pointer;text-align:left;
+  transition:background var(--t-fast) ease;
+}
+.sb-user:hover{background:var(--surface);}
+.sb-ava{
+  width:28px;height:28px;border-radius:50%;flex:none;
+  background:var(--surface-2);color:var(--text-2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:600;
+}
+.sb-user .n{font-size:13px;font-weight:500;color:var(--text);display:block;}
+.sb-user .s{font-size:11px;color:var(--text-3);display:block;}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column;}
+
+/* ============================================================
+   ШАПКА СТРАНИЦЫ
+   ============================================================ */
+.head{
+  display:flex;align-items:center;gap:12px;height:var(--head-h);
+  padding:0 var(--pad);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:20;
+  background:var(--bg);
+}
+.head h1{font-size:16px;font-weight:600;letter-spacing:-.01em;}
+.head .sub{font-size:12px;line-height:16px;color:var(--text-3);margin-top:2px;}
+.head .spacer{flex:1;}
+
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  border-radius:var(--r-md);cursor:pointer;
+  font-size:13px;font-weight:500;
+  transition:background var(--t-fast) ease,border-color var(--t-fast) ease,color var(--t-fast) ease;
+}
+.btn-primary{
+  background:var(--accent-fill);color:var(--accent-fg);border:1px solid var(--accent-fill);
+  padding:8px 14px;
+}
+.btn-primary:hover{background:var(--accent-fill-hover);border-color:var(--accent-fill-hover);}
+.btn-quiet{
+  background:transparent;color:var(--text-2);border:1px solid var(--border);
+  padding:8px 13px;
+}
+.btn-quiet:hover{background:var(--surface);color:var(--text);}
+.btn-icon{
+  width:34px;height:34px;padding:0;justify-content:center;
+  background:transparent;color:var(--text-2);border:1px solid var(--border);
+}
+.btn-icon:hover{background:var(--surface);color:var(--text);}
+
+/* ============================================================
+   СЕКЦИИ — во всю ширину, разделены волосяной линией
+   ============================================================ */
+.sec-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;}
+.sec-head .spacer{flex:1;}
+.sec-title{font-size:13px;font-weight:600;letter-spacing:-.005em;}
+.sec-sub{font-size:12px;line-height:16px;color:var(--text-3);margin-top:3px;}
+.title-row{display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.sec-sub .badge{margin-right:3px;vertical-align:1px;}
+.lbl{font-size:12px;font-weight:500;color:var(--text-3);}
+
+.info{
+  width:14px;height:14px;border-radius:50%;flex:none;
+  border:1px solid var(--border-strong);color:var(--text-3);
+  font-size:9px;font-weight:600;line-height:1;font-style:normal;
+  display:inline-flex;align-items:center;justify-content:center;
+  cursor:help;vertical-align:1px;
+}
+.badge{
+  display:inline-flex;align-items:center;
+  padding:2px 8px;border-radius:var(--r-sm);
+  font-size:11px;line-height:16px;font-weight:500;white-space:nowrap;
+}
+.badge--fact{background:var(--surface-2);color:var(--text-2);}
+.badge--est{background:var(--surface-2);color:var(--text-2);}
+.badge--forecast{background:var(--accent-soft);color:var(--accent-hover);}
+.badge--recon{background:var(--positive-bg);color:var(--positive);}
+.badge--muted{background:var(--surface-2);color:var(--text-3);}
+:root[data-theme="dark"] .badge--forecast{color:var(--accent);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .badge--forecast{color:var(--accent);}
+}
+
+/* ============================================================
+   ПРЕДУПРЕЖДЕНИЯ
+   ============================================================ */
+.alerts{
+  padding:10px var(--pad);background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex;flex-direction:column;gap:2px;
+}
+.alert{display:flex;align-items:baseline;gap:10px;padding:4px 0;}
+.alert .d{width:6px;height:6px;border-radius:50%;flex:none;transform:translateY(-2px);}
+.alert .tx{flex:1;font-size:13px;line-height:19px;color:var(--text-2);min-width:0;}
+.alert .tx b{font-weight:600;color:var(--text);}
+.alert .x{
+  background:none;border:none;padding:0 2px;cursor:pointer;
+  font-size:12px;color:var(--text-3);flex:none;
+  transition:color var(--t-fast) ease;
+}
+.alert .x:hover{color:var(--text);}
+
+/* ============================================================
+   ГЕРОЙ — ДОСТУПНО НА СЧЕТАХ
+   ============================================================ */
+.hero{
+  padding:26px var(--pad) 24px;
+  display:flex;flex-wrap:nowrap;align-items:flex-start;justify-content:space-between;gap:28px;
+}
+/* Открытый список счетов не сталкивает кредитку вниз: колонка суммы
+   занимает свободное место, счета переносятся внутри неё. В макете
+   ряд переносился целиком — карточка кредитки прыгала под список. */
+.hero-main{min-width:0;flex:1 1 auto;}
+.hero-label{display:flex;align-items:center;gap:7px;margin-bottom:10px;}
+.hero-sum{display:flex;align-items:baseline;gap:8px;}
+.hero-sum .v{
+  font-family:var(--font-mono);font-weight:500;font-size:46px;line-height:1;
+  letter-spacing:-.035em;
+}
+.hero-sum .c{font-family:var(--font-mono);font-size:22px;color:var(--text-3);font-weight:400;}
+.hero-note{font-size:12px;line-height:16px;color:var(--text-3);margin-top:9px;}
+
+.acc-toggle{
+  display:inline-flex;align-items:center;gap:5px;margin-top:12px;
+  background:none;border:none;padding:0;cursor:pointer;
+  font-size:12px;color:var(--text-2);
+  transition:color var(--t-fast) ease;
+}
+.acc-toggle:hover{color:var(--text);}
+.acc-toggle svg{transition:transform var(--t-base) ease;}
+.acc-toggle[aria-expanded="true"] svg{transform:rotate(180deg);}
+.acc-list{display:none;margin-top:14px;gap:10px 36px;flex-wrap:wrap;}
+.acc-list.is-open{display:flex;}
+.acc-item .n{font-size:12px;line-height:16px;color:var(--text-3);}
+.acc-item .v{
+  display:flex;align-items:center;gap:8px;margin-top:3px;
+  font-family:var(--font-mono);font-size:14px;font-weight:500;
+}
+
+.hero-side{
+  flex:none;max-width:340px;
+  border-left:1px solid var(--border);padding-left:24px;
+}
+.hero-side .k{display:flex;align-items:center;gap:8px;}
+.hero-side .credit-name{font-size:13px;font-weight:500;margin-top:8px;}
+.hero-side .credit-sum{
+  font-family:var(--font-mono);font-size:20px;font-weight:500;color:var(--danger);
+  letter-spacing:-.02em;margin-top:5px;
+}
+.hero-side .credit-note{font-size:12px;line-height:16px;color:var(--text-3);margin-top:6px;}
+.credit-bar{height:3px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-top:10px;}
+.credit-bar i{display:block;height:100%;border-radius:99px;background:var(--danger);}
+
+/* ============================================================
+   РЯД МЕТРИК
+   ============================================================ */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--border);}
+.metric{padding:20px var(--pad);display:flex;flex-direction:column;gap:9px;}
+.metric + .metric{border-left:1px solid var(--border);}
+.metric-head{display:flex;align-items:center;gap:7px;}
+.metric-head .spacer{flex:1;}
+.metric-val{
+  font-family:var(--font-mono);font-size:26px;font-weight:500;line-height:1;
+  letter-spacing:-.025em;
+}
+.metric-sub{display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:var(--text-3);}
+.metric-foot{margin-top:auto;padding-top:4px;}
+.tri{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;flex:none;}
+.tri--down{border-top:6px solid var(--positive);}
+.tri--up{border-bottom:6px solid var(--danger);}
+.track{height:3px;border-radius:99px;background:var(--surface-2);overflow:hidden;}
+.track i{display:block;height:100%;border-radius:99px;background:var(--accent);transition:width var(--t-slow) ease;}
+
+/* ============================================================
+   РЯД ГРАФИКОВ
+   ============================================================ */
+.charts{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);border-top:1px solid var(--border);}
+.chart-pane{padding:22px var(--pad);min-width:0;}
+.chart-pane + .chart-pane{border-left:1px solid var(--border);}
+.pane-tools{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
+
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;flex:none;}
+.seg button{
+  padding:4px 10px;border:none;background:transparent;cursor:pointer;
+  font-family:var(--font-mono);font-size:11px;line-height:16px;color:var(--text-3);
+  transition:background var(--t-fast) ease,color var(--t-fast) ease;
+}
+.seg button + button{border-left:1px solid var(--border);}
+.seg button:hover{background:var(--surface);color:var(--text-2);}
+.seg button.is-active,.seg button.is-active:hover{background:var(--text);color:var(--bg);}
+
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:flex-end;}
+.legend-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:none;border:none;padding:0;cursor:pointer;
+  font-size:12px;color:var(--text-2);
+  transition:opacity var(--t-fast) ease;
+}
+.legend-btn.is-off{opacity:.32;}
+.legend-line{width:16px;height:2px;border-radius:2px;flex:none;}
+.legend-btn .d{font-family:var(--font-mono);font-size:11px;color:var(--text-3);}
+.legend-sq{width:9px;height:9px;border-radius:2px;flex:none;background:var(--accent);}
+.legend-dash{width:16px;height:0;border-top:1.5px dashed var(--text-3);flex:none;}
+.legend-static{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);}
+.legend--under{justify-content:flex-start;gap:6px 18px;margin-top:16px;}
+
+.chart-ribbon{position:relative;height:44px;width:100%;}
+.evt-chip{
+  position:absolute;display:inline-flex;align-items:center;gap:6px;
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);
+  padding:2px 7px;white-space:nowrap;font-size:11px;line-height:15px;
+}
+.evt-chip .d{width:5px;height:5px;border-radius:50%;flex:none;}
+.evt-chip .n{color:var(--text-2);}
+.evt-chip .s{font-family:var(--font-mono);}
+.chart-wrap{position:relative;width:100%;}
+.chart-wrap svg{display:block;}
+.rates{
+  display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:14px;
+  font-size:12px;line-height:16px;color:var(--text-3);
+}
+.rates b{font-weight:500;color:var(--text-2);}
+.rates i{font-family:var(--font-mono);font-style:normal;}
+
+/* --- столбцы «Траты по дням» --- */
+.bars-wrap{display:flex;}
+.bars-axis{width:46px;flex:none;position:relative;height:170px;margin-top:24px;}
+.bars-axis span{
+  position:absolute;right:10px;transform:translateY(-50%);
+  font-family:var(--font-mono);font-size:10px;color:var(--text-3);white-space:nowrap;
+}
+.bars-plot{flex:1;min-width:0;position:relative;padding-top:24px;}
+.bars-grid{position:absolute;top:24px;left:0;right:0;height:170px;pointer-events:none;}
+.bars-grid i{position:absolute;left:0;right:0;height:1px;background:var(--border);}
+.bars-grid i.zero{background:var(--border-strong);}
+.bars-avg{position:absolute;left:0;right:0;border-top:1px dashed var(--text-3);pointer-events:none;}
+.bars-avg b{
+  position:absolute;right:0;top:-10px;background:var(--bg);
+  border:1px solid var(--border);border-radius:var(--r-sm);
+  padding:1px 6px;font-family:var(--font-mono);font-size:10px;font-weight:400;color:var(--text-2);
+  white-space:nowrap;
+}
+.bars{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;height:170px;align-items:end;position:relative;}
+.bar-col{display:flex;align-items:flex-end;justify-content:center;height:100%;position:relative;}
+.bar{
+  width:100%;max-width:26px;border-radius:2px 2px 0 0;min-height:2px;
+  background:var(--accent);opacity:.62;transition:opacity var(--t-fast) ease;
+}
+.bar-col.is-weekend .bar{opacity:.3;}
+.bar-col.is-max .bar{background:var(--danger);opacity:.8;}
+.bar-col:hover .bar{opacity:1;}
+/* столбец не помещается в шкалу: верх растворяется, сумма подписана сверху */
+.bar.is-clipped{
+  border-radius:0;
+  -webkit-mask-image:linear-gradient(to top,#000 calc(100% - 14px),transparent 100%);
+  mask-image:linear-gradient(to top,#000 calc(100% - 14px),transparent 100%);
+}
+.bar-over{
+  position:absolute;top:-20px;left:50%;transform:translateX(-50%);white-space:nowrap;
+  font-family:var(--font-mono);font-size:10px;line-height:14px;color:var(--text-2);
+  pointer-events:none;
+}
+.bars-labels{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin-top:8px;}
+.bars-labels div{
+  text-align:center;font-family:var(--font-mono);font-size:10px;line-height:14px;color:var(--text-3);
+}
+.bars-labels div small{
+  display:block;font-family:var(--font-sans);font-size:10px;color:var(--text-3);opacity:.75;
+}
+.bars-labels.is-dense div small{display:none;}
+
+/* Подсказка стоит НАД графиком и не ловит мышь. Пока она висела поверх
+   столбцов, курсор упирался в неё и не мог дойти до соседнего дня. */
+.tip{
+  position:absolute;bottom:100%;left:50%;width:250px;margin-bottom:26px;
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);
+  box-shadow:var(--shadow-lg);padding:10px 12px;z-index:6;text-align:left;
+  opacity:0;visibility:hidden;transition:opacity var(--t-fast) ease;transform:translateX(-50%);
+  pointer-events:none;
+}
+.bar-col:hover .tip{opacity:1;visibility:visible;}
+.tip.at-left{left:0;transform:none;}
+.tip.at-right{left:auto;right:0;transform:none;}
+/* Сверху не помещается — уходит под шкалу дат, но не на столбцы. */
+.bars.tips-down .tip{bottom:auto;top:100%;margin-bottom:0;margin-top:40px;}
+.tip .t-date{font-size:13px;font-weight:600;}
+.tip .t-sum{font-family:var(--font-mono);font-size:13px;margin-top:6px;color:var(--text-2);}
+.tip .t-line{height:1px;background:var(--border);margin:9px 0;}
+.tip .t-row{display:flex;align-items:center;gap:8px;font-size:12px;line-height:16px;margin-top:5px;}
+.tip .t-row .spacer{flex:1;}
+.tip .t-row .d{width:6px;height:6px;border-radius:50%;flex:none;}
+.tip .t-row .k{color:var(--text-2);min-width:0;}
+.tip .t-row .num{white-space:nowrap;font-size:11px;}
+.tip .t-more{font-size:11px;line-height:15px;color:var(--text-3);margin-top:7px;}
+
+.note{font-size:12px;line-height:17px;color:var(--text-3);margin-top:14px;}
+.bars-empty{
+  border:1px dashed var(--border-strong);border-radius:var(--r-md);
+  padding:40px 20px;text-align:center;color:var(--text-3);font-size:13px;line-height:19px;
+}
+
+/* ============================================================
+   ТАБЛИЦА «БЛИЖАЙШИЕ 14 ДНЕЙ»
+   ============================================================ */
+.tbl-sec{border-top:1px solid var(--border);}
+.tbl-head{
+  display:flex;align-items:center;gap:10px;
+  padding:16px var(--pad);border-bottom:1px solid var(--border);
+}
+.tbl-head .spacer{flex:1;}
+.tbl-scroll{overflow-x:auto;}
+.tbl{width:100%;border-collapse:collapse;min-width:800px;}
+.tbl th{
+  text-align:left;padding:9px var(--pad);
+  font-size:12px;font-weight:500;color:var(--text-3);white-space:nowrap;
+  border-bottom:1px solid var(--border);
+}
+.tbl th + th{padding-left:0;}
+.tbl td{padding:11px var(--pad);border-bottom:1px solid var(--border);vertical-align:middle;}
+.tbl td + td{padding-left:0;}
+.tbl tbody tr{transition:background var(--t-fast) ease;}
+.tbl tbody tr:not(.grp):hover{background:var(--surface);}
+.tbl tbody tr:last-child td{border-bottom:none;}
+.tbl .grp td{
+  padding:9px var(--pad) 7px;background:var(--surface);
+  font-size:11px;font-weight:500;color:var(--text-3);
+  border-bottom:1px solid var(--border);
+}
+.tbl th.col-sum,.tbl th.col-bal,td.col-sum,td.col-bal{text-align:right;}
+.d-cell{display:flex;align-items:baseline;gap:7px;white-space:nowrap;}
+.d-cell .dt{font-family:var(--font-mono);font-size:13px;}
+.d-cell .dw{font-size:11px;color:var(--text-3);}
+.e-cell{display:flex;align-items:center;gap:8px;}
+.e-cell .en{font-size:13px;}
+.tag{
+  display:inline-flex;align-items:center;padding:1px 7px;border-radius:var(--r-sm);
+  font-size:11px;line-height:16px;font-weight:500;white-space:nowrap;
+}
+.tag--sub{background:var(--surface-2);color:var(--text-2);}
+.tag--income{background:var(--positive-bg);color:var(--positive);}
+.tag--must{background:var(--warning-bg);color:var(--warning);}
+.acc-cell{font-size:13px;color:var(--text-2);white-space:nowrap;}
+.sum-cell{font-family:var(--font-mono);font-size:13px;font-weight:500;white-space:nowrap;}
+.bal-cell{font-family:var(--font-mono);font-size:13px;color:var(--text-3);white-space:nowrap;}
+.c-pos{color:var(--positive);} .c-neg{color:var(--danger);} .c-warn{color:var(--warning);}
+.tbl-foot{
+  display:flex;align-items:center;gap:22px;flex-wrap:wrap;
+  padding:14px var(--pad);border-top:1px solid var(--border);
+}
+.tbl-foot .spacer{flex:1;}
+.tot{display:inline-flex;align-items:baseline;gap:8px;}
+.tot .k{font-size:12px;color:var(--text-3);}
+.tot .v{font-family:var(--font-mono);font-size:13px;font-weight:500;}
+
+/* ============================================================
+   АДАПТИВ — минимальное окно по ТЗ 1280×800
+   ============================================================ */
+/* Две колонки держим до 1180: на минимальном окне по ТЗ (1280×800)
+   графики должны оставаться рядом, как в концепте. */
+@media (max-width:1180px){
+  .charts{grid-template-columns:minmax(0,1fr);}
+  .chart-pane + .chart-pane{border-left:none;border-top:1px solid var(--border);}
+}
+@media (max-width:1100px){
+  :root{--pad:24px;}
+  .hero{flex-wrap:wrap;}
+  .metrics{grid-template-columns:1fr;}
+  .metric + .metric{border-left:none;border-top:1px solid var(--border);}
+  .hero-side{
+    border-left:none;padding-left:0;
+    border-top:1px solid var(--border);padding-top:18px;
+    max-width:none;width:100%;
+  }
+  .hero-sum .v{font-size:38px;}
+  .sec-head{flex-wrap:wrap;}
+  .pane-tools{align-items:flex-start;}
+  .legend{justify-content:flex-start;}
+}
+
+/* ============================================================
+   ДВИЖЕНИЕ — приёмы, общие для всех экранов
+   ============================================================
+   Общий словарь движения: наборы кадров и три класса-переключателя.
+   Блок одинаков во всех файлах — как и остальная часть дизайн-системы,
+   он пишется один раз, а какими приёмами пользуется конкретный экран,
+   зависит от того, что на нём меняется по воле человека. Длительности и
+   кривая берутся из токенов: темп всего приложения меняется в одном
+   месте.                                                          */
+/* Появление строки списка. */
+@keyframes obRise{ from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:none;} }
+/* Вспышка изменившегося числа. Конечного кадра нет намеренно: цвет
+   возвращается к собственному цвету элемента, и зелёное не станет
+   чёрным после вспышки. Размер не трогаем — он сдвинул бы соседей. */
+@keyframes obBump{ from{color:var(--accent);} }
+/* Появление панели на месте предыдущей. */
+@keyframes obIn{ from{opacity:0;transform:translateY(var(--in-y,8px));} to{opacity:1;transform:none;} }
+.is-rise{animation:obRise var(--t-base) var(--ease-out) both;}
+.is-bump{animation:obBump var(--t-slow) var(--ease-out);}
+.is-in{animation:obIn var(--t-base) var(--ease-out) both;}

@@ -1,0 +1,90 @@
+/* ============================================================
+   ШРИФТЫ
+   ============================================================
+   Файлы лежат внутри приложения, а не тянутся из сети: программа
+   обязана выглядеть одинаково без интернета и на чужом компьютере.
+
+   Подмножество latin-ext здесь не формальность — именно в нём лежит
+   знак рубля (диапазон U+20AD—20C0). Без него ₽ подставляется из
+   системного шрифта и выбивается из строки.
+
+   Кириллицы в DM Sans и DM Mono нет вовсе: Google отдаёт только
+   латиницу. Русский текст берётся из системного шрифта — ровно так же,
+   как он берётся в макетах, открытых в браузере. Поэтому цепочка
+   запасных шрифтов названа явно, а не оставлена на волю случая.
+   ============================================================ */
+@font-face{
+  font-family:'DM Mono';
+  font-style:normal;
+  font-weight:300;
+  font-display:swap;
+  src:url('fonts/dm-mono-latin-ext-300.woff2') format('woff2');
+  unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face{
+  font-family:'DM Mono';
+  font-style:normal;
+  font-weight:300;
+  font-display:swap;
+  src:url('fonts/dm-mono-latin-300.woff2') format('woff2');
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family:'DM Mono';
+  font-style:normal;
+  font-weight:400;
+  font-display:swap;
+  src:url('fonts/dm-mono-latin-ext-400.woff2') format('woff2');
+  unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face{
+  font-family:'DM Mono';
+  font-style:normal;
+  font-weight:400;
+  font-display:swap;
+  src:url('fonts/dm-mono-latin-400.woff2') format('woff2');
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family:'DM Mono';
+  font-style:normal;
+  font-weight:500;
+  font-display:swap;
+  src:url('fonts/dm-mono-latin-ext-500.woff2') format('woff2');
+  unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face{
+  font-family:'DM Mono';
+  font-style:normal;
+  font-weight:500;
+  font-display:swap;
+  src:url('fonts/dm-mono-latin-500.woff2') format('woff2');
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family:'DM Sans';
+  font-style:normal;
+  font-weight:300 700;
+  font-display:swap;
+  src:url('fonts/dm-sans-latin-ext-300700.woff2') format('woff2');
+  unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face{
+  font-family:'DM Sans';
+  font-style:normal;
+  font-weight:300 700;
+  font-display:swap;
+  src:url('fonts/dm-sans-latin-300700.woff2') format('woff2');
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Название GREENFOX — Special Gothic Expanded One (Google Fonts, лицензия
+   SIL Open Font License). Только латиница: шрифт нужен для одного слова. */
+@font-face{
+  font-family:'Special Gothic Expanded One';
+  font-style:normal;
+  font-weight:400;
+  font-display:block;
+  src:url('fonts/special-gothic-expanded-one-latin-400.woff2') format('woff2');
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}

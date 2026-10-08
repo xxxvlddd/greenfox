@@ -1,0 +1,145 @@
+/* ============================================================
+   ДОБАВЛЕНИЯ К ОФОРМЛЕНИЮ МАКЕТА
+   ============================================================ */
+/* Полоса перетаскивания окна: заголовок у нас скрыт, и без этого окно
+   нельзя было бы двигать мышью. */
+.head{ -webkit-app-region: drag; }
+.head button,.head a{ -webkit-app-region: no-drag; }
+.sb-logo{ -webkit-app-region: drag; padding-left:78px; }
+
+.state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;padding:80px 32px;text-align:center;
+}
+.state h2{font-size:17px;font-weight:600;letter-spacing:-.01em;}
+.state p{font-size:13px;line-height:19px;color:var(--text-2);max-width:420px;}
+.state .btn{margin-top:4px;}
+/* Кнопка действия пустого экрана и ошибки — малая, как в макете
+   состояний. Пустое состояние стоит вне области экрана, поэтому её
+   оформление — здесь, тем же правилом, что у экранов. */
+.state .btn-sm{background:var(--bg);color:var(--text-2);border:1px solid var(--border);padding:5px 11px;font-size:12px;border-radius:var(--r-sm);}
+.state .btn-sm:hover{background:var(--surface);color:var(--text);}
+.state .btn-sm--acc{background:var(--accent-fill);border-color:var(--accent-fill);color:var(--accent-fg);}
+.state .btn-sm--acc:hover{background:var(--accent-fill-hover);border-color:var(--accent-fill-hover);color:var(--accent-fg);}
+.state.is-error h2{color:var(--danger);}
+
+/* Правое выравнивание в таблицах: в макете «Обзора» этого правила нет,
+   там суммы прижимались другим способом. */
+.tbl th.r,.tbl td.r{text-align:right;}
+.state.is-error h2{color:var(--danger);}
+
+/* Пункты меню сделаны кнопками ради клавиатуры, но браузер рисует им
+   собственный фон и рамку — в макете они плоские. */
+.nav-item{
+  border:none;background:none;width:100%;text-align:left;
+  font-family:inherit;font-size:14px;
+}
+.nav-item[disabled]{opacity:.45;cursor:default;}
+.nav-item[disabled]:hover{background:none;color:var(--text-3);}
+.sb-user{font-family:inherit;}
+
+
+/* Точка-маркер в плашках. В макете «Обзора» такого класса не было —
+   там предупреждения рисовались через .alert .d. */
+
+/* Всплывающая подсказка о том, чего ещё нет. Появляется по нажатию на
+   кнопку, за которой экран пока не собран. */
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
+  background:var(--text);color:var(--bg);
+  padding:10px 16px;border-radius:var(--r-md);
+  font-size:13px;line-height:18px;box-shadow:var(--shadow-lg);
+  z-index:100;max-width:70vw;
+}
+[hidden]{display:none !important;}
+
+/* Место в шапке под элементы экрана: бейдж «Прогнозов», переключатели
+   «Календаря». Само место в раскладке не участвует — его содержимое
+   встаёт в ряд шапки наравне с её кнопками. */
+#headExtra{display:contents;}
+
+/* Кнопка настроек в подвале меню — отмечена, пока открыты настройки. */
+.sb-user[aria-current="page"]{background:var(--surface);}
+.sb-user[aria-current="page"] .n{font-weight:600;}
+
+/* ============================================================
+   АССИСТЕНТ БЕЗ КЛЮЧА
+   ============================================================
+   Кнопка видна, но приглушена. При наведении — подсказка: чего не
+   хватает и куда за этим идти. Подсказку держит прозрачный мостик над
+   ней, пока мышь переходит с кнопки вниз. Шапка — область
+   перетаскивания окна, поэтому подсказка из неё явно исключена. */
+.asst-wrap{position:relative;display:inline-flex;}
+.asst-wrap.is-off #headAssistant{opacity:.5;cursor:default;}
+.asst-wrap.is-off #headAssistant:hover{background:transparent;color:var(--text-2);}
+.asst-tip{
+  position:absolute;top:100%;right:0;padding-top:8px;width:300px;z-index:60;
+  visibility:hidden;opacity:0;transform:translateY(-4px);-webkit-app-region:no-drag;
+  transition:opacity var(--t-fast) ease,transform var(--t-fast) ease,visibility var(--t-fast);
+}
+.asst-wrap.is-off:hover .asst-tip,.asst-wrap.is-off:focus-within .asst-tip,.asst-wrap.is-hint .asst-tip{
+  visibility:visible;opacity:1;transform:none;
+}
+.asst-tip-box{
+  display:block;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);
+  box-shadow:var(--shadow-lg);padding:12px 14px;font-size:12px;line-height:17px;color:var(--text-2);
+}
+.asst-tip-box b{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.asst-go{
+  display:inline-flex;margin-top:10px;padding:5px 11px;border-radius:var(--r-sm);cursor:pointer;
+  background:var(--accent-fill);border:1px solid var(--accent-fill);color:var(--accent-fg);
+  font-family:inherit;font-size:12px;font-weight:500;
+  transition:background var(--t-fast) ease,border-color var(--t-fast) ease;
+}
+.asst-go:hover{background:var(--accent-fill-hover);border-color:var(--accent-fill-hover);}
+
+/* ============================================================
+   ПЛОТНЫЙ РЕЖИМ
+   ============================================================
+   Из «Настроек»: вертикальные отступы и высота строк меньше. Графики
+   остаются прежней высоты, поэтому экран короче на 3–11 %, больше всего —
+   там, где таблицы. Селектор с атрибутом корня сильнее правил областей экранов,
+   поэтому действует на всех. Расстояние под заголовком блока не
+   уменьшается: подзаголовок не должен прилипать к линии. */
+:root[data-density="dense"]{--pad:22px;}
+:root[data-density="dense"] .sec{padding-top:12px;padding-bottom:12px;}
+:root[data-density="dense"] .grid > *{padding-top:12px;padding-bottom:12px;}
+:root[data-density="dense"] .metric{padding-top:11px;padding-bottom:11px;gap:5px;}
+:root[data-density="dense"] .tbl td{padding-top:5px;padding-bottom:5px;}
+:root[data-density="dense"] .tbl th{padding-top:5px;padding-bottom:5px;}
+:root[data-density="dense"] .row{padding-top:8px;padding-bottom:8px;}
+:root[data-density="dense"] .set-item{padding-top:6px;padding-bottom:6px;}
+:root[data-density="dense"] .alert{padding-top:2px;padding-bottom:2px;}
+
+/* Контраст. Самый светлый текст на серой плашке даёт 4,4:1 в светлой теме и
+   4,3:1 в тёмной — меньше порога 4,5:1 для текста из макета состояний.
+   Плашки и счётчики в меню получают текст на ступень темнее; сами
+   макеты не трогаем, правило стоит последним и перекрывает их. */
+.nav-count,.badge--muted,[class*="scr-"] .badge--muted,.scr-expenses .rank,.scr-plans .tg,.scr-payments .pm-tag,
+.scr-forms .badge--soon{color:var(--text-2);}
+
+/* Заглушка загрузки: серые бруски без мерцания (макет состояний). */
+.skel{padding:26px var(--pad);}
+.skel .sk{background:var(--surface-2);border-radius:4px;}
+.skel .sk-line{height:11px;margin-bottom:9px;}
+.skel .sk-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-top:26px;}
+.skel .sk-row .sk{height:96px;}
+.skel .sk-wide{height:220px;margin-top:24px;}
+
+/* Песочница: подпись под «Настройками» — акцентом. */
+#sbVersion.is-sandbox{color:var(--warning);}
+
+/* Валютный счёт на «Обзоре»: остаток в валюте, рядом — в рублях по курсу. */
+.acc-item .acc-fx{font-size:12px;font-weight:400;color:var(--text-3);}
+
+/* Знак и название GREENFOX: лиса без подложки, слово — своим широким
+   гротеском. Цвета лисы — её собственные, в обеих темах одни. */
+.brand-fox{display:block;flex:none;background:none;border-radius:0;object-fit:contain;}
+.brand-name{font-family:'Special Gothic Expanded One', var(--font-sans);font-weight:400;letter-spacing:.03em;}
+.sb-mark.brand-fox{width:28px;height:28px;}
+/* Слева место под кнопки окна — название чуть мельче, чтобы не упираться в линию. */
+.sb-name.brand-name{font-size:13px;line-height:17px;letter-spacing:.02em;}
+/* «О программе» — знак и название над строками. */
+.sg-brand{display:flex;align-items:center;gap:14px;padding:6px 0 18px;}
+.sg-brand .brand-fox{width:40px;height:40px;}
+.sg-brand .brand-name{font-size:22px;line-height:26px;}

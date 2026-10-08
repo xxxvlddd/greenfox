@@ -1,0 +1,15 @@
+/* ============================================================
+   ЗАСТАВКА ПРИ ЗАПУСКЕ — поверх всего окна
+   ============================================================
+   Фон — отдельным слоем: при уходе он гаснет, а точки знака ещё
+   разлетаются поверх приложения на прозрачном холсте. */
+.splash{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;}
+.splash .sp-fill{position:absolute;inset:0;z-index:0;background:var(--bg);}
+.splash .wl-fx{position:absolute;left:0;top:0;z-index:1;pointer-events:none;}
+.splash .wl{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;text-align:center;}
+.splash .wl-fox{width:clamp(132px, 23vh, 216px);height:clamp(132px, 23vh, 216px);margin-bottom:26px;flex:none;}
+.splash .wl-fox img{display:block;width:100%;height:100%;visibility:hidden;}
+/* Холст не заработал — знак картинкой. */
+.splash.is-plain .wl-fox img{visibility:visible;}
+.splash .sp-word{font-size:34px;line-height:40px;letter-spacing:.04em;color:var(--text);white-space:nowrap;}
+.splash .sp-status{margin-top:12px;height:18px;font-size:13px;line-height:18px;color:var(--text-3);white-space:nowrap;}

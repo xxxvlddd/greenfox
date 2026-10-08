@@ -1,0 +1,93 @@
+{
+  "name": "finances",
+  "productName": "GREENFOX",
+  "version": "0.7.0",
+  "description": "GREENFOX — домашняя бухгалтерия",
+  "author": "Valeriy Babenko",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/xxxvlddd/greenfox",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xxxvlddd/greenfox.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xxxvlddd/greenfox/issues"
+  },
+  "private": true,
+  "main": "main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "predist": "node -e \"require('electron')\"",
+    "dist": "electron-builder --mac --arm64",
+    "icon": "electron tools/make-icon.js"
+  },
+  "devDependencies": {
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3"
+  },
+  "build": {
+    "appId": "ru.local.finances",
+    "productName": "GREENFOX",
+    "artifactName": "greenfox-${version}-${arch}.${ext}",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main/**/*",
+      "core/**/*",
+      "renderer/**/*",
+      "CHANGELOG.md",
+      "package.json",
+      "!**/.DS_Store",
+      "!node_modules/better-sqlite3/{deps,src}/**",
+      "!node_modules/better-sqlite3/binding.gyp",
+      "!node_modules/better-sqlite3/prebuilds/{darwin-x64,linux-arm64,linux-x64,linuxmusl-arm64,linuxmusl-x64,win32-arm64,win32-x64}.node"
+    ],
+    "extraResources": [
+      {
+        "from": "LICENSE",
+        "to": "LICENSE.txt"
+      },
+      {
+        "from": "node_modules/electron/dist/LICENSE",
+        "to": "LICENSE.electron.txt"
+      },
+      {
+        "from": "node_modules/electron/dist/LICENSES.chromium.html",
+        "to": "LICENSES.chromium.html"
+      }
+    ],
+    "afterPack": "tools/after-pack.js",
+    "mac": {
+      "category": "public.app-category.finance",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "identity": null,
+      "hardenedRuntime": false,
+      "icon": "build/icon.icns"
+    },
+    "dmg": {
+      "title": "GREENFOX",
+      "icon": "build/icon.icns"
+    },
+    "npmRebuild": false,
+    "electronFuses": {
+      "runAsNode": false,
+      "enableCookieEncryption": true,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "enableEmbeddedAsarIntegrityValidation": true,
+      "onlyLoadAppFromAsar": true,
+      "resetAdHocDarwinSignature": true
+    }
+  }
+}

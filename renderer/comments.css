@@ -1,0 +1,49 @@
+/* ============================================================
+   КОММЕНТАРИЙ АССИСТЕНТА НА ЭКРАНЕ
+   ============================================================
+   Информационная строка — плоская, под волосяной линией, без фона и
+   скруглений: нажимается в ней только «Обновить». Ширина текста
+   ограничена, чтобы строка читалась на широком окне. */
+.cm{padding:13px var(--pad) 14px;border-bottom:1px solid var(--border);}
+.cm-head{display:flex;align-items:center;gap:8px;min-height:20px;}
+.cm-head .spacer{flex:1;}
+.cm-ic{display:flex;color:var(--accent-hover);}
+.cm-t{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-3);}
+.cm .badge--decision{background:var(--surface-2);color:var(--text-2);}
+.cm-at{font-size:11px;color:var(--text-3);white-space:nowrap;}
+.cm .link-btn{
+  background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-sans);
+  font-size:12px;font-weight:500;color:var(--accent-hover);white-space:nowrap;
+}
+.cm .link-btn:hover{text-decoration:underline;text-underline-offset:3px;}
+.cm-text{margin-top:6px;max-width:920px;font-size:13px;line-height:19px;color:var(--text-2);
+  transition:opacity var(--t-base) ease;}
+.cm-text b{font-weight:600;color:var(--text);}
+.cm-text i{font-style:italic;}
+.cm-text mark.asst-acc{background:var(--accent-soft);color:var(--accent-hover);padding:0 3px;border-radius:3px;}
+.cm-text.is-dim{opacity:.5;}
+.cm-muted{color:var(--text-3);}
+.cm-err{margin-top:4px;font-size:12px;line-height:17px;color:var(--danger);}
+.cm .spin{
+  width:11px;height:11px;flex:none;border-radius:50%;
+  border:2px solid var(--border-strong);border-top-color:var(--accent);animation:spin .7s linear infinite;
+}
+/* Первый комментарий ещё пишется — по строке бежит тот же блик, что в
+   панели ассистента. */
+.cm-wait .x{
+  background:linear-gradient(90deg,var(--text-3) 0%,var(--text) 50%,var(--text-3) 100%);background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;animation:asShine 2.4s linear infinite;
+}
+:root[data-theme="dark"] .cm-ic,:root[data-theme="dark"] .cm .link-btn,
+:root[data-theme="dark"] .cm-text mark.asst-acc{color:var(--accent);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .cm-ic,:root:not([data-theme="light"]) .cm .link-btn,
+  :root:not([data-theme="light"]) .cm-text mark.asst-acc{color:var(--accent);}
+}
+
+/* Готов авто-отчёт — точка на кнопке «Ассистент» в шапке. */
+#headAssistant{position:relative;}
+#headAssistant.has-news::after{
+  content:'';position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;
+  background:var(--accent);box-shadow:0 0 0 2px var(--bg);
+}

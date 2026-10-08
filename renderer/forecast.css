@@ -1,0 +1,305 @@
+/* ============================================================
+   ОФОРМЛЕНИЕ ЭКРАНА «ПРОГНОЗЫ»
+   ============================================================
+   Перенесено из макета Main App/screens/04-prognozy.html как есть:
+   каждое правило макета получило приставку .scr-forecast, и только.
+   Участок между метками ПЕРЕНОС пишет tools/scope-css.js; добавления
+   — ниже метки КОНЕЦ.
+
+   Область нужна по той же причине, что у «Расходов» и «Капитала»: у
+   экранов разные варианты одних и тех же элементов, и без неё значения
+   одного экрана переписывали бы другой.
+   ============================================================ */
+/* ▼ ПЕРЕНОС ИЗ МАКЕТА — пишется tools/scope-css.js, руками не править */
+.scr-forecast .btn-sm{background:var(--bg);color:var(--text-2);border:1px solid var(--border);padding:5px 11px;font-size:12px;border-radius:var(--r-sm);}
+.scr-forecast .btn-sm:hover{background:var(--surface);color:var(--text);}
+.scr-forecast .btn-sm--acc{background:var(--accent-fill);border-color:var(--accent-fill);color:var(--accent-fg);}
+.scr-forecast .btn-sm--acc:hover{background:var(--accent-fill-hover);border-color:var(--accent-fill-hover);color:var(--accent-fg);}
+.scr-forecast .btn-link{
+  border:none;background:none;padding:0;cursor:pointer;
+  color:var(--accent-hover);font-family:var(--font-sans);font-size:12px;font-weight:500;
+}
+.scr-forecast .btn-link:hover{text-decoration:underline;text-underline-offset:3px;}
+:root[data-theme="dark"] .scr-forecast .btn-link{color:var(--accent);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .scr-forecast .btn-link{color:var(--accent);}
+}
+
+/* ============================================================
+   ОБЩИЕ ЭЛЕМЕНТЫ
+   ============================================================ */
+.scr-forecast .sec{padding:22px var(--pad);border-top:1px solid var(--border);}
+.scr-forecast .grid{display:grid;gap:1px;background:var(--border);border-top:1px solid var(--border);}
+.scr-forecast .grid > *{background:var(--bg);padding:22px var(--pad);min-width:0;}
+.scr-forecast .grid--2{grid-template-columns:repeat(2,minmax(0,1fr));}
+.scr-forecast .sec-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.scr-forecast .sec-head .spacer{flex:1;}
+.scr-forecast .sec-title{font-size:13px;font-weight:600;letter-spacing:-.005em;}
+.scr-forecast .sec-sub{font-size:12px;line-height:16px;color:var(--text-3);margin-top:3px;}
+.scr-forecast .title-row{display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.scr-forecast .sec-sub .badge{margin-right:3px;vertical-align:1px;}
+.scr-forecast .lbl{font-size:12px;font-weight:500;color:var(--text-3);}
+.scr-forecast .info{
+  width:14px;height:14px;border-radius:50%;flex:none;
+  border:1px solid var(--border-strong);color:var(--text-3);
+  font-size:9px;font-weight:600;line-height:1;font-style:normal;
+  display:inline-flex;align-items:center;justify-content:center;cursor:help;vertical-align:1px;
+}
+.scr-forecast .badge{
+  display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--r-sm);
+  font-size:11px;line-height:16px;font-weight:500;white-space:nowrap;
+}
+.scr-forecast .badge--fact{background:var(--surface-2);color:var(--text-2);}
+.scr-forecast .badge--est{background:var(--surface-2);color:var(--text-2);}
+.scr-forecast .badge--muted{background:var(--surface-2);color:var(--text-3);}
+.scr-forecast .badge--recon{background:var(--positive-bg);color:var(--positive);}
+.scr-forecast .badge--stale{background:var(--warning-bg);color:var(--warning);}
+.scr-forecast .dot{width:7px;height:7px;border-radius:50%;flex:none;}
+.scr-forecast .c-pos{color:var(--positive);} .scr-forecast .c-neg{color:var(--danger);} .scr-forecast .c-warn{color:var(--warning);}
+.scr-forecast .note{font-size:12px;line-height:17px;color:var(--text-3);margin-top:14px;}
+.scr-forecast .note-warn{
+  display:flex;align-items:flex-start;gap:9px;
+  font-size:12px;line-height:17px;color:var(--text-2);
+  background:var(--warning-bg);border-radius:var(--r-md);padding:11px 13px;
+}
+.scr-forecast .note-warn .dot{margin-top:5px;background:var(--warning);}
+.scr-forecast .note-warn b{font-weight:600;color:var(--text);}
+.scr-forecast .tri{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;flex:none;}
+.scr-forecast .tri--up{border-bottom:6px solid var(--positive);}
+.scr-forecast .tri--down{border-top:6px solid var(--danger);}
+
+.scr-forecast .seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;flex:none;background:var(--bg);}
+.scr-forecast .seg button{
+  padding:4px 12px;border:none;background:transparent;cursor:pointer;
+  font-family:var(--font-sans);font-size:12px;line-height:16px;color:var(--text-3);
+  transition:background var(--t-fast) ease,color var(--t-fast) ease;white-space:nowrap;
+}
+.scr-forecast .seg button + button{border-left:1px solid var(--border);}
+.scr-forecast .seg button:hover{background:var(--surface);color:var(--text-2);}
+.scr-forecast .seg button.is-active,.scr-forecast .seg button.is-active:hover{background:var(--text);color:var(--bg);}
+
+.scr-forecast .legend{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:flex-end;}
+.scr-forecast .legend-item{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);}
+.scr-forecast .legend-line{width:16px;height:2px;border-radius:2px;flex:none;}
+
+
+/* ============================================================
+   ДОБАВЛЕНИЯ К ОБЩЕМУ БЛОКУ
+   ============================================================ */
+.scr-forecast .grid--3{grid-template-columns:repeat(3,minmax(0,1fr));}
+/* Бейдж происхождения числа. На этом экране прогноз — состояние по умолчанию,
+   поэтому он выглядит спокойно, а выделяются как раз факты. */
+.scr-forecast .badge--forecast{background:var(--accent-soft);color:var(--accent-hover);}
+:root[data-theme="dark"] .scr-forecast .badge--forecast{color:var(--accent);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .scr-forecast .badge--forecast{color:var(--accent);}
+}
+.scr-forecast .badge--warn{background:var(--warning-bg);color:var(--warning);}
+.scr-forecast .badge--ok{background:var(--positive-bg);color:var(--positive);}
+.scr-forecast .note-ok{
+  display:flex;align-items:flex-start;gap:9px;
+  font-size:12px;line-height:17px;color:var(--text-2);
+  background:var(--positive-bg);border-radius:var(--r-md);padding:11px 13px;
+}
+.scr-forecast .note-ok .dot{margin-top:5px;background:var(--positive);}
+.scr-forecast .note-ok b{font-weight:600;color:var(--text);}
+.scr-forecast .mini-note{
+  display:flex;align-items:flex-start;gap:9px;
+  font-size:12px;line-height:17px;color:var(--text-3);
+  background:var(--surface);border-radius:var(--r-md);padding:10px 12px;
+}
+.scr-forecast .mini-note b{font-weight:600;color:var(--text-2);}
+
+/* ============================================================
+   ТРИ СЦЕНАРИЯ
+   ============================================================ */
+.scr-forecast .scn{
+  display:flex;flex-direction:column;align-items:stretch;gap:0;
+  border:none;text-align:left;font-family:inherit;font-size:14px;color:inherit;
+  cursor:pointer;position:relative;transition:background var(--t-fast) ease;
+}
+.scr-forecast .scn:hover{background:var(--surface);}
+/* Активный сценарий отмечаем линией сверху внутрь ячейки: рамка вокруг
+   сломала бы бесшовную сетку, а фон — контраст подписей. */
+.scr-forecast .scn.is-active{box-shadow:inset 0 2px 0 var(--accent);}
+.scr-forecast .scn-top{display:flex;align-items:center;gap:8px;}
+.scr-forecast .scn-top .spacer{flex:1;}
+.scr-forecast .scn-name{font-size:13px;font-weight:600;letter-spacing:-.005em;}
+.scr-forecast .scn-rate{font-family:var(--font-mono);font-size:12px;color:var(--text-3);word-spacing:-.22em;white-space:nowrap;}
+.scr-forecast .scn-def{font-size:12px;line-height:16px;color:var(--text-3);margin-top:5px;min-height:32px;}
+.scr-forecast .scn-when{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-top:14px;}
+.scr-forecast .scn-when .big{
+  font-family:var(--font-mono);font-size:20px;font-weight:500;line-height:1.15;
+  letter-spacing:-.025em;word-spacing:-.22em;white-space:nowrap;
+}
+.scr-forecast .scn-when .sub{font-size:12px;color:var(--text-3);white-space:nowrap;}
+.scr-forecast .scn-chart{margin-top:12px;width:100%;}
+.scr-forecast .scn-chart svg{display:block;width:100%;}
+.scr-forecast .scn-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--text-3);margin-top:5px;}
+.scr-forecast .scn-verdict{
+  display:flex;align-items:flex-start;gap:8px;margin-top:auto;padding-top:14px;
+  font-size:12px;line-height:17px;color:var(--text-2);
+}
+.scr-forecast .scn-verdict .dot{margin-top:5px;}
+.scr-forecast .scn-verdict b{font-weight:600;color:var(--text);}
+
+/* ============================================================
+   ПРОГНОЗ НА КОНЕЦ МЕСЯЦА
+   ============================================================ */
+.scr-forecast .mf-vals{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;
+  background:var(--border);border:1px solid var(--border);border-radius:var(--r-md);
+  overflow:hidden;margin-bottom:20px;
+}
+.scr-forecast .mf-val{background:var(--bg);padding:13px 15px;min-width:0;}
+.scr-forecast .mf-val .k{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-3);}
+.scr-forecast .mf-val .v{
+  font-family:var(--font-mono);font-size:20px;font-weight:500;line-height:1.15;
+  letter-spacing:-.025em;word-spacing:-.22em;white-space:nowrap;margin-top:6px;
+}
+.scr-forecast .mf-val .s{font-size:11px;line-height:15px;color:var(--text-3);margin-top:6px;}
+.scr-forecast .mf-val .r{
+  font-family:var(--font-mono);font-size:11px;line-height:15px;color:var(--text-3);
+  word-spacing:-.22em;margin-top:5px;
+}
+.scr-forecast .mf-val--ghost{background:var(--surface);}
+
+/* ============================================================
+   ПОГАШЕНИЕ КРЕДИТА
+   ============================================================ */
+.scr-forecast .chart-wrap{position:relative;width:100%;}
+.scr-forecast .chart-wrap svg{display:block;}
+.scr-forecast .trio{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;
+  background:var(--border);border:1px solid var(--border);border-radius:var(--r-md);
+  overflow:hidden;margin-top:16px;
+}
+.scr-forecast .trio > div{background:var(--bg);padding:12px 14px;min-width:0;}
+.scr-forecast .trio .k{font-size:11px;color:var(--text-3);}
+.scr-forecast .trio .v{
+  font-family:var(--font-mono);font-size:17px;font-weight:500;margin-top:5px;
+  letter-spacing:-.02em;word-spacing:-.22em;white-space:nowrap;
+}
+.scr-forecast .trio .s{font-size:11px;line-height:15px;color:var(--text-3);margin-top:5px;}
+.scr-forecast .whatif{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);}
+.scr-forecast .whatif-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.scr-forecast .whatif-row label{font-size:12px;color:var(--text-2);}
+.scr-forecast .whatif-row .spacer{flex:1;}
+.scr-forecast .whatif-in{
+  display:inline-flex;align-items:center;gap:6px;
+  border:1px solid var(--border-strong);border-radius:var(--r-sm);
+  padding:3px 9px;background:var(--bg);
+  transition:border-color var(--t-fast) ease,box-shadow var(--t-fast) ease;
+}
+.scr-forecast .whatif-in:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.scr-forecast .whatif-in input{
+  width:64px;border:none;outline:none;background:transparent;color:var(--text);
+  font-family:var(--font-mono);font-size:13px;text-align:right;
+  -moz-appearance:textfield;appearance:textfield;
+}
+.scr-forecast .whatif-in input::-webkit-outer-spin-button,.scr-forecast .whatif-in input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.scr-forecast .whatif-in .cur{font-family:var(--font-mono);font-size:12px;color:var(--text-3);}
+.scr-forecast .whatif-out{
+  margin-top:12px;font-size:12px;line-height:17px;color:var(--text-3);
+  background:var(--surface);border-radius:var(--r-md);padding:10px 12px;
+}
+.scr-forecast .whatif-out.is-on{background:var(--positive-bg);color:var(--text-2);}
+.scr-forecast .whatif-out b{font-weight:600;color:var(--text);}
+.scr-forecast .whatif-out .num{font-weight:600;}
+
+/* ============================================================
+   ГРЕЙС КРЕДИТКИ
+   ============================================================ */
+.scr-forecast .gr-hero{display:flex;align-items:flex-end;gap:16px;}
+.scr-forecast .gr-hero .spacer{flex:1;}
+.scr-forecast .gr-sum{
+  font-family:var(--font-mono);font-size:28px;font-weight:500;line-height:1;
+  letter-spacing:-.03em;word-spacing:-.22em;white-space:nowrap;
+}
+.scr-forecast .gr-of{font-size:12px;line-height:16px;color:var(--text-3);margin-top:7px;}
+.scr-forecast .gr-count{text-align:right;flex:none;white-space:nowrap;}
+.scr-forecast .gr-count .d{font-family:var(--font-mono);font-size:20px;font-weight:500;line-height:1.1;letter-spacing:-.02em;}
+.scr-forecast .gr-count .l{font-size:11px;line-height:15px;color:var(--text-3);margin-top:4px;}
+.scr-forecast .gr-ops-head{
+  display:flex;align-items:center;gap:8px;
+  margin-top:18px;padding-top:14px;border-top:1px solid var(--border);
+}
+.scr-forecast .gr-ops-head .spacer{flex:1;}
+.scr-forecast .gr-ops{display:none;flex-direction:column;margin-top:6px;}
+.scr-forecast .gr-ops.is-open{display:flex;}
+.scr-forecast .gr-op{
+  display:flex;align-items:center;gap:10px;padding:7px 0;
+  border-bottom:1px solid var(--border);font-size:12px;
+}
+.scr-forecast .gr-op:last-child{border-bottom:none;}
+.scr-forecast .gr-op .dt{font-family:var(--font-mono);color:var(--text-3);width:44px;flex:none;}
+.scr-forecast .gr-op .ds{flex:1;min-width:0;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.scr-forecast .gr-op .am{font-family:var(--font-mono);word-spacing:-.22em;white-space:nowrap;flex:none;}
+.scr-forecast .gr-rule{
+  margin-top:16px;font-size:12px;line-height:17px;color:var(--text-3);
+  border-left:2px solid var(--border-strong);padding-left:12px;
+}
+.scr-forecast .gr-rule b{font-weight:600;color:var(--text-2);}
+.scr-forecast .gr-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:auto;padding-top:16px;}
+.scr-forecast .gr-foot .spacer{flex:1;}
+
+/* ============================================================
+   ЦЕЛИ ПО НАКОПЛЕНИЯМ
+   ============================================================ */
+.scr-forecast .goals{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;
+  background:var(--border);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;
+}
+.scr-forecast .goal{background:var(--bg);padding:16px 18px;display:flex;flex-direction:column;min-width:0;}
+.scr-forecast .goal.is-warn{background:var(--warning-bg);}
+.scr-forecast .goal-top{display:flex;align-items:center;gap:8px;}
+.scr-forecast .goal-top .spacer{flex:1;}
+.scr-forecast .goal-top .nm{font-size:14px;font-weight:600;letter-spacing:-.01em;}
+.scr-forecast .goal-amt{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.scr-forecast .goal-amt b{
+  font-family:var(--font-mono);font-size:22px;font-weight:500;line-height:1.1;
+  letter-spacing:-.025em;word-spacing:-.22em;white-space:nowrap;
+}
+.scr-forecast .goal-amt span{font-size:12px;color:var(--text-3);white-space:nowrap;}
+.scr-forecast .goal-track{height:5px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-top:11px;}
+.scr-forecast .goal-track i{display:block;height:100%;border-radius:99px;background:var(--accent);}
+.scr-forecast .goal-track.is-empty{border:1px dashed var(--border-strong);background:none;height:7px;}
+.scr-forecast .goal-spark{margin-top:10px;}
+.scr-forecast .goal-spark svg{display:block;width:100%;height:auto;aspect-ratio:240/44;}
+.scr-forecast .goal-meta{display:flex;gap:20px;flex-wrap:wrap;margin-top:13px;}
+.scr-forecast .goal-meta .k{font-size:11px;color:var(--text-3);}
+.scr-forecast .goal-meta .v{font-family:var(--font-mono);font-size:12px;margin-top:3px;word-spacing:-.22em;white-space:nowrap;}
+.scr-forecast .goal-meta .v.is-text{font-family:var(--font-sans);word-spacing:normal;color:var(--text-2);}
+.scr-forecast .goal-note{font-size:11px;line-height:16px;color:var(--text-3);margin-top:13px;}
+.scr-forecast .goal-foot{display:flex;align-items:center;gap:10px;margin-top:auto;padding-top:13px;}
+.scr-forecast .goal-foot .spacer{flex:1;}
+.scr-forecast .goals-foot{
+  display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap;
+  margin-top:16px;padding-top:14px;border-top:1px solid var(--border);
+}
+.scr-forecast .goals-foot .spacer{flex:1;}
+.scr-forecast .goals-foot .k{font-size:11px;color:var(--text-3);}
+.scr-forecast .goals-foot .v{font-family:var(--font-mono);font-size:15px;font-weight:600;margin-top:4px;word-spacing:-.22em;white-space:nowrap;}
+
+/* ============================================================
+   АДАПТИВ — минимальное окно по ТЗ 1280×800
+   ============================================================ */
+@media (max-width:1180px){
+  .scr-forecast .grid--2{grid-template-columns:minmax(0,1fr);}
+  .scr-forecast .grid--3{grid-template-columns:minmax(0,1fr);}
+  .scr-forecast .mf-vals{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .scr-forecast .goals{grid-template-columns:minmax(0,1fr);}
+}
+@media (max-width:900px){
+  .scr-forecast{--pad:20px;}
+  .scr-forecast .trio{grid-template-columns:minmax(0,1fr);}
+  .scr-forecast .mf-vals{grid-template-columns:minmax(0,1fr);}
+}
+/* ▲ КОНЕЦ ПЕРЕНОСА ИЗ МАКЕТА */
+
+/* ============================================================
+   ДОБАВЛЕНИЯ К МАКЕТУ
+   ============================================================ */
+/* Карточка сценария — кнопка: браузер иначе подкрашивает её фокусом
+   и собственным фоном при нажатии. */
+.scr-forecast .scn:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}

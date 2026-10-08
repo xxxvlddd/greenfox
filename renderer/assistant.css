@@ -1,0 +1,344 @@
+/* ============================================================
+   ОФОРМЛЕНИЕ ПАНЕЛИ АССИСТЕНТА
+   ============================================================
+   Перенесено из макета Main App/screens/09-assistent.html как есть:
+   каждое правило макета получило приставку .scr-asst, и только.
+   Участок между метками ПЕРЕНОС пишет tools/scope-css.js; добавления
+   — ниже метки КОНЕЦ.
+
+   Панель — шторка поверх любого экрана, поэтому её область — не экран,
+   а отдельный слой в конце страницы.
+   ============================================================ */
+/* ▼ ПЕРЕНОС ИЗ МАКЕТА — пишется tools/scope-css.js, руками не править */
+.scr-asst .btn-sm{background:var(--bg);color:var(--text-2);border:1px solid var(--border);padding:5px 11px;font-size:12px;border-radius:var(--r-sm);}
+.scr-asst .btn-sm:hover{background:var(--surface);color:var(--text);}
+.scr-asst .btn-sm--acc{background:var(--accent-fill);border-color:var(--accent-fill);color:var(--accent-fg);}
+.scr-asst .btn-sm--acc:hover{background:var(--accent-fill-hover);border-color:var(--accent-fill-hover);color:var(--accent-fg);}
+.scr-asst .btn-link{
+  border:none;background:none;padding:0;cursor:pointer;
+  color:var(--accent-hover);font-family:var(--font-sans);font-size:12px;font-weight:500;
+}
+.scr-asst .btn-link:hover{text-decoration:underline;text-underline-offset:3px;}
+:root[data-theme="dark"] .scr-asst .btn-link{color:var(--accent);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .scr-asst .btn-link{color:var(--accent);}
+}
+
+/* ============================================================
+   ОБЩИЕ ЭЛЕМЕНТЫ
+   ============================================================ */
+.scr-asst .sec{padding:22px var(--pad);border-top:1px solid var(--border);}
+.scr-asst .grid{display:grid;gap:1px;background:var(--border);border-top:1px solid var(--border);}
+.scr-asst .grid > *{background:var(--bg);padding:22px var(--pad);min-width:0;}
+.scr-asst .grid--2{grid-template-columns:repeat(2,minmax(0,1fr));}
+.scr-asst .sec-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.scr-asst .sec-head .spacer{flex:1;}
+.scr-asst .sec-title{font-size:13px;font-weight:600;letter-spacing:-.005em;}
+.scr-asst .sec-sub{font-size:12px;line-height:16px;color:var(--text-3);margin-top:3px;}
+.scr-asst .title-row{display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.scr-asst .sec-sub .badge{margin-right:3px;vertical-align:1px;}
+.scr-asst .lbl{font-size:12px;font-weight:500;color:var(--text-3);}
+.scr-asst .info{
+  width:14px;height:14px;border-radius:50%;flex:none;
+  border:1px solid var(--border-strong);color:var(--text-3);
+  font-size:9px;font-weight:600;line-height:1;font-style:normal;
+  display:inline-flex;align-items:center;justify-content:center;cursor:help;vertical-align:1px;
+}
+.scr-asst .badge{
+  display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--r-sm);
+  font-size:11px;line-height:16px;font-weight:500;white-space:nowrap;
+}
+.scr-asst .badge--fact{background:var(--surface-2);color:var(--text-2);}
+.scr-asst .badge--est{background:var(--surface-2);color:var(--text-2);}
+.scr-asst .badge--muted{background:var(--surface-2);color:var(--text-3);}
+.scr-asst .badge--recon{background:var(--positive-bg);color:var(--positive);}
+.scr-asst .badge--stale{background:var(--warning-bg);color:var(--warning);}
+.scr-asst .dot{width:7px;height:7px;border-radius:50%;flex:none;}
+.scr-asst .c-pos{color:var(--positive);} .scr-asst .c-neg{color:var(--danger);} .scr-asst .c-warn{color:var(--warning);}
+.scr-asst .note{font-size:12px;line-height:17px;color:var(--text-3);margin-top:14px;}
+.scr-asst .note-warn{
+  display:flex;align-items:flex-start;gap:9px;
+  font-size:12px;line-height:17px;color:var(--text-2);
+  background:var(--warning-bg);border-radius:var(--r-md);padding:11px 13px;
+}
+.scr-asst .note-warn .dot{margin-top:5px;background:var(--warning);}
+.scr-asst .note-warn b{font-weight:600;color:var(--text);}
+.scr-asst .tri{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;flex:none;}
+.scr-asst .tri--up{border-bottom:6px solid var(--positive);}
+.scr-asst .tri--down{border-top:6px solid var(--danger);}
+
+.scr-asst .seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;flex:none;background:var(--bg);}
+.scr-asst .seg button{
+  padding:4px 12px;border:none;background:transparent;cursor:pointer;
+  font-family:var(--font-sans);font-size:12px;line-height:16px;color:var(--text-3);
+  transition:background var(--t-fast) ease,color var(--t-fast) ease;white-space:nowrap;
+}
+.scr-asst .seg button + button{border-left:1px solid var(--border);}
+.scr-asst .seg button:hover{background:var(--surface);color:var(--text-2);}
+.scr-asst .seg button.is-active,.scr-asst .seg button.is-active:hover{background:var(--text);color:var(--bg);}
+
+.scr-asst .legend{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:flex-end;}
+.scr-asst .legend-item{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);}
+.scr-asst .legend-line{width:16px;height:2px;border-radius:2px;flex:none;}
+
+
+
+
+
+
+/* ============================================================
+   ДОБАВЛЕНИЯ К ОБЩЕМУ БЛОКУ
+   ============================================================ */
+.scr-asst .badge--forecast{background:var(--accent-soft);color:var(--accent-hover);}
+:root[data-theme="dark"] .scr-asst .badge--forecast{color:var(--accent);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .scr-asst .badge--forecast{color:var(--accent);}
+}
+.scr-asst .badge--decision{background:var(--surface-2);color:var(--text-2);}
+.scr-asst .badge--warn{background:var(--warning-bg);color:var(--warning);}
+.scr-asst .kbd{
+  font-family:var(--font-mono);font-size:11px;line-height:16px;color:var(--text-3);
+  border:1px solid var(--border);border-radius:4px;padding:0 5px;background:var(--surface);
+}
+.scr-asst .qs{display:flex;flex-direction:column;}
+.scr-asst .q-row{display:flex;align-items:flex-start;gap:12px;padding:13px 0;border-bottom:1px solid var(--border);}
+.scr-asst .q-row:first-child{padding-top:0;}
+.scr-asst .q-row:last-child{border-bottom:none;}
+.scr-asst .q-main{flex:1;min-width:0;}
+.scr-asst .q-text{font-size:13px;line-height:19px;font-weight:500;}
+.scr-asst .q-meta{font-size:12px;line-height:17px;color:var(--text-3);margin-top:4px;}
+.scr-asst .inp{
+  width:100%;box-sizing:border-box;
+  border:1px solid var(--border-strong);border-radius:var(--r-sm);background:var(--bg);
+  padding:7px 10px;font-family:var(--font-sans);font-size:12px;line-height:18px;color:var(--text);
+  transition:border-color var(--t-fast) ease,box-shadow var(--t-fast) ease;
+}
+.scr-asst .inp:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.scr-asst .chip{
+  border:1px solid var(--border);background:var(--bg);color:var(--text-2);
+  border-radius:var(--r-sm);padding:3px 10px;font-family:var(--font-sans);font-size:11px;
+  cursor:pointer;transition:background var(--t-fast) ease,border-color var(--t-fast) ease,color var(--t-fast) ease;
+}
+.scr-asst .chip:hover{background:var(--surface);}
+.scr-asst .chip.is-on{background:var(--text);border-color:var(--text);color:var(--bg);}
+.scr-asst .mod-x{
+  width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center;
+  border:none;background:none;color:var(--text-3);cursor:pointer;border-radius:var(--r-sm);
+  transition:background var(--t-fast) ease,color var(--t-fast) ease;
+}
+.scr-asst .mod-x:hover{background:var(--surface);color:var(--text);}
+
+/* ============================================================
+   ШТОРКА АССИСТЕНТА
+   ============================================================
+   Ассистент — вспомогательный инструмент, а не главный интерфейс: он лежит
+   поверх экрана шторкой и закрывается, не ломая работу приложения. */
+.scr-asst .asst-dim{
+  position:fixed;inset:0;z-index:90;background:rgba(17,17,16,.28);
+  opacity:0;pointer-events:none;transition:opacity var(--t-base) ease;
+}
+:root[data-theme="dark"] .scr-asst .asst-dim{background:rgba(0,0,0,.44);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .scr-asst .asst-dim{background:rgba(0,0,0,.44);}
+}
+.scr-asst .asst-dim.is-on{opacity:1;pointer-events:auto;}
+.scr-asst .asst{
+  position:fixed;top:0;right:0;bottom:0;width:380px;max-width:100%;z-index:95;
+  background:var(--bg);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform var(--t-base) ease;
+}
+.scr-asst .asst.is-on{transform:none;}
+.scr-asst .asst-head{display:flex;align-items:center;gap:9px;padding:14px 18px;border-bottom:1px solid var(--border);flex:none;}
+.scr-asst .asst-head h2{font-size:14px;font-weight:600;letter-spacing:-.01em;}
+.scr-asst .asst-head .spacer{flex:1;}
+.scr-asst .asst-model{
+  display:inline-flex;align-items:center;gap:6px;
+  border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);
+  padding:3px 8px;font-family:var(--font-sans);font-size:11px;color:var(--text-2);cursor:pointer;
+}
+.scr-asst .asst-model:hover{background:var(--surface);}
+.scr-asst .asst-model .dot{width:5px;height:5px;background:var(--positive);}
+.scr-asst .asst-quick{display:flex;gap:6px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--border);flex:none;}
+.scr-asst .asst-feed{flex:1;min-height:0;overflow-y:auto;padding:4px 18px 14px;}
+.scr-asst .asst-msg{padding:14px 0;border-bottom:1px solid var(--border);}
+.scr-asst .asst-msg:last-child{border-bottom:none;}
+.scr-asst .asst-who{
+  display:flex;align-items:center;gap:7px;
+  font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--text-3);margin-bottom:7px;
+}
+.scr-asst .asst-msg--me .asst-who{color:var(--text-2);}
+.scr-asst .asst-text{font-size:13px;line-height:19px;color:var(--text-2);}
+.scr-asst .asst-text b{font-weight:600;color:var(--text);}
+.scr-asst .asst-msg--me .asst-text{color:var(--text);}
+/* Каждое число в ответе ведёт на экран с нужным фильтром: ассистент не
+   заменяет интерфейс, а показывает на него дорогу. */
+.scr-asst .asst-num{
+  font-family:var(--font-mono);font-weight:500;color:var(--accent-hover);
+  border:none;background:none;padding:0;cursor:pointer;font-size:13px;
+  border-bottom:1px dashed var(--accent-line, var(--border-strong));
+}
+.scr-asst .asst-num:hover{color:var(--accent);}
+:root[data-theme="dark"] .scr-asst .asst-num{color:var(--accent);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .scr-asst .asst-num{color:var(--accent);}
+}
+.scr-asst .asst-list{margin:9px 0 0;padding-left:18px;font-size:13px;line-height:20px;color:var(--text-2);}
+.scr-asst .asst-list li{margin-bottom:4px;}
+
+/* Карточка разобранной операции — ничего не пишется без подтверждения. */
+.scr-asst .parse{border:1px solid var(--border);border-radius:var(--r-md);padding:11px 13px;margin-top:9px;}
+.scr-asst .parse.is-off{opacity:.45;}
+.scr-asst .parse-top{display:flex;align-items:center;gap:9px;}
+.scr-asst .parse-top .spacer{flex:1;}
+.scr-asst .parse-sum{font-family:var(--font-mono);font-size:15px;font-weight:500;word-spacing:-.22em;white-space:nowrap;}
+.scr-asst .parse-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:9px;}
+.scr-asst .parse-f .k{font-size:10px;color:var(--text-3);margin-bottom:3px;}
+.scr-asst .parse-acts{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px;}
+
+.scr-asst .asst-state{
+  display:flex;align-items:flex-start;gap:9px;margin:14px 0;
+  padding:12px 13px;border-radius:var(--r-md);
+  font-size:12px;line-height:18px;color:var(--text-2);
+}
+.scr-asst .asst-state b{font-weight:600;color:var(--text);display:block;margin-bottom:3px;}
+.scr-asst .asst-state .acts{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px;}
+.scr-asst .asst-state--wait{background:var(--surface);}
+.scr-asst .asst-state--err{background:var(--danger-bg);}
+.scr-asst .asst-state--warn{background:var(--warning-bg);}
+.scr-asst .asst-state--empty{
+  flex-direction:column;align-items:center;text-align:center;
+  gap:12px;padding:36px 20px;background:none;color:var(--text-3);
+}
+.scr-asst .spin{
+  width:12px;height:12px;flex:none;margin-top:3px;border-radius:50%;
+  border:2px solid var(--border-strong);border-top-color:var(--accent);
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.scr-asst .asst-foot{flex:none;border-top:1px solid var(--border);padding:12px 18px 14px;}
+.scr-asst .asst-box{display:flex;align-items:flex-end;gap:8px;}
+.scr-asst .asst-box textarea{
+  flex:1;min-width:0;resize:none;height:38px;
+  border:1px solid var(--border-strong);border-radius:var(--r-sm);background:var(--bg);
+  padding:9px 11px;font-family:var(--font-sans);font-size:13px;line-height:19px;color:var(--text);
+}
+.scr-asst .asst-box textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.scr-asst .asst-send{
+  width:38px;height:38px;flex:none;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--accent-fill);border-radius:var(--r-sm);background:var(--accent-fill);
+  color:var(--accent-fg);cursor:pointer;
+}
+.scr-asst .asst-send:hover{background:var(--accent-fill-hover);border-color:var(--accent-fill-hover);}
+/* Индикатор контекста: человек должен видеть, о каких данных идёт речь. */
+.scr-asst .asst-ctx{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-3);margin-top:9px;}
+.scr-asst .asst-ctx .dot{background:var(--accent);}
+
+@media (max-width:900px){ .scr-asst{--pad:20px;} .scr-asst .asst{width:100%;} }
+/* ▲ КОНЕЦ ПЕРЕНОСА ИЗ МАКЕТА */
+
+/* ============================================================
+   ДОБАВЛЕНИЯ К МАКЕТУ
+   ============================================================ */
+/* Слой панели не участвует в раскладке — только её содержимое. */
+.scr-asst.layer{display:contents;}
+/* Абзацы ответа отделены, как в макете, где второй абзац шёл с отступом. */
+.scr-asst .asst-text + .asst-text,.scr-asst .asst-list + .asst-text{margin-top:9px;}
+.scr-asst .asst-text + .asst-list{margin-top:7px;}
+/* Служебная строка под ответом: во сколько он обошёлся. */
+.scr-asst .asst-cost{font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-top:8px;word-spacing:-.22em;}
+.scr-asst .asst-note{margin-top:10px;color:var(--text-3);}
+.scr-asst .asst-ctx .spacer{flex:1;}
+.scr-asst .link-btn{
+  border:none;background:none;padding:0;cursor:pointer;
+  color:var(--accent-hover);font-family:var(--font-sans);font-size:12px;font-weight:500;
+}
+.scr-asst .link-btn:hover{text-decoration:underline;text-underline-offset:3px;}
+:root[data-theme="dark"] .scr-asst .link-btn{color:var(--accent);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .scr-asst .link-btn{color:var(--accent);}
+}
+.scr-asst .asst-head .link-btn{font-size:12px;margin-right:4px;}
+/* Длинное имя модели не переносится, а обрезается — шапка в одну строку. */
+.scr-asst .asst-model{min-width:0;max-width:170px;white-space:nowrap;}
+.scr-asst #asModelName{overflow:hidden;text-overflow:ellipsis;}
+.scr-asst .asst-model svg,.scr-asst .asst-model .dot{flex:none;}
+.scr-asst .asst-head .link-btn{white-space:nowrap;flex:none;}
+.scr-asst #asSpent{font-family:var(--font-mono);word-spacing:-.22em;white-space:nowrap;}
+/* Вид операции в карточке и причина, почему её не сохранить. */
+.scr-asst .parse-kind{font-size:11px;color:var(--text-3);}
+.scr-asst .parse-err{margin-top:8px;font-size:12px;line-height:17px;color:var(--danger);}
+.scr-asst .asst-send:disabled{opacity:.45;cursor:not-allowed;}
+.scr-asst .chip:disabled{opacity:.45;cursor:not-allowed;}
+.scr-asst .parse .inp:disabled,.scr-asst .parse input:disabled{background:var(--surface);color:var(--text-2);}
+
+/* Ответ блоками. Главный вывод — темнее пояснений. */
+.scr-asst .asst-lead{color:var(--text);}
+/* Ключевые числа — справка, не кнопки: плоская сетка под волосяными
+   линиями, без скруглений. Под числом — на какую дату или за какой срок
+   оно посчитано. Нечётное последнее число — во всю ширину. */
+.scr-asst .asst-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:12px;border-top:1px solid var(--border);}
+.scr-asst .asst-facts.is-one{grid-template-columns:minmax(0,1fr);}
+.scr-asst .asst-fact{display:flex;flex-direction:column;gap:2px;min-width:0;padding:9px 12px 10px 0;border-bottom:1px solid var(--border);}
+.scr-asst .asst-fact:nth-child(2n){padding-left:12px;padding-right:0;border-left:1px solid var(--border);}
+.scr-asst .asst-fact:last-child:nth-child(2n+1){grid-column:1 / -1;}
+.scr-asst .asst-fact .k{font-size:11px;line-height:15px;color:var(--text-3);}
+.scr-asst .asst-fact .v{
+  font-family:var(--font-mono);font-size:15px;line-height:20px;font-weight:500;color:var(--text);
+  word-spacing:-.22em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+}
+.scr-asst .asst-fact.is-neg .v{color:var(--danger);}
+.scr-asst .asst-fact .n{font-size:11px;line-height:15px;color:var(--text-3);}
+/* Выделения в тексте ответа: жирный, курсив, акцент. */
+.scr-asst .asst-text i,.scr-asst .asst-list i,.scr-asst .asst-risk i,.scr-asst .asst-do i{font-style:italic;}
+.scr-asst .asst-msg b{font-weight:600;color:var(--text);}
+.scr-asst mark.asst-acc{background:var(--accent-soft);color:var(--accent-hover);padding:0 3px;border-radius:3px;}
+:root[data-theme="dark"] .scr-asst mark.asst-acc{color:var(--accent);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .scr-asst mark.asst-acc{color:var(--accent);}
+}
+.scr-asst .asst-lead + .asst-lead,.scr-asst .asst-lead + .asst-list{margin-top:8px;}
+/* Риски и шаги — плоские разделы под волосяной линией. */
+.scr-asst .asst-sec{margin-top:12px;padding-top:10px;border-top:1px solid var(--border);}
+.scr-asst .asst-sec-t{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-3);margin-bottom:7px;}
+.scr-asst .asst-risk{display:flex;align-items:flex-start;gap:9px;font-size:13px;line-height:19px;color:var(--text-2);}
+.scr-asst .asst-risk + .asst-risk{margin-top:6px;}
+.scr-asst .asst-risk .dot{margin-top:6px;background:var(--warning);}
+.scr-asst .asst-do{margin:0;padding:0;list-style:none;counter-reset:asdo;}
+.scr-asst .asst-do li{display:flex;gap:9px;font-size:13px;line-height:19px;color:var(--text-2);}
+.scr-asst .asst-do li + li{margin-top:6px;}
+.scr-asst .asst-do li::before{
+  counter-increment:asdo;content:counter(asdo);flex:none;min-width:12px;
+  font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--accent-hover);
+}
+:root[data-theme="dark"] .scr-asst .asst-do li::before{color:var(--accent);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .scr-asst .asst-do li::before{color:var(--accent);}
+}
+
+/* Ход работы — одна строка постоянной высоты. Статус меняется на месте:
+   прежний уходит вверх, новый поднимается снизу. Блик по тексту
+   бесшовный: плитка градиента вдвое шире строки и сдвигается ровно на
+   одну плитку за период, начало и конец плитки одного цвета. */
+.scr-asst .asst-work{
+  display:flex;align-items:center;gap:10px;margin:14px 0;padding:9px 10px 9px 13px;min-height:44px;
+  border-radius:var(--r-md);background:var(--surface);
+}
+.scr-asst .asst-work .spin{margin-top:0;}
+.scr-asst .asst-now{position:relative;flex:1;min-width:0;height:18px;overflow:hidden;}
+.scr-asst .asst-now .t{position:absolute;left:0;right:0;top:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-size:12px;line-height:18px;}
+.scr-asst .asst-now .x{
+  background:linear-gradient(90deg,var(--text-3) 0%,var(--text) 50%,var(--text-3) 100%);background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;animation:asShine 2.4s linear infinite;
+}
+@keyframes asShine{ from{background-position:200% 0;} to{background-position:0% 0;} }
+.scr-asst .asst-now .t.is-enter{animation:asNowIn var(--t-base) var(--ease-out) both;}
+.scr-asst .asst-now .t.is-out{animation:asNowOut var(--t-fast) ease-in both;}
+@keyframes asNowIn{ from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:none;} }
+@keyframes asNowOut{ from{opacity:1;transform:none;} to{opacity:0;transform:translateY(-10px);} }
+.scr-asst #asElapsed{flex:none;font-family:var(--font-mono);font-size:11px;color:var(--text-3);word-spacing:-.22em;}
+/* Заголовок авто-отчёта — период сводки. */
+.scr-asst .asst-title{color:var(--text);font-weight:600;margin-bottom:4px;}

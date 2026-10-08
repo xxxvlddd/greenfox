@@ -1,0 +1,309 @@
+/* ============================================================
+   ОФОРМЛЕНИЕ ЭКРАНА «КАЛЕНДАРЬ»
+   ============================================================
+   Перенесено из макета Main App/screens/06-kalendar.html как есть:
+   каждое правило макета получило приставку .scr-calendar, и только.
+   Участок между метками ПЕРЕНОС пишет tools/scope-css.js; добавления
+   — ниже метки КОНЕЦ.
+
+   Переключатель месяца и режим заливки стоят в общей шапке окна,
+   вне экрана. Поэтому, пока открыт календарь, шапка тоже получает
+   класс .scr-calendar — иначе их оформление до неё бы не дошло.
+   ============================================================ */
+/* ▼ ПЕРЕНОС ИЗ МАКЕТА — пишется tools/scope-css.js, руками не править */
+.scr-calendar .btn-sm{background:var(--bg);color:var(--text-2);border:1px solid var(--border);padding:5px 11px;font-size:12px;border-radius:var(--r-sm);}
+.scr-calendar .btn-sm:hover{background:var(--surface);color:var(--text);}
+.scr-calendar .btn-sm--acc{background:var(--accent-fill);border-color:var(--accent-fill);color:var(--accent-fg);}
+.scr-calendar .btn-sm--acc:hover{background:var(--accent-fill-hover);border-color:var(--accent-fill-hover);color:var(--accent-fg);}
+.scr-calendar .btn-link{
+  border:none;background:none;padding:0;cursor:pointer;
+  color:var(--accent-hover);font-family:var(--font-sans);font-size:12px;font-weight:500;
+}
+.scr-calendar .btn-link:hover{text-decoration:underline;text-underline-offset:3px;}
+:root[data-theme="dark"] .scr-calendar .btn-link{color:var(--accent);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .scr-calendar .btn-link{color:var(--accent);}
+}
+
+/* ============================================================
+   ОБЩИЕ ЭЛЕМЕНТЫ
+   ============================================================ */
+.scr-calendar .sec{padding:22px var(--pad);border-top:1px solid var(--border);}
+.scr-calendar .grid{display:grid;gap:1px;background:var(--border);border-top:1px solid var(--border);}
+.scr-calendar .grid > *{background:var(--bg);padding:22px var(--pad);min-width:0;}
+.scr-calendar .grid--2{grid-template-columns:repeat(2,minmax(0,1fr));}
+.scr-calendar .sec-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.scr-calendar .sec-head .spacer{flex:1;}
+.scr-calendar .sec-title{font-size:13px;font-weight:600;letter-spacing:-.005em;}
+.scr-calendar .sec-sub{font-size:12px;line-height:16px;color:var(--text-3);margin-top:3px;}
+.scr-calendar .title-row{display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.scr-calendar .sec-sub .badge{margin-right:3px;vertical-align:1px;}
+.scr-calendar .lbl{font-size:12px;font-weight:500;color:var(--text-3);}
+.scr-calendar .info{
+  width:14px;height:14px;border-radius:50%;flex:none;
+  border:1px solid var(--border-strong);color:var(--text-3);
+  font-size:9px;font-weight:600;line-height:1;font-style:normal;
+  display:inline-flex;align-items:center;justify-content:center;cursor:help;vertical-align:1px;
+}
+.scr-calendar .badge{
+  display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--r-sm);
+  font-size:11px;line-height:16px;font-weight:500;white-space:nowrap;
+}
+.scr-calendar .badge--fact{background:var(--surface-2);color:var(--text-2);}
+.scr-calendar .badge--est{background:var(--surface-2);color:var(--text-2);}
+.scr-calendar .badge--muted{background:var(--surface-2);color:var(--text-3);}
+.scr-calendar .badge--recon{background:var(--positive-bg);color:var(--positive);}
+.scr-calendar .badge--stale{background:var(--warning-bg);color:var(--warning);}
+.scr-calendar .dot{width:7px;height:7px;border-radius:50%;flex:none;}
+.scr-calendar .c-pos{color:var(--positive);} .scr-calendar .c-neg{color:var(--danger);} .scr-calendar .c-warn{color:var(--warning);}
+.scr-calendar .note{font-size:12px;line-height:17px;color:var(--text-3);margin-top:14px;}
+.scr-calendar .note-warn{
+  display:flex;align-items:flex-start;gap:9px;
+  font-size:12px;line-height:17px;color:var(--text-2);
+  background:var(--warning-bg);border-radius:var(--r-md);padding:11px 13px;
+}
+.scr-calendar .note-warn .dot{margin-top:5px;background:var(--warning);}
+.scr-calendar .note-warn b{font-weight:600;color:var(--text);}
+.scr-calendar .tri{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;flex:none;}
+.scr-calendar .tri--up{border-bottom:6px solid var(--positive);}
+.scr-calendar .tri--down{border-top:6px solid var(--danger);}
+
+.scr-calendar .seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;flex:none;background:var(--bg);}
+.scr-calendar .seg button{
+  padding:4px 12px;border:none;background:transparent;cursor:pointer;
+  font-family:var(--font-sans);font-size:12px;line-height:16px;color:var(--text-3);
+  transition:background var(--t-fast) ease,color var(--t-fast) ease;white-space:nowrap;
+}
+.scr-calendar .seg button + button{border-left:1px solid var(--border);}
+.scr-calendar .seg button:hover{background:var(--surface);color:var(--text-2);}
+.scr-calendar .seg button.is-active,.scr-calendar .seg button.is-active:hover{background:var(--text);color:var(--bg);}
+
+.scr-calendar .legend{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:flex-end;}
+.scr-calendar .legend-item{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);}
+.scr-calendar .legend-line{width:16px;height:2px;border-radius:2px;flex:none;}
+
+
+
+/* ============================================================
+   ДОБАВЛЕНИЯ К ОБЩЕМУ БЛОКУ
+   ============================================================ */
+.scr-calendar .badge--forecast{background:var(--accent-soft);color:var(--accent-hover);}
+:root[data-theme="dark"] .scr-calendar .badge--forecast{color:var(--accent);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .scr-calendar .badge--forecast{color:var(--accent);}
+}
+/* Тепловая шкала — пять ступеней на прозрачности акцента. Оттенок один:
+   шкала показывает величину траты, а не хорошо это или плохо. */
+.scr-calendar{
+  --heat-1:rgba(13,148,136,.08); --heat-2:rgba(13,148,136,.16);
+  --heat-3:rgba(13,148,136,.26); --heat-4:rgba(13,148,136,.38);
+  --heat-5:rgba(13,148,136,.52);
+}
+:root[data-theme="dark"] .scr-calendar{
+  --heat-1:rgba(45,212,191,.09); --heat-2:rgba(45,212,191,.17);
+  --heat-3:rgba(45,212,191,.27); --heat-4:rgba(45,212,191,.38);
+  --heat-5:rgba(45,212,191,.50);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .scr-calendar{
+    --heat-1:rgba(45,212,191,.09); --heat-2:rgba(45,212,191,.17);
+    --heat-3:rgba(45,212,191,.27); --heat-4:rgba(45,212,191,.38);
+    --heat-5:rgba(45,212,191,.50);
+  }
+}
+
+/* ============================================================
+   ШАПКА МЕСЯЦА
+   ============================================================ */
+.scr-calendar .mon{display:flex;align-items:center;gap:4px;}
+.scr-calendar .mon-name{
+  font-family:var(--font-mono);font-size:14px;font-weight:500;
+  min-width:150px;text-align:center;letter-spacing:-.01em;
+}
+.scr-calendar .mon-btn{
+  width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);
+  color:var(--text-2);cursor:pointer;transition:background var(--t-fast) ease,color var(--t-fast) ease;
+}
+.scr-calendar .mon-btn:hover:not(:disabled){background:var(--surface);color:var(--text);}
+.scr-calendar .mon-btn:disabled{opacity:.35;cursor:not-allowed;}
+
+/* ============================================================
+   КАЛЕНДАРЬ
+   ============================================================ */
+/* Календарь и панель дня — одна полоса во всю ширину, разделённая волосяной
+   линией: скруглённых плашек на экранах нет, такой вид остаётся только у того,
+   что нажимается.
+   Панель меняла высоту вслед за числом операций, и низ страницы скакал —
+   поэтому она вынута из потока и прижата к краям своей ячейки, а высоту
+   полосы задаёт только сетка месяца. */
+.scr-calendar .cal{
+  display:grid;grid-template-columns:minmax(0,1fr) 340px;
+  gap:1px;background:var(--border);align-items:stretch;
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+}
+.scr-calendar .cal-left{background:var(--bg);min-width:0;}
+.scr-calendar .dp-wrap{position:relative;min-height:440px;background:var(--bg);}
+.scr-calendar .cal-dow{
+  display:grid;grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:1px;padding:13px 0 11px;
+}
+.scr-calendar .cal-dow span{
+  font-size:11px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--text-3);padding:0 10px;
+}
+.scr-calendar .cal-dow span:nth-child(n+6){color:var(--warning);}
+.scr-calendar .cal-grid{
+  display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;
+  background:var(--border);border-top:1px solid var(--border);
+}
+.scr-calendar .cal-day{
+  position:relative;background:var(--bg);min-height:96px;padding:8px 10px 9px;
+  display:flex;flex-direction:column;gap:2px;min-width:0;
+  border:none;font-family:inherit;text-align:left;cursor:pointer;
+  transition:filter var(--t-fast) ease;
+}
+.scr-calendar .cal-day:hover{filter:brightness(1.06);}
+:root[data-theme="dark"] .scr-calendar .cal-day:hover{filter:brightness(1.35);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .scr-calendar .cal-day:hover{filter:brightness(1.35);}
+}
+/* Дни соседних месяцев остаются кликабельными, но уходят на второй план. */
+.scr-calendar .cal-day.is-out{opacity:.4;}
+/* Будущее — без заливки и пунктиром: заливка означала бы наблюдение. */
+.scr-calendar .cal-day.is-future{outline:1px dashed var(--border-strong);outline-offset:-1px;}
+.scr-calendar .cal-day.is-today{box-shadow:inset 0 0 0 2px var(--accent);}
+.scr-calendar .cal-day.is-sel{box-shadow:inset 0 0 0 2px var(--text);}
+.scr-calendar .cal-day.is-today.is-sel{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px var(--bg);}
+.scr-calendar .cal-top{display:flex;align-items:flex-start;gap:6px;}
+.scr-calendar .cal-num{font-family:var(--font-mono);font-size:13px;font-weight:500;line-height:16px;}
+.scr-calendar .cal-day.is-today .cal-num{color:var(--accent-hover);font-weight:600;}
+:root[data-theme="dark"] .scr-calendar .cal-day.is-today .cal-num{color:var(--accent);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .scr-calendar .cal-day.is-today .cal-num{color:var(--accent);}
+}
+.scr-calendar .cal-marks{margin-left:auto;display:flex;align-items:center;gap:3px;flex:none;}
+.scr-calendar .cal-mark{font-size:9px;line-height:16px;}
+.scr-calendar .cal-mark--inc{color:var(--positive);}
+.scr-calendar .cal-mark--due{color:var(--warning);}
+.scr-calendar .cal-mark--plan{color:var(--accent);}
+.scr-calendar .cal-mark--mov{color:var(--text-3);}
+.scr-calendar .cal-mark--plain{color:var(--text-3);}
+.scr-calendar .cal-more{font-family:var(--font-mono);font-size:9px;color:var(--text-3);}
+.scr-calendar .cal-exp{
+  font-family:var(--font-mono);font-size:13px;font-weight:500;margin-top:6px;
+  word-spacing:-.22em;white-space:nowrap;letter-spacing:-.02em;
+}
+.scr-calendar .cal-inc{
+  font-family:var(--font-mono);font-size:12px;color:var(--positive);
+  word-spacing:-.22em;white-space:nowrap;
+}
+.scr-calendar .cal-none{font-size:11px;color:var(--text-3);margin-top:6px;}
+/* На верхних ступенях заливки серый text-3 переставал читаться — остаток
+   на конец дня набираем на тон контрастнее. */
+.scr-calendar .cal-bal{
+  font-family:var(--font-mono);font-size:10px;color:var(--text-2);
+  margin-top:auto;padding-top:6px;word-spacing:-.22em;white-space:nowrap;
+}
+.scr-calendar .cal-day.is-future .cal-exp,.scr-calendar .cal-day.is-future .cal-inc{color:var(--text-3);}
+.scr-calendar .cal-note-dot{
+  position:absolute;left:10px;bottom:9px;width:4px;height:4px;border-radius:50%;
+  background:var(--text-3);
+}
+
+/* ============================================================
+   ПАНЕЛЬ ДНЯ
+   ============================================================ */
+.scr-calendar .dp{
+  position:absolute;inset:0;display:flex;flex-direction:column;min-height:0;
+  overflow:hidden;background:var(--bg);
+}
+.scr-calendar .dp-head,.scr-calendar .dp-sums,.scr-calendar .dp-note-sec,.scr-calendar .dp-foot{flex:none;}
+/* Прокручивается только середина — шапка, суммы, заметка и кнопка на месте. */
+.scr-calendar .dp-body{flex:1;min-height:0;overflow-y:auto;}
+.scr-calendar .dp-head{padding:14px 16px;border-bottom:1px solid var(--border);}
+.scr-calendar .dp-title{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}
+.scr-calendar .dp-title h3{margin:0;font-size:14px;font-weight:600;letter-spacing:-.01em;}
+/* Три величины в столбик, как в ТЗ: в трёх колонках на 340 пикселях подпись
+   «Остаток на конец дня» ломалась на две строки, а суммы упирались в край. */
+.scr-calendar .dp-sums{display:flex;flex-direction:column;}
+.scr-calendar .dp-sum{
+  display:flex;align-items:baseline;gap:12px;
+  padding:9px 16px;border-bottom:1px solid var(--border);
+}
+.scr-calendar .dp-sum .k{font-size:12px;color:var(--text-3);flex:1;min-width:0;}
+.scr-calendar .dp-sum .v{
+  flex:none;font-family:var(--font-mono);font-size:14px;font-weight:500;
+  word-spacing:-.22em;white-space:nowrap;letter-spacing:-.02em;
+}
+.scr-calendar .dp-sec{padding:14px 16px;border-top:1px solid var(--border);}
+.scr-calendar .dp-body > .dp-sec:first-child{border-top:none;}
+.scr-calendar .dp-sec-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.scr-calendar .dp-sec-head .spacer{flex:1;}
+.scr-calendar .dp-op{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.scr-calendar .dp-op:last-child{border-bottom:none;}
+.scr-calendar .dp-op:first-child{padding-top:0;}
+.scr-calendar .dp-op-main{flex:1;min-width:0;}
+.scr-calendar .dp-op-desc{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.scr-calendar .dp-op-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;color:var(--text-3);margin-top:3px;}
+.scr-calendar .dp-op-amt{
+  flex:none;font-family:var(--font-mono);font-size:13px;
+  word-spacing:-.22em;white-space:nowrap;
+}
+.scr-calendar .dp-plan{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.scr-calendar .dp-plan:last-child{border-bottom:none;}
+.scr-calendar .dp-plan:first-child{padding-top:0;}
+.scr-calendar .dp-empty{
+  display:flex;flex-direction:column;align-items:flex-start;gap:10px;
+  font-size:12px;line-height:17px;color:var(--text-3);
+}
+.scr-calendar .dp-empty .row{display:flex;gap:8px;flex-wrap:wrap;}
+.scr-calendar .dp-note{
+  width:100%;box-sizing:border-box;resize:vertical;min-height:52px;
+  border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);
+  padding:9px 11px;font-family:var(--font-sans);font-size:12px;line-height:17px;color:var(--text);
+  transition:border-color var(--t-fast) ease,box-shadow var(--t-fast) ease;
+}
+.scr-calendar .dp-note:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.scr-calendar .dp-note::placeholder{color:var(--text-3);}
+.scr-calendar .dp-foot{padding:14px 16px;border-top:1px solid var(--border);}
+.scr-calendar .dp-foot .btn{width:100%;justify-content:center;}
+
+/* ============================================================
+   ЛЕГЕНДА
+   ============================================================ */
+.scr-calendar .leg{display:flex;gap:40px;flex-wrap:wrap;}
+.scr-calendar .leg-block{min-width:0;}
+.scr-calendar .leg-title{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px;}
+.scr-calendar .leg-scale{display:flex;align-items:flex-end;gap:2px;}
+.scr-calendar .leg-step{width:52px;}
+.scr-calendar .leg-step i{display:block;height:12px;border:1px solid var(--border);border-radius:2px;}
+.scr-calendar .leg-step span{display:block;font-size:10px;color:var(--text-3);margin-top:5px;white-space:nowrap;}
+.scr-calendar .leg-marks{display:flex;gap:22px;flex-wrap:wrap;}
+.scr-calendar .leg-mark{display:flex;align-items:baseline;gap:7px;font-size:12px;color:var(--text-2);}
+.scr-calendar .leg-mark b{font-size:11px;font-weight:400;}
+
+/* ============================================================
+   АДАПТИВ — минимальное окно по ТЗ 1280×800
+   ============================================================ */
+@media (max-width:1180px){
+  .scr-calendar .cal{grid-template-columns:minmax(0,1fr);}
+  /* В одну колонку панель ничего не ломает — возвращаем обычный поток. */
+  .scr-calendar .dp-wrap{position:static;min-height:0;}
+  .scr-calendar .dp{position:static;}
+  .scr-calendar .dp-body{overflow:visible;}
+}
+@media (max-width:900px){
+  .scr-calendar{--pad:20px;}
+  .scr-calendar .cal-day{min-height:80px;padding:7px 8px;}
+  .scr-calendar .cal-bal{display:none;}
+  .scr-calendar .leg{gap:24px;}
+}
+/* ▲ КОНЕЦ ПЕРЕНОСА ИЗ МАКЕТА */
+
+/* ============================================================
+   ДОБАВЛЕНИЯ К МАКЕТУ
+   ============================================================ */
+/* Ячейка соседнего месяца без данных — пустое место сетки. */
+.scr-calendar .cal-day.is-void{cursor:default;}
+.scr-calendar .cal-day.is-void:hover{filter:none;}
