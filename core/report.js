@@ -83,7 +83,11 @@ function upcoming(recurring, fromDay, days) {
       }
       /* После даты окончания платёж больше не ждём. */
       if (hit && r.end_date && day > r.end_date) hit = false;
-      if (hit) out.push({ day, name: r.name, amount: BigInt(r.amount), dir: r.direction,
+      /* Сумма бывает своя на каждый день: пополнение кредитки к ближайшему
+         грейсу — сколько осталось внести (main/grace.js). */
+      const amount = hit ? (r.amountOn ? BigInt(r.amountOn(day)) : BigInt(r.amount)) : 0n;
+      /* Ноль — например, к грейсу уже всё внесено: события нет. */
+      if (hit && amount > 0n) out.push({ day, name: r.name, amount, dir: r.direction,
                           category: r.category || '', accountId: r.account_id || '',
                           obligatory: !!r.obligatory });
     }

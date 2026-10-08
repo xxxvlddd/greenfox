@@ -485,7 +485,7 @@ function renderExpenses(d){
         '<p class="sec-sub">' + nOps(d.opsTotal) + ' за период, включая доходы и переводы</p>' +
       '</div><span class="spacer"></span>' +
         '<button class="btn btn-sm" id="exOpsToggle">Свернуть</button>' +
-        '<button class="btn btn-sm" data-soon="Экспорт в CSV">Экспорт в CSV</button>' +
+        '<button class="btn btn-sm" id="exExport">Экспорт в CSV</button>' +
       '</div>' +
       '<div id="exOpsPanel">' +
         '<div class="ops-controls">' +
@@ -1479,4 +1479,20 @@ function redrawExpensesWidth(){
   exRenderTreemap();
   exRenderPareto();
   exRenderDaily();
+}
+
+/* «Экспорт в CSV»: операции показанного периода — в папку, которую
+   человек выберет. Формат — журнал операций, тот же, что в «Настройках». */
+function exExportPeriod(){
+  var p = EXP && EXP.period;
+  if (!p) return;
+  var from = (exCustom && exCustom.from) || p.from, to = (exCustom && exCustom.to) || p.to;
+  window.api.pickFolder().then(function(dir){
+    if (!dir) return;
+    return window.api.exportPeriod(dir, from, to).then(function(r){
+      if (!r || !r.ok){ toast('Не выгрузилось: ' + ((r && r.error) || 'ошибка')); return; }
+      toast('Выгружено операций: ' + r.rows + ' — файл «' + r.file.split('/').pop() + '»');
+      window.api.reveal('export');
+    });
+  });
 }

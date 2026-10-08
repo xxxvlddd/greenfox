@@ -181,6 +181,9 @@ function register(ipcMain, env) {
   h('day-note', write((date, text) => calendar.setNote(db(), date, text)));
   h('payments', screen(() => payments.build(db(), today())));
   h('question-done', write(key => payments.resolveQuestion(db(), key)));
+  h('payment-skip', write(id => payments.skipPayment(db(), id, today(), entry.remember)));
+  h('question-add', write(q => payments.addQuestion(db(), q, entry.remember)));
+  h('day-quiet', write((date, on) => calendar.setQuiet(db(), date, !!on, today())));
 
   /* ── Окна ввода ── */
   h('form-data', read(() => entry.formData(db(), today())));
@@ -195,6 +198,7 @@ function register(ipcMain, env) {
   h('save-loan', write(l => entry.saveLoan(db(), l, today())));
   h('save-recon', write(r => entry.saveRecon(db(), r, today())));
   h('drop-plan', write(id => entry.dropPlan(db(), id)));
+  h('plan-aside', write((id, amount) => entry.setAside(db(), id, amount)));
   h('pause-recurring', write(id => entry.pauseRecurring(db(), id)));
   h('undo', write(token => entry.undo(db(), token)));
 
@@ -241,7 +245,7 @@ function register(ipcMain, env) {
     try { await fx.refresh(db(), today(), { curs: [cur] }); } catch (err) { /* без курса — посчитает позже */ }
     return fx.forForms(db());
   });
-  h('account-edit', write(a => entry.editAccount(db(), a)));
+  h('account-edit', write(a => entry.editAccount(db(), Object.assign({}, a, { today: today() }))));
   h('account-reorder', write(ids => entry.reorderAccounts(db(), ids)));
   h('account-archive', write(id => entry.archiveAccount(db(), id, today())));
   h('account-restore', write(id => entry.restoreAccount(db(), id)));
@@ -255,7 +259,7 @@ function register(ipcMain, env) {
   h('category-delete', write(name => entry.deleteCategory(db(), name)));
   h('recurring-resume', write(id => entry.resumeRecurring(db(), id)));
   h('loan-rate', write(rate => entry.setLoanRate(db(), rate)));
-  h('card-terms', write(t => entry.setCardTerms(db(), t)));
+  h('card-terms', write(t => entry.setCardTerms(db(), Object.assign({}, t, { today: today() }))));
 
   /* ── Ассистент: ключ и модели ── */
   h('ai-key-set', write(async raw => {
@@ -339,6 +343,12 @@ function register(ipcMain, env) {
   h('backup-now', write(() => backup.make(db(), env.dataDir(), 'manual')));
   h('export-csv', write((dir, tables) => {
     const r = csvio.exportCsv(db(), chosen(dir, 'Папка'), tables, today() || undefined);
+    if (r && r.ok) exported = r.dir;
+    return r;
+  }));
+  /* Операции периода с «Расходов» — в выбранную папку. */
+  h('export-period', write((dir, from, to) => {
+    const r = csvio.exportPeriod(db(), chosen(dir, 'Папка'), from, to, today() || undefined);
     if (r && r.ok) exported = r.dir;
     return r;
   }));

@@ -22,12 +22,12 @@ function techCategories(db) {
 }
 
 const book = require('./book');
+const grace = require('./grace');
 const prefs = require('./prefs');
 const allTransactions = book.allTransactions;
 
 function build(db, todayIso) {
   const accounts = db.prepare('SELECT * FROM accounts WHERE archived = 0 ORDER BY sort_order').all();
-  const recurring = book.recurring(db, 'WHERE active = 1');
   const liabilities = db.prepare('SELECT * FROM liabilities').all();
   const tech = techCategories(db);
 
@@ -37,8 +37,15 @@ function build(db, todayIso) {
   /* Пусто — пока нет ни одного счёта; без операций, но со счетами —
      уже есть что показать. */
   if (!hist.length) return { empty: true };
+  /* Пополнение кредитки в расписании — тем, что осталось внести до грейса,
+     а не лимитом карты. */
+  const G = grace.state(accounts, book.recurring(db, 'WHERE active = 1'), B, todayIso || R.iso(new Date()));
+  const recurring = grace.applyTo(book.recurring(db, 'WHERE active = 1'), G);
 
-  const lastDay = hist[hist.length - 1].d;
+  /* Последний день, о котором учёт что-то знает: операция или отметка
+     «день без трат» из календаря. */
+  const quietLast = db.prepare('SELECT MAX(date) d FROM quiet_days WHERE date <= ?').get(todayIso || R.iso(new Date())).d;
+  const lastDay = quietLast && quietLast > hist[hist.length - 1].d ? quietLast : hist[hist.length - 1].d;
   /* Сегодня — это сегодня, а не последний день, когда что-то вносили.
      Иначе приложение, в которое два дня не заглядывали, показывало бы
      позавчерашний дневной лимит и уверяло, что всё в порядке.
@@ -222,28 +229,13 @@ function build(db, todayIso) {
               : 'на ней ' + say(room)) });
   }
 
-  /* 3. Условие грейса по кредитке: за цикл нужно внести оговорённую
-        сумму. Цикл считаем от дня выписки до дня выписки. */
-  /* Условие грейса — закрыть долг до дня выписки, а не внести
-     фиксированную сумму: сумма из расписания — это лимит карты,
-     худший случай, а не то, что нужно заплатить именно сейчас. */
-  const card = accounts.filter(a => a.type === 'кредитная карта')[0];
-  const graceRule = recurring.filter(r => r.category === 'Переводы между своими' && r.obligatory)[0];
-  if (card && graceRule && graceRule.day_of_month) {
-    const debt = -(snap.bal[card.id] || 0n);
-    if (debt > 0n) {
-      const cyc = R.graceCycle(today, graceRule.day_of_month);
-      let paid = 0n;
-      for (const r of rows) {
-        if (r.d < cyc.start || r.d > today) continue;
-        if (r.to === card.id) paid += r.a;
-      }
-      const left = R.daysBetween(today, cyc.due);
-      alerts.push({ tone: 'warning', lead: 'Грейс кредитки.',
-        text: 'Долг ' + say(debt) + ' нужно закрыть до ' + R.human(cyc.due) + ' — ' +
-              (left === 0 ? 'сегодня последний день' : 'осталось ' + R.nDays(left)) +
-              '. За цикл уже внесено ' + say(paid) });
-    }
+  /* 3. Грейс кредитки: сколько ещё внести до дня грейса, чтобы не было
+        процентов (main/grace.js). Всё внесено — молчим. */
+  if (G && G.left > 0n) {
+    alerts.push({ tone: 'warning', lead: 'Грейс кредитки.',
+      text: 'До ' + R.human(G.due) + ' нужно внести ещё ' + say(G.left) + ' — ' +
+            (G.daysLeft === 0 ? 'сегодня последний день' : 'осталось ' + R.nDays(G.daysLeft)) +
+            (G.paid > 0n ? '. Уже внесено ' + say(G.paid) : '') });
   }
 
   return {

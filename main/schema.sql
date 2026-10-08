@@ -26,6 +26,10 @@ CREATE TABLE IF NOT EXISTS accounts (
   credit_limit  INTEGER,                    -- только для кредитных карт
   grace_note    TEXT NOT NULL DEFAULT '',
   is_payment    INTEGER NOT NULL DEFAULT 1, -- платёжный счёт: участвует в «доступно на счетах»
+  statement_day  INTEGER,                   -- кредитка: день выписки (необязательно)
+  grace_need     INTEGER,                   -- кредитка: сколько осталось внести до грейса, копейки…
+  grace_need_at  TEXT,                      -- …на какую дату это сказано…
+  grace_need_due TEXT,                      -- …и к какому дню грейса
   reconciled_balance INTEGER,
   reconciled_at      TEXT,
   sort_order    INTEGER NOT NULL DEFAULT 0,
@@ -221,5 +225,30 @@ CREATE TABLE IF NOT EXISTS fx_rates (
   source   TEXT    NOT NULL DEFAULT 'cbr',   -- cbr / manual
   PRIMARY KEY (date, currency),
   CHECK (rate > 0),
+  CHECK (date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]')
+);
+
+-- Платёж, который в этом месяце пропущен по решению: «Пропустить» на
+-- «Обязательных платежах». period — месяц ГГГГ-ММ.
+CREATE TABLE IF NOT EXISTS skipped_payments (
+  recurring_id INTEGER NOT NULL,
+  period       TEXT    NOT NULL,
+  at           TEXT    NOT NULL,
+  PRIMARY KEY (recurring_id, period)
+);
+
+-- Вопросы к платежам, заданные руками («Новый вопрос»). Закрытые — в
+-- resolved_questions под ключом q:<id>, как и вопросы из заметок.
+CREATE TABLE IF NOT EXISTS questions (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  recurring_id INTEGER,
+  text         TEXT    NOT NULL,
+  created_at   TEXT    NOT NULL
+);
+
+-- Дни, отмеченные «без трат»: в такой день записей нет, и это не пропуск.
+CREATE TABLE IF NOT EXISTS quiet_days (
+  date TEXT PRIMARY KEY,
+  at   TEXT NOT NULL,
   CHECK (date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]')
 );

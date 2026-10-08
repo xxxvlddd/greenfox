@@ -280,18 +280,30 @@ function asHead(){
 /* ---------- открыть, спросить, сохранить ---------- */
 function asToggle(on){
   asIsOpen = on;
-  document.getElementById('asPanel').classList.toggle('is-on', on);
-  document.getElementById('asDim').classList.toggle('is-on', on);
-  document.getElementById('asPanel').setAttribute('aria-hidden', on ? 'false' : 'true');
-  if (!on) return Promise.resolve();
+  var panel = document.getElementById('asPanel'), dim = document.getElementById('asDim');
+  panel.setAttribute('aria-hidden', on ? 'false' : 'true');
+  if (!on){
+    panel.classList.remove('is-on');
+    dim.classList.remove('is-on');
+    return Promise.resolve();
+  }
+  /* Сначала содержимое, потом выезд: собранная за кадром панель едет
+     ровно, а не перестраивается на ходу. */
   return window.api.assistantMeta().then(function(m){
     if (m && !m.error) AS = m;
     asHead();
     asRender(false);
-    var inp = document.getElementById('asInput');
-    if (inp && AS && AS.hasKey) inp.focus();
-    return asLoadReports();
-  });
+    return new Promise(function(res){
+      afterPaint(function(){
+        if (!asIsOpen) return res();
+        panel.classList.add('is-on');
+        dim.classList.add('is-on');
+        var inp = document.getElementById('asInput');
+        if (inp && AS && AS.hasKey) inp.focus({ preventScroll: true });
+        res();
+      });
+    });
+  }).then(function(){ return asIsOpen ? asLoadReports() : null; });
 }
 /* Авто-отчёты, которых человек ещё не видел, — в ленту, с заголовком
    периода. Прочитанный отчёт попадает в память разговора: можно сразу

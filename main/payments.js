@@ -68,8 +68,10 @@ function build(db, todayIso) {
   const card = accounts.filter(a => a.type === 'кредитная карта')[0] || null;
   const catType = {};
   for (const c of db.prepare('SELECT name, type FROM categories').all()) catType[c.name] = c.type;
-  const recurring = book.recurring(db, 'WHERE active = 1 ORDER BY id');
   const B = book.load(db);
+  /* Пополнение кредитки — тем, что осталось внести до грейса. */
+  const S = book.schedule(db, accounts, B, today, 'WHERE active = 1 ORDER BY id');
+  const recurring = S.recurring, G = S.grace;
   const rows = B.rows, hist = B.hist;
   const snap = R.balanceOn(hist, today);
   const monthStart = today.slice(0, 8) + '01';
@@ -85,17 +87,11 @@ function build(db, todayIso) {
                                R.nextDayOfMonth(today, loanRow.payment_day), loanRow.payment_day, B.loanRate);
     if (sch && sch.n) { loanEnd = sch.dates[sch.n - 1]; loanLeft = sch.n; }
   }
-  /* Сколько внесено на кредитку за текущий цикл грейса — у перевода
-     «до грейса» это и есть его состояние. */
-  let gracePaid = null, graceDue = null;
-  const graceRule = recurring.filter(r => r.category === SELF && r.obligatory && r.day_of_month)[0];
-  if (card && graceRule) {
-    const cyc = R.graceCycle(today, graceRule.day_of_month);
-    graceDue = cyc.due;
-    gracePaid = 0n;
-    for (const r of rows) if (r.to === card.id && r.d >= cyc.start && r.d <= today) gracePaid += r.a;
-  }
-
+  /* Грейс кредитки (main/grace.js): у перевода «до грейса» состояние —
+     внесено ли всё, что нужно к ближайшему дню грейса. */
+  const graceDone = !!G && G.left === 0n;
+  /* Пропущенные в этом месяце по решению. */
+  const skipped = new Set(db.prepare('SELECT recurring_id id FROM skipped_payments WHERE period = ?').all(today.slice(0, 7)).map(x => x.id));
   /* Какая операция месяца закрывает какой платёж. Сначала точные
      совпадения суммы, потом — с запасом в 10%: подписка в валюте
      списывается по курсу. Одна операция засчитывается одному платежу,
@@ -158,9 +154,13 @@ function build(db, todayIso) {
     /* Состояние отдаём значениями, а фразу собирает окно: только там
        знают, какой пробел неразрывный. */
     let cycle, cstate;
-    if (flow === 'mov') {
-      cycle = gracePaid > 0n ? 'done' : 'wait';
-      cstate = gracePaid > 0n ? { t: 'paid', sum: String(gracePaid) } : { t: 'until', date: graceDue || today };
+    if (skipped.has(r.id) && !hit) {
+      /* «Пропустить»: в этом месяце платежа не будет — по решению. */
+      cycle = 'skip'; cstate = { t: 'skipped' };
+    } else if (flow === 'mov') {
+      cycle = graceDone ? 'done' : 'wait';
+      cstate = graceDone ? { t: 'paid', sum: String(G.paid) }
+        : { t: 'until', date: G ? G.due : today, left: G ? String(G.left) : null };
     } else if (hit) {
       cycle = 'done';
       cstate = { t: flow === 'in' ? 'came' : voluntary ? 'put' : 'charged', date: hit.date };
@@ -251,6 +251,14 @@ function build(db, todayIso) {
       meta: 'из заметки к покупке «' + p.name + '»' + (p.bought_at ? ' · куплено ' + ddmm(p.bought_at) + '.' +
             p.bought_at.slice(0, 4) : '') });
   }
+  /* Заданные руками — «Новый вопрос». */
+  const recName = {};
+  for (const r of db.prepare('SELECT id, name FROM recurring').all()) recName[r.id] = r.name;
+  for (const q of db.prepare('SELECT * FROM questions ORDER BY id').all()) {
+    questions.push({ key: 'q:' + q.id, text: capFirst(q.text) + (/[.?!]$/.test(q.text) ? '' : '.'),
+      meta: (q.recurring_id && recName[q.recurring_id] ? 'к платежу «' + recName[q.recurring_id] + '»' : 'вопрос') +
+            ' · задан ' + ddmm(q.created_at.slice(0, 10)) });
+  }
   for (const r of recurring) {
     if (!/уточн/i.test(String(r.note || ''))) continue;
     questions.push({ key: 'rec:' + r.id, text: 'Проверить на следующем цикле «' + r.name + '»: ' + String(r.note).trim() + '.',
@@ -279,10 +287,36 @@ function build(db, todayIso) {
 
 /* Закрыть вопрос: запоминаем его ключ, сам вопрос больше не показывается. */
 function resolveQuestion(db, key) {
-  if (!/^(plan|rec):\d+$/.test(String(key))) throw new Error('неизвестный вопрос: ' + key);
+  if (!/^(plan|rec|q):\d+$/.test(String(key))) throw new Error('неизвестный вопрос: ' + key);
   db.prepare('INSERT OR REPLACE INTO resolved_questions(key, resolved_at) VALUES(?, ?)')
     .run(key, new Date().toISOString());
   return { ok: true };
 }
 
-module.exports = { build, resolveQuestion, GROUPS };
+function fail(m) { const e = new Error(m); e.user = true; throw e; }
+/* «Пропустить»: платежа в этом месяце не будет — он не ждётся и не
+   считается пропущенным. Отмена — в течение минуты. */
+function skipPayment(db, id, todayIso, remember) {
+  const r = db.prepare('SELECT * FROM recurring WHERE id = ? AND active = 1').get(Number(id));
+  if (!r) fail('Платёж не найден — возможно, он уже на паузе');
+  const period = String(todayIso).slice(0, 7);
+  db.prepare('INSERT OR REPLACE INTO skipped_payments(recurring_id, period, at) VALUES(?, ?, ?)').run(r.id, period, new Date().toISOString());
+  return { ok: true, name: r.name, undo: remember(() =>
+    db.prepare('DELETE FROM skipped_payments WHERE recurring_id = ? AND period = ?').run(r.id, period)) };
+}
+/* «Новый вопрос»: текст и, если есть, платёж, к которому он относится. */
+function addQuestion(db, q, remember) {
+  const text = String((q && q.text) || '').replace(/\s+/g, ' ').trim().slice(0, 300);
+  if (!text) fail('Вопрос: что нужно выяснить');
+  let rid = null;
+  if (q.recurringId) {
+    const r = db.prepare('SELECT id FROM recurring WHERE id = ?').get(Number(q.recurringId));
+    if (!r) fail('Платёж не найден');
+    rid = r.id;
+  }
+  const id = Number(db.prepare('INSERT INTO questions(recurring_id, text, created_at) VALUES(?, ?, ?)')
+    .run(rid, text, new Date().toISOString()).lastInsertRowid);
+  return { ok: true, id, undo: remember(() => db.prepare('DELETE FROM questions WHERE id = ?').run(id)) };
+}
+
+module.exports = { build, resolveQuestion, skipPayment, addQuestion, GROUPS };

@@ -58,7 +58,7 @@ function obSkipHint(step){
 var obTouched = { s2: false };
 var obRailKept = {};           /* числа итога с прошлой отрисовки — между шагами не обнуляются */
 var OB_TYPES = [['debit', 'Дебетовая карта'], ['credit', 'Кредитная карта'], ['cash', 'Наличные'],
-  ['current', 'Текущий или накопительный'], ['broker', 'Брокерский'], ['crypto', 'Криптокошелёк']];
+  ['savings', 'Копилка или накопления'], ['current', 'Текущий счёт'], ['broker', 'Брокерский'], ['crypto', 'Криптокошелёк']];
 /* Группы категорий: тип, заголовок, пояснение. */
 var OB_GROUPS = [
   ['доход', 'Доходы', 'откуда приходят деньги'],
@@ -271,13 +271,19 @@ function obAccRowHTML(a, i){
   /* Кредитка тянет за собой лимит и день грейса: без них не посчитать,
      до какого числа долг возвращается без процентов. */
   if (obIsCredit(a)){
+    var fld = function(key, label, ph, mode, aria){
+      return '<div class="f"><div class="l">' + label + '</div><input class="inp" data-oa="' + i + ':' + key + '" inputmode="' + mode + '" ' +
+        'value="' + esc(a[key] || '') + '" placeholder="' + ph + '" aria-label="' + aria + '"></div>';
+    };
     h += '<div class="ac-more">' +
-      '<div class="f"><div class="l">Кредитный лимит</div><input class="inp" data-oa="' + i + ':limit" inputmode="decimal" ' +
-        'value="' + esc(a.limit || '') + '" aria-label="Кредитный лимит"></div>' +
-      '<div class="f"><div class="l">Грейс до … числа</div><input class="inp" data-oa="' + i + ':graceDay" inputmode="numeric" ' +
-        'value="' + esc(a.graceDay || '') + '" placeholder="1–28" aria-label="День грейса"></div>' +
-      '<div class="why">Нужны, чтобы считать грейс-период: без них приложение не скажет, до какого числа долг ' +
-        'возвращается без процентов.</div></div>';
+      fld('limit', 'Кредитный лимит', '', 'decimal', 'Кредитный лимит') +
+      fld('avail', 'Доступно', '', 'decimal', 'Доступно по карте') +
+      fld('graceDay', 'Грейс до … числа', '1–28', 'numeric', 'День грейса') +
+      fld('statementDay', 'День выписки', 'не обяз.', 'numeric', 'День выписки') +
+      fld('graceLeft', 'Осталось до грейса', 'не обяз.', 'decimal', 'Осталось внести до грейса') +
+      '<div class="why">Долг, лимит и «доступно» — хватит двух любых, третье посчитается. «Осталось до грейса» — ' +
+        'сумма из приложения банка «внесите до …, чтобы не платить проценты»: по ней приложение будет следить за ' +
+        'грейсом с первого дня.</div></div>';
   }
   return h;
 }
@@ -495,11 +501,14 @@ function obA(el, frames, o){
   try { return el.animate(frames, Object.assign({ fill: 'backwards', easing: OB_OUT }, o || {})); } catch (e) { return null; }
 }
 /* Подъём по очереди: dy — откуда, step — шаг очереди. */
+/* Подушка перед появлением: кадр, в котором собирается новый экран,
+   длинный — появление начинается после него и не теряет первых кадров. */
+var OB_CUSHION = 90;
 function obRise(list, base, step, dy, dur, dx){
   var out = [];
   list.forEach(function(el, i){
     var a = obA(el, [{ opacity: 0, transform: 'translate(' + (dx || 0) + 'px,' + (dy || 0) + 'px)' },
-                     { opacity: 1, transform: 'none' }], { duration: dur, delay: base + Math.min(i, 12) * step });
+                     { opacity: 1, transform: 'none' }], { duration: dur, delay: OB_CUSHION + base + Math.min(i, 12) * step });
     if (a) out.push(a);
   });
   return out;
@@ -586,6 +595,8 @@ function obEnterWelcome(pane, move){
   var still = REDUCED || !move;
   var sc = typeof obFxStart === 'function' ? obFxStart(pane, { still: still }) : null;
   if (still) return;
+  /* Прогрев холста — пока на экране ещё ничего не движется. */
+  if (sc && sc.warm) sc.warm();
   var anims = [];
   var lt = pane.querySelectorAll('.wl-word .lt > span');
   [].forEach.call(lt, function(x, i){
@@ -601,10 +612,15 @@ function obEnterWelcome(pane, move){
   /* До старта всё стоит в начальном положении: анимации созданы и
      поставлены на паузу. */
   anims.forEach(function(a){ a.pause(); });
+  /* Окно показано и шрифты на месте — и ещё подушка: первый запуск
+     после установки занят (macOS проверяет приложение, графика
+     готовится), движение начинается, когда браузер освободился. */
   obReady().then(function(){
-    if (!pane.isConnected) return;
-    if (sc) sc.play();
-    anims.forEach(function(a){ a.play(); });
+    whenIdle(function(){
+      if (!pane.isConnected) return;
+      if (sc) sc.play();
+      anims.forEach(function(a){ a.play(); });
+    }, 350, 900);
   });
 }
 
@@ -716,9 +732,17 @@ function obCheck(step){
       var named = String(a.name || '').trim(), c = obCents(a.bal);
       if (!named && !String(a.bal || '').trim()) continue;
       if (!named) return 'Счёт без названия: впишите, как он называется';
-      if (!isFinite(c)) return '«' + named + '»: остаток — числом';
+      var blankBal = !String(a.bal || '').trim();
+      if (!blankBal && !isFinite(c)) return '«' + named + '»: остаток — числом';
       if (obIsCredit(a)){
-        if (!(obCents(a.limit) > 0)) return '«' + named + '»: впишите кредитный лимит';
+        /* Долг, лимит и «доступно» — хватит двух любых. */
+        var has = function(v){ return String(v || '').trim() !== '' && isFinite(obCents(v)); };
+        var known = (has(a.bal) ? 1 : 0) + (has(a.limit) ? 1 : 0) + (has(a.avail) ? 1 : 0);
+        if (known < 2 || (!has(a.limit) && !has(a.avail))) return '«' + named + '»: впишите лимит или сколько доступно — хватит двух чисел из трёх';
+        if (has(a.statementDay)){
+          var sd = Number(a.statementDay);
+          if (!(sd >= 1 && sd <= 28 && Math.round(sd) === sd)) return '«' + named + '»: день выписки — число от 1 до 28';
+        }
         var gd = Number(a.graceDay);
         if (!(gd >= 1 && gd <= 28 && Math.round(gd) === gd)) return '«' + named + '»: день грейса — число от 1 до 28';
       }
@@ -741,6 +765,27 @@ function obCheck(step){
 }
 
 /* ---------- запись ---------- */
+/* Сумма из поля — копейками строкой; пусто — пустая строка. */
+function obCentsStr(v){
+  var c = obCents(v);
+  return String(v === undefined || v === null ? '' : v).trim() !== '' && isFinite(c) ? String(Math.abs(c)) : '';
+}
+/* Кредитка: из двух чисел — долг, лимит, «доступно» — пустое третье
+   подсказкой показывает, каким оно станет. */
+function obCardHint(i){
+  var a = OB.accounts[i];
+  if (!a || !obIsCredit(a)) return;
+  var row = document.querySelector('#obBody [data-oarow="' + i + '"]');
+  if (!row) return;
+  var more = row.nextElementSibling;
+  var num = function(v){ var c = obCents(v); return String(v || '').trim() !== '' && isFinite(c) ? Math.abs(c) : null; };
+  var d = num(a.bal), l = num(a.limit), v = num(a.avail);
+  var put = function(el, cents){ if (el) el.placeholder = cents === null || cents < 0 ? (el === row.querySelector('[data-oa$=":bal"]') ? 'долг' : '') : '= ' + money0(String(cents)).replace(NBSP + '₽', ''); };
+  var elD = row.querySelector('[data-oa$=":bal"]'), elL = more && more.querySelector('[data-oa$=":limit"]'), elV = more && more.querySelector('[data-oa$=":avail"]');
+  put(elD, d === null && l !== null && v !== null ? l - v : null);
+  put(elL, l === null && d !== null && v !== null ? d + v : null);
+  put(elV, v === null && d !== null && l !== null ? l - d : null);
+}
 function obPayload(){
   var steps = { s1: obFilled('s1'), s2: obFilled('s2'), s3: obFilled('s3') };
   var date = exParseDate(exRuDate(OB.date)) || OB.today;
@@ -749,8 +794,10 @@ function obPayload(){
     accounts: OB.accounts.map(function(a){
       var c = obCents(a.bal);
       return { existing: !!a.existing, name: a.name, type: a.type, isPay: !!a.isPay, cur: obIsCredit(a) ? 'RUB' : (a.cur || 'RUB'),
-        bal: isFinite(c) ? String(obIsCredit(a) ? -Math.abs(c) : c) : '',
-        limit: obIsCredit(a) ? String(obCents(a.limit)) : null, graceDay: obIsCredit(a) ? Number(a.graceDay) : null };
+        bal: isFinite(c) && String(a.bal).trim() !== '' ? String(obIsCredit(a) ? -Math.abs(c) : c) : '',
+        limit: obIsCredit(a) ? obCentsStr(a.limit) : null, graceDay: obIsCredit(a) ? Number(a.graceDay) : null,
+        avail: obIsCredit(a) ? obCentsStr(a.avail) : null, statementDay: obIsCredit(a) ? String(a.statementDay || '').trim() : null,
+        graceLeft: obIsCredit(a) ? obCentsStr(a.graceLeft) : null };
     }),
     cats: OB.cats.map(function(c){ return { name: c.name, type: c.type, on: !!c.on, custom: !!c.custom }; }),
     recurring: OB.recurring.map(function(r){
@@ -970,6 +1017,7 @@ function obInit(){
     if (t.getAttribute('data-oa') !== null){
       OB.accounts[i][key] = t.value;
       if (key === 'bal'){ obSyncRail(true); obSyncCost(); }
+      if (key === 'bal' || key === 'limit' || key === 'avail') obCardHint(i);
     } else {
       if (key === 'newcat') return;
       var r = OB.recurring[i];
@@ -990,7 +1038,8 @@ function obInit(){
       if (t.getAttribute('data-oa') !== null && key === 'type'){
         var a = OB.accounts[i];
         a.type = t.value;
-        a.isPay = !(t.value === 'credit' || t.value === 'broker' || t.value === 'crypto');
+        /* Копилка, брокерский и крипта — не на каждый день: в «доступно» не входят. */
+        a.isPay = !(t.value === 'credit' || t.value === 'broker' || t.value === 'crypto' || t.value === 'savings');
         if (t.value === 'credit') a.cur = 'RUB';
         obRender(true);
         obSyncRail(true);

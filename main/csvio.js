@@ -21,7 +21,7 @@ const R = require('../core/report');
 const book = require('./book');
 
 const SELF = 'Переводы между своими';
-const ACC_TYPE_OUT = { 'брокерский': 'брокерский счёт', 'крипто': 'криптокошелёк', 'текущий': 'текущий счёт' };
+const ACC_TYPE_OUT = { 'брокерский': 'брокерский счёт', 'крипто': 'криптокошелёк', 'текущий': 'текущий счёт', 'копилка': 'копилка' };
 const FREQ_OUT = { month: 'месяц', year: 'год', week: 'неделя', quarter: 'квартал' };
 const WEEKDAYS = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье'];
 const TABLES = ['transactions', 'accounts', 'categories', 'recurring', 'liabilities', 'planned',
@@ -262,4 +262,17 @@ function importApply(db, token, withDups, remember) {
   }) };
 }
 
-module.exports = { TABLES, TABLE_NAMES, exportCsv, tableRows, importPreview, importApply, isoDate };
+/* Операции за период — с экрана «Расходы»: один файл в формате журнала. */
+function exportPeriod(db, parentDir, from, to, today) {
+  if (!parentDir || !fs.existsSync(parentDir)) fail('Папка для выгрузки не найдена');
+  if (!isoDate(from) || !isoDate(to) || from > to) fail('Период: даты не поняты');
+  const all = tableRows(db, 'transactions', today);
+  const rows = all.rows.filter(r => r.date >= from && r.date <= to);
+  const dd = iso => iso.slice(8, 10) + '.' + iso.slice(5, 7) + '.' + iso.slice(0, 4);
+  let file = path.join(parentDir, 'GREENFOX — операции ' + dd(from) + (from === to ? '' : '–' + dd(to)) + '.csv'), n = 2;
+  while (fs.existsSync(file)) file = file.replace(/( \(\d+\))?\.csv$/, ' (' + n++ + ').csv');
+  fs.writeFileSync(file, toCsv(all.head, rows), 'utf8');
+  return { ok: true, file, dir: parentDir, rows: rows.length };
+}
+
+module.exports = { TABLES, TABLE_NAMES, exportCsv, exportPeriod, tableRows, importPreview, importApply, isoDate };

@@ -88,6 +88,22 @@ ObFxScene.prototype.play = function(){
   requestAnimationFrame(this.loop);
 };
 
+/* Прогрев: один раз нарисовать собранный знак и поле и сразу стереть.
+   Первое рисование на холсте — самое дорогое (видеокарта готовит всё
+   нужное); пусть оно случится до начала движения, а не на его первом
+   кадре. Точки потом снова разлетаются по местам старта. */
+ObFxScene.prototype.warm = function(){
+  if (this.dead || this.still) return;
+  var phase = this.phase, t0 = this.t0;
+  this.settleAll();
+  this.phase = 'idle'; this.t0 = performance.now() - 6000 / this.speed;
+  this.draw(performance.now(), 16);
+  this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+  this.ctx.clearRect(0, 0, this.cv.width, this.cv.height);
+  this.phase = phase; this.t0 = t0;
+  this.buildFox();
+};
+
 ObFxScene.prototype.measure = function(){
   var r = this.pane.getBoundingClientRect(), a = this.anchor.getBoundingClientRect();
   this.W = Math.max(1, r.width); this.H = Math.max(1, r.height);

@@ -240,6 +240,18 @@ document.addEventListener('click', function(e){
   if (t.closest('[data-state-act="integrity"]')){ sgIntegrity(); return; }
   var formBtn = t.closest('[data-form]');
   if (formBtn){ fmFromButton(formBtn); return; }
+  if (t.closest('#exExport')){ exExportPeriod(); return; }
+  /* «День без трат» в календаре — отметить или снять. */
+  var quietBtn = t.closest('[data-quiet]');
+  if (quietBtn){
+    var qd = quietBtn.getAttribute('data-quiet'), qon = quietBtn.getAttribute('data-on') === '1';
+    window.api.setQuiet(qd, qon).then(function(r){
+      if (!r || !r.ok){ toast('Не сохранилось: ' + ((r && r.error) || 'ошибка базы')); return; }
+      toast(qon ? humanDate(qd) + ' — отмечен как день без трат' : 'Отметка снята');
+      draw();
+    });
+    return;
+  }
   var actBtn = t.closest('[data-act]');
   if (actBtn){ fmAct(actBtn); return; }
   var noteBtn = t.closest('[data-note]:not([data-form])');
@@ -303,6 +315,9 @@ document.addEventListener('click', function(e){
   }
   if (!t.closest('.pop')) closePops();
 
+  /* Переход к разделу «Настроек» — например, к условиям кредитки. */
+  var toSet = t.closest('[data-goto-settings]');
+  if (toSet){ sgSec = toSet.getAttribute('data-goto-settings'); goTo('settings'); return; }
   var soon = t.closest('[data-soon]');
   if (soon){ toast(soon.getAttribute('data-soon') + ' — экран ещё не собран'); return; }
 

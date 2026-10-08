@@ -578,7 +578,9 @@ function toolCheck(db, today) {
   const accounts = db.prepare('SELECT * FROM accounts WHERE archived = 0').all();
   const stale = R.staleRecon(accounts, today).map(s => ({ account: s.name || s.id, days_since_reconciliation: s.days }));
   const from = R.addDays(today, -29);
-  const have = new Set(db.prepare('SELECT DISTINCT date FROM transactions WHERE date >= ?').all(from).map(r => r.date));
+  /* Дни с записями и дни, отмеченные «без трат», — не пропуски. */
+  const have = new Set(db.prepare('SELECT DISTINCT date FROM transactions WHERE date >= ? UNION SELECT date FROM quiet_days WHERE date >= ?')
+    .all(from, from).map(r => r.date));
   const empty = [];
   for (let d = from; d <= today; d = R.addDays(d, 1)) if (!have.has(d)) empty.push(d);
   const dups = db.prepare('SELECT date, amount, description, COUNT(*) n FROM transactions WHERE date >= ? ' +

@@ -34,12 +34,13 @@ function serSchedule(s) {
 
 function loadAll(db, todayIso) {
   const accounts = db.prepare('SELECT * FROM accounts WHERE archived = 0 ORDER BY sort_order').all();
-  const recurring = book.recurring(db, 'WHERE active = 1');
   const liabilities = db.prepare('SELECT * FROM liabilities').all();
   const B = book.load(db);
   const rows = B.rows, hist = B.hist;
   const today = todayIso || R.iso(new Date());
-  return { accounts, recurring, liabilities, rows, hist, today, loanRate: B.loanRate,
+  const S = book.schedule(db, accounts, B, today);
+  const recurring = S.recurring;
+  return { accounts, recurring, grace: S.grace, liabilities, rows, hist, today, loanRate: B.loanRate,
            snap: hist.length ? R.balanceOn(hist, today) : null };
 }
 
@@ -143,27 +144,19 @@ function build(db, todayIso) {
     base: serSchedule(R.loanSchedule(snap.loan, l.pay, l.next, l.row.payment_day, ctx.loanRate)),
   } : null;
 
-  /* ── Грейс кредитки: тот же цикл, что у «Обзора» и «Капитала» ── */
-  const card = accounts.filter(a => a.type === 'кредитная карта')[0] || null;
-  const graceRule = recurring.filter(r => r.category === SELF && r.obligatory && r.day_of_month)[0] || null;
+  /* ── Грейс кредитки: один расчёт для всех экранов (main/grace.js) ── */
+  const G = ctx.grace;
   let grace = null;
-  if (card && graceRule) {
-    const cyc = R.graceCycle(today, graceRule.day_of_month);
-    const ops = rows.filter(r => r.to === card.id && r.d >= cyc.start && r.d <= today);
-    const before = R.balanceOn(hist, R.addDays(cyc.start, -1)).bal[card.id] || 0n;
-    const need = before < 0n ? -before : 0n;
-    const bal = snap.bal[card.id] || 0n;
-    const debt = bal < 0n ? -bal : 0n;
-    const paid = sum(ops, r => r.a);
+  if (G) {
     grace = {
-      bank: card.bank && card.bank !== '—' ? card.bank : '',
-      start: cyc.start, due: cyc.due, graceDay: graceRule.day_of_month,
-      len: R.daysBetween(cyc.start, cyc.due), todayIdx: R.daysBetween(cyc.start, today),
-      daysLeft: R.daysBetween(today, cyc.due),
-      need: String(need), paid: String(paid),
-      ops: ops.map(r => ({ date: ddmm(r.d), day: R.daysBetween(cyc.start, r.d), desc: r.t, sum: String(r.a) })),
-      debt: String(debt), limit: card.credit_limit === null ? null : String(card.credit_limit),
-      stuck: paid > 0n && debt > 0n && debt >= need,
+      bank: G.card.bank && G.card.bank !== '—' ? G.card.bank : '',
+      start: G.start, due: G.due, graceDay: G.graceDay, statementDay: G.statementDay, source: G.source,
+      len: Math.max(1, R.daysBetween(G.start, G.due)), todayIdx: R.daysBetween(G.start, today),
+      daysLeft: G.daysLeft,
+      need: String(G.need), paid: String(G.paid), left: String(G.left),
+      ops: G.ops.map(r => ({ date: ddmm(r.d), day: R.daysBetween(G.start, r.d), desc: r.t, sum: String(r.a) })),
+      debt: String(G.debt), limit: G.limit === null ? null : String(G.limit),
+      stuck: G.paid > 0n && G.debt > 0n && G.debt >= G.need && G.left > 0n,
     };
   }
 

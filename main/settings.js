@@ -17,10 +17,11 @@ const overview = require('./overview');
 const capital = require('./capital');
 const entry = require('./entry');
 const fx = require('./fx');
+const grace = require('./grace');
 
 const SELF = 'Переводы между своими';
 const ACC_WORD = { 'дебетовая карта': 'дебетовая', 'кредитная карта': 'кредитная', 'наличные': 'наличные',
-                   'брокерский': 'брокерский', 'крипто': 'криптокошелёк', 'текущий': 'текущий счёт' };
+                   'брокерский': 'брокерский', 'крипто': 'криптокошелёк', 'текущий': 'текущий счёт', 'копилка': 'копилка' };
 const MON_GEN = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября',
                  'октября', 'ноября', 'декабря'];
 const WEEKDAYS = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье'];
@@ -107,8 +108,13 @@ function build(db, todayIso, ctx) {
     limit: ov && ov.limitDays ? { free0: String(BigInt(ov.free) + BigInt(ov.reserve)), days: ov.limitDays,
                                   value: ov.dayLimit, nextIncome: ov.nextIncome } : null,
     loan: loanRow ? { creditor: loanRow.creditor, rateBp: loanRow.rate_bp } : null,
-    card: card ? { name: card.name, limit: card.credit_limit === null ? null : String(card.credit_limit),
-                   graceDay: graceRule ? graceRule.day_of_month : null } : null,
+    card: card ? Object.assign({ name: card.name, limit: card.credit_limit === null ? null : String(card.credit_limit),
+                   graceDay: graceRule ? graceRule.day_of_month : null, statementDay: card.statement_day || null },
+                   /* Как приложение сейчас считает грейс — для подписи под полем. */
+                   (() => {
+                     const G = B.hist.length ? book.schedule(db, accAll.filter(a => !a.archived), B, today).grace : null;
+                     return G ? { grace: grace.out(G), graceLeft: G.source === 'manual' ? String(G.left) : null } : {};
+                   })()) : null,
     /* Курсы ЦБ по валютам счетов. */
     fx: fx.status(db, today),
   };

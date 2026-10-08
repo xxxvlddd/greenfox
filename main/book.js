@@ -79,4 +79,13 @@ function recurring(db, tail) {
   });
 }
 
-module.exports = { load, allTransactions, recurring };
+/* Расписание для расчётов вместе с грейсом кредитки: пополнение карты —
+   тем, что осталось внести к ближайшему дню грейса (main/grace.js). */
+function schedule(db, accounts, B, today, tail) {
+  const grace = require('./grace');
+  const list = recurring(db, tail || 'WHERE active = 1');
+  const g = grace.state(accounts, list, B, today);
+  return { recurring: grace.applyTo(list, g), grace: g };
+}
+
+module.exports = { load, allTransactions, recurring, schedule };

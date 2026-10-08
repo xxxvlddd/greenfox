@@ -224,13 +224,22 @@ function sgCalc(){
         sgGo('Прогнозы', 'forecast') + ' · ' + sgGo('Капитал и долги', 'capital'), '', 'loanRate')
     : sgRow('Ставка кредита', 'Кредита в учёте нет — ставка появится вместе с ним.', sgInp('readonly', '—'))) +
   (C.card
-    ? sgRow('Лимит кредитки и день грейса', 'Лимит карты «' + esc(C.card.name) + '» и число, до которого за цикл нужно ' +
-          'внести долг.',
+    ? sgRow('Кредитка: лимит, выписка и грейс', 'Карта «' + esc(C.card.name) + '»: кредитный лимит, день выписки и число, ' +
+          'до которого нужно внести сумму по выписке. День выписки можно не указывать — тогда грейс считается по долгу на ' +
+          'начало цикла.',
         '<div style="display:flex;gap:8px;width:100%">' +
-          sgInp('data-sg-inp="cardLimit"', C.card.limit === null ? '' : sgRubText(C.card.limit), '100 000', ' inputmode="decimal"') +
-          sgInp('data-sg-inp="cardDay"', C.card.graceDay || '', '21', ' inputmode="numeric"') + '</div>',
-        sgGo('Прогнозы', 'forecast') + ' · ' + sgGo('Обязательные платежи', 'payments'), '', 'cardTerms')
-    : sgRow('Лимит кредитки и день грейса', 'Кредитной карты в учёте нет.', sgInp('readonly', '—'))) +
+          sgInp('data-sg-inp="cardLimit" aria-label="Кредитный лимит"', C.card.limit === null ? '' : sgRubText(C.card.limit), 'лимит', ' inputmode="decimal"') +
+          sgInp('data-sg-inp="cardStmt" aria-label="День выписки"', C.card.statementDay || '', 'выписка', ' inputmode="numeric"') +
+          sgInp('data-sg-inp="cardDay" aria-label="День грейса"', C.card.graceDay || '', 'грейс до', ' inputmode="numeric"') + '</div>',
+        sgGo('Прогнозы', 'forecast') + ' · ' + sgGo('Обязательные платежи', 'payments'), '', 'cardTerms') +
+      sgRow('Осталось внести до грейса', 'Сумма из приложения банка «внесите до …, чтобы не платить проценты» — на сегодня. ' +
+          'Действует до ближайшего дня грейса; внесённое потом вычитается само. Пусто — приложение считает само.',
+        sgInp('data-sg-inp="cardLeft" aria-label="Осталось внести до грейса"', C.card.graceLeft ? sgRubText(C.card.graceLeft) : '', 'не обязательно', ' inputmode="decimal"'),
+        '', C.card.grace ? '<div class="row-prev is-same">Сейчас: до ' + humanDate(C.card.grace.due) + ' осталось внести ' +
+          money0(C.card.grace.left) + (C.card.grace.source === 'manual' ? ' — по вашей сумме'
+            : C.card.grace.source === 'statement' ? ' — по выписке ' + C.card.grace.statementDay + ' числа' : ' — по долгу на начало цикла') +
+          '</div>' : '', 'cardLeft')
+    : sgRow('Кредитка: лимит, выписка и грейс', 'Кредитной карты в учёте нет.', sgInp('readonly', '—'))) +
   sgFxRow(C.fx) +
   sgRow('Пороги уровней трат', 'Границы ступеней тепловой шкалы в календаре и в поведенческих срезах, в рублях через дробь. ' +
       'Календарь берёт первые четыре.',
@@ -242,7 +251,9 @@ function sgCalc(){
 }
 
 function sgRecItem(r){
-  var amt = r.amountTo === null ? money(r.amount) : money0(r.amount) + ' – ' + money0(r.amountTo);
+  /* Пополнение кредитки — не фиксированная сумма: сколько осталось до грейса. */
+  var amt = r.self && r.obligatory ? 'сумма к грейсу'
+    : r.amountTo === null ? money(r.amount) : money0(r.amount) + ' – ' + money0(r.amountTo);
   return '<div class="set-item' + (r.active ? '' : ' is-arch') + '">' +
     '<span style="min-width:0"><span class="nm">' + esc(r.name) + '</span>' +
       '<div class="sb">' + esc(r.when) + (r.dir === 'доход' ? ' · поступление' : r.obligatory ? '' : ' · по желанию') + '</div></span>' +
@@ -492,14 +503,16 @@ function sgSetPref(key, value){
     return sgReload(false).then(function(){ return r; });
   });
 }
-function sgCardTerms(){
-  var lim = document.querySelector('#sgBody [data-sg-inp="cardLimit"]');
-  var day = document.querySelector('#sgBody [data-sg-inp="cardDay"]');
-  var p = fmParse(lim.value);
-  if (!p.ok || p.empty){ sgSay('cardTerms', 'лимит: сумма в рублях, например 100 000', true); sgRenderBody(false); return; }
-  window.api.setCardTerms({ limit: String(p.cents), graceDay: day.value }).then(function(r){
-    if (!r || !r.ok){ sgSay('cardTerms', (r && r.error) || 'не сохранено', true); sgRenderBody(false); return; }
-    sgSay('cardTerms', 'сохранено');
+function sgCardTerms(which){
+  var v = function(k){ return document.querySelector('#sgBody [data-sg-inp="' + k + '"]').value; };
+  var p = fmParse(v('cardLimit')), left = fmParse(v('cardLeft'));
+  var key = which === 'cardLeft' ? 'cardLeft' : 'cardTerms';
+  if (!p.ok || p.empty){ sgSay(key, 'лимит: сумма в рублях, например 100 000', true); sgRenderBody(false); return; }
+  if (!left.ok){ sgSay(key, 'осталось внести: сумма в рублях', true); sgRenderBody(false); return; }
+  window.api.setCardTerms({ limit: String(p.cents), graceDay: v('cardDay'), statementDay: v('cardStmt'),
+                            graceLeft: left.empty ? '' : String(left.cents) }).then(function(r){
+    if (!r || !r.ok){ sgSay(key, (r && r.error) || 'не сохранено', true); sgRenderBody(false); return; }
+    sgSay(key, 'сохранено');
     sgReload(false);
   });
 }
@@ -755,7 +768,7 @@ function sgChange(el){
     });
     return true;
   }
-  if (own === 'cardLimit' || own === 'cardDay'){ sgCardTerms(); return true; }
+  if (own === 'cardLimit' || own === 'cardDay' || own === 'cardStmt' || own === 'cardLeft'){ sgCardTerms(own); return true; }
   if (own && own.indexOf('fx:') === 0){
     window.api.fxManual(own.slice(3), el.value).then(function(r){
       if (!r || !r.ok){ sgSay('fx', (r && r.error) || 'не сохранено', true); sgRenderBody(false); return; }

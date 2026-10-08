@@ -10,7 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const SCHEMA_VERSION = 8;
+const SCHEMA_VERSION = 9;
 
 function open(Database, file) {
   const dir = path.dirname(file);
@@ -47,6 +47,12 @@ const ADDED_COLUMNS = {
   recurring: [
     ['end_date', 'TEXT'],
   ],
+  accounts: [
+    ['statement_day', 'INTEGER'],
+    ['grace_need', 'INTEGER'],
+    ['grace_need_at', 'TEXT'],
+    ['grace_need_due', 'TEXT'],
+  ],
   transactions: [
     ['amount_from', 'INTEGER'],
     ['amount_to', 'INTEGER'],
@@ -81,7 +87,11 @@ function migrate(db) {
      7 → 8: поправка «до первого снимка» переехала из кода в данные. Трата
      в день открытия счёта, прошедшая до снимка его остатка, этим
      остатком уже учтена; раньше её возвращали при каждом расчёте по
-     списку в коде, теперь стартовый остаток — на начало того дня. */
+     списку в коде, теперь стартовый остаток — на начало того дня.
+     8 → 9: у кредитки — день выписки и «сколько осталось внести до
+     грейса» на дату: из них считается грейс (main/grace.js). Колонки
+     добавляются по факту, переносить нечего. Новые таблицы — пропущенные
+     платежи, вопросы к платежам, дни без трат — создаёт schema.sql. */
   for (const table of Object.keys(ADDED_COLUMNS)) {
     const have = new Set(db.prepare('PRAGMA table_info(' + table + ')').all().map(c => c.name));
     for (const [name, def] of ADDED_COLUMNS[table]) {

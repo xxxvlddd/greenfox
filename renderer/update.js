@@ -91,8 +91,13 @@ function updRender(){
   /* Появление — один раз, когда плашки не было: смена состояния внутри
      неё — на месте, без движения. */
   if (!updWasOn && !REDUCED && el.animate){
-    el.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }],
-               { duration: 260, easing: 'cubic-bezier(.16, 1, .3, 1)' });
+    /* После того как плашка собрана и нарисована. */
+    el.style.opacity = '0';
+    afterPaint(function(){
+      el.style.opacity = '';
+      el.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }],
+                 { duration: 260, easing: 'cubic-bezier(.16, 1, .3, 1)' });
+    }, 40);
   }
   updWasOn = true;
 }

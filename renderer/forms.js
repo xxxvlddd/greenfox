@@ -25,9 +25,10 @@ var FM_TITLES = { expense: 'Расход', income: 'Доход', transfer: 'Пе
   plan: 'Плановая покупка', recur: 'Регулярный платёж', goal: 'Цель накопления', account: 'Счёт',
   loan: 'Кредит или долг', recon: 'Сверка балансов', cat: 'Категория', merge: 'Объединение категорий',
   'export': 'Выгрузка таблиц', 'import': 'Загрузка операций', integrity: 'Проверка целостности',
-  changelog: 'Журнал изменений', models: 'Выбор модели', keys: 'Горячие клавиши' };
+  changelog: 'Журнал изменений', models: 'Выбор модели', keys: 'Горячие клавиши',
+  plansave: 'Отложить под покупку', question: 'Новый вопрос' };
 /* Окна настроек: справочник категорий и отчёты. */
-var FM_MISC = ['cat', 'merge', 'export', 'import', 'integrity', 'changelog', 'models', 'keys'];
+var FM_MISC = ['cat', 'merge', 'export', 'import', 'integrity', 'changelog', 'models', 'keys', 'plansave', 'question'];
 var FM_TABLES = [['transactions', 'Журнал операций'], ['accounts', 'Счета'], ['categories', 'Категории'],
   ['recurring', 'Регулярные платежи'], ['liabilities', 'Кредиты и долги'], ['planned', 'Планы покупок'],
   ['savings_goals', 'Цели накоплений'], ['balances_history', 'Снимки балансов']];
@@ -44,7 +45,7 @@ var FM_MONTHS = ['январь', 'февраль', 'март', 'апрель', '
 var FM_WEEKDAYS = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье'];
 var FM_PAY_TYPES = ['обязательный', 'добровольный', 'доход'];
 var FM_ACC_TYPES = [['debit', 'дебетовая карта'], ['credit', 'кредитная карта'], ['current', 'текущий счёт'],
-                    ['cash', 'наличные'], ['broker', 'брокерский счёт'], ['crypto', 'криптокошелёк']];
+                    ['cash', 'наличные'], ['savings', 'копилка или накопления'], ['broker', 'брокерский счёт'], ['crypto', 'криптокошелёк']];
 var FM_LOAN_TYPES = ['потребительский кредит', 'автокредит', 'ипотека', 'долг человеку'];
 var FM_BASE_TAGS = ['спонтанная', 'по плану', 'регулярный'];
 var FM_X = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">' +
@@ -231,10 +232,11 @@ function fmNewRef(kind, pre){
                balance: acc.balance, native: fmNat(acc), cur: acc.cur || 'RUB', wasCur: acc.cur || 'RUB', ops: acc.ops || 0,
                isPay: acc.isPayment, wasPay: acc.isPayment,
                limit: acc.limit === null ? '' : fmRaw(acc.limit), graceDay: String(acc.graceDay || ''),
+               statementDay: acc.statementDay ? String(acc.statementDay) : '', graceLeft: acc.graceLeft ? fmRaw(acc.graceLeft) : '',
                graceRule: acc.graceNote || '', err: '' };
     }
     return { kind: kind, name: '', bank: FD.banks[0], type: 'debit', cur: 'RUB', bal: '', balDateTxt: exRuDate(today),
-             isPay: true, limit: '', graceDay: '21', graceRule: '', err: '' };
+             isPay: true, limit: '', avail: '', graceDay: '21', statementDay: '', graceLeft: '', graceRule: '', err: '' };
   }
   /* Кредит открывается заполненным: форма служит и для правки. */
   var l = FD.loan;
@@ -527,6 +529,23 @@ function fmErr(st){
 /* ============================================================
    ОКНА СПРАВОЧНИКОВ
    ============================================================ */
+/* Условия кредитки. Новая карта: долг, лимит и «доступно» — любые два,
+   третье посчитается. День выписки и «осталось внести до грейса» —
+   по желанию: из них грейс считается точно (main/grace.js). */
+function fmCardTerms(st, isNew){
+  return '<div class="f-row" style="margin-bottom:15px"><div class="f"><div class="f-lbl">Кредитный лимит</div>' +
+      fmInp('limit', st, isNew ? 'или «доступно»' : '100 000') + '</div>' +
+      (isNew ? '<div class="f"><div class="f-lbl">Доступно сейчас</div>' + fmInp('avail', st, 'лимит − долг') + '</div>'
+             : '<div class="f"><div class="f-lbl">Доступно сейчас</div><input class="inp" type="text" readonly value="' +
+               (st.limit ? money(String(fmParse(st.limit).cents + Number(st.native || st.balance || 0))) : '—') + '"></div>') +
+    '</div>' +
+    '<div class="f-row" style="margin-bottom:15px"><div class="f"><div class="f-lbl">День выписки</div>' +
+      fmInp('statementDay', st, 'не обязательно', ' inputmode="numeric"') + '</div>' +
+      '<div class="f"><div class="f-lbl">Грейс до … числа</div>' + fmInp('graceDay', st, '21', ' inputmode="numeric"') + '</div></div>' +
+    fmFld('Осталось внести до грейса', fmInp('graceLeft', st, 'не обязательно'),
+      'Из приложения банка: сколько внести до конца льготного периода, чтобы не начислялись проценты' +
+      (isNew ? ' — на дату баланса' : ' — на сегодня') + '. Пусто — приложение посчитает само: по дню выписки, если он указан.');
+}
 function fmFld(label, inner, hint, note){
   return '<div class="f"><div class="f-lbl">' + label +
     (note ? '<span class="spacer"></span><span style="color:var(--text-3)">' + note + '</span>' : '') + '</div>' +
@@ -751,9 +770,7 @@ function fmRefHTML(st){
         'Снимите для копилки, брокерского счёта и криптокошелька: их остаток виден в капитале, но тратить его каждый ' +
         'день не планируется.');
     } else {
-      b += '<div class="f-row" style="margin-bottom:15px"><div class="f"><div class="f-lbl">Кредитный лимит</div>' +
-        fmInp('limit', st, '100 000') + '</div><div class="f"><div class="f-lbl">День грейса</div>' +
-        fmInp('graceDay', st, '21', ' inputmode="numeric"') + '</div></div>';
+      b += fmCardTerms(st, false);
       b += fmFld('Правило грейса', '<textarea class="inp" data-f="graceRule" rows="2">' + esc(st.graceRule) + '</textarea>',
         'Текстом, как формулирует банк.');
     }
@@ -766,8 +783,9 @@ function fmRefHTML(st){
     /* Кредитка — только в рублях: долг и грейс считаются в рублях. */
     b += '<div class="f-row" style="margin-bottom:15px"><div class="f"><div class="f-lbl">Валюта</div>' +
       (st.type === 'credit' ? '<input class="inp" type="text" readonly value="Рубли — ₽">' : fmSel('cur', st, FM_CURS)) +
-      '</div><div class="f"><div class="f-lbl">Начальный баланс' + (st.cur !== 'RUB' ? ' в ' + FM_CUR_IN[st.cur] : '') + '</div>' +
-      fmInp('bal', st, '0') + '</div></div>';
+      '</div><div class="f"><div class="f-lbl">' + (st.type === 'credit' ? 'Долг по карте'
+        : 'Начальный баланс' + (st.cur !== 'RUB' ? ' в ' + FM_CUR_IN[st.cur] : '')) + '</div>' +
+      fmInp('bal', st, st.type === 'credit' ? 'или лимит и «доступно»' : '0') + '</div></div>';
     if (st.cur !== 'RUB' && st.type !== 'credit'){
       b += '<div class="f-hint" style="margin:-6px 0 14px">Остаток и операции этого счёта — в ' + FM_CUR_IN[st.cur] +
         '. В «Доступно на счетах», капитале и тратах он считается в рублях по курсу ЦБ' +
@@ -780,9 +798,7 @@ function fmRefHTML(st){
         'Снимите для копилки, брокерского счёта и криптокошелька: их остаток виден в капитале, но тратить его каждый ' +
         'день не планируется.');
     } else {
-      b += '<div class="f-row" style="margin-bottom:15px"><div class="f"><div class="f-lbl">Кредитный лимит</div>' +
-        fmInp('limit', st, '100 000') + '</div><div class="f"><div class="f-lbl">День грейса</div>' +
-        fmInp('graceDay', st, '21', ' inputmode="numeric"') + '</div></div>';
+      b += fmCardTerms(st, true);
       b += fmFld('Правило грейса', '<textarea class="inp" data-f="graceRule" rows="2" placeholder="Например: до 21 числа ' +
         'внести всю сумму долга, можно частями">' + esc(st.graceRule) + '</textarea>',
         'Текстом, как формулирует банк. От формулировки зависит, считать условие по сумме внесений или по обнулению долга.');
@@ -900,6 +916,12 @@ function fmReconHTML(st){
    ОКНА НАСТРОЕК: КАТЕГОРИИ И ОТЧЁТЫ
    ============================================================ */
 function fmNewMisc(kind, pre){
+  /* Отложить под позицию очереди: деньги помечаются, а не переводятся. */
+  if (kind === 'plansave'){
+    var pl = FD.plans.filter(function(x){ return x.id === Number(pre.id); })[0];
+    return { kind: kind, plan: pl || null, amount: '', err: pl ? '' : 'Позиция уже не в очереди' };
+  }
+  if (kind === 'question') return { kind: kind, text: '', rec: '', err: '' };
   if (kind === 'cat'){
     var c = pre.cat;
     return c ? { kind: kind, orig: c.name, name: c.name, type: c.type, note: c.note || '', system: c.system, ops: c.ops,
@@ -946,6 +968,36 @@ function fmChangelogHTML(text){
 }
 function fmMiscHTML(st){
   var k = st.kind, b = '', foot = '';
+  if (k === 'plansave'){
+    var P = st.plan;
+    if (!P){
+      return '<div class="mod" data-k="plansave">' + fmModHead(FM_TITLES.plansave) + '<div class="mod-body">' + fmErr(st) + '</div>' +
+        fmMiscFoot('') + '</div>';
+    }
+    var add = fmParse(st.amount), saved = Number(P.saved), max = Number(P.max);
+    var after = add.ok && !add.empty ? saved + add.cents : saved;
+    b += fmPlainNote('<b>' + esc(P.name) + '</b> — отложено ' + money0(P.saved) + ' из ' + money0(P.max) + '.');
+    b += fmFld('Сколько отложить', fmInp('amount', st, max > saved ? fmRaw(max - saved) : '0', ' inputmode="decimal"'),
+      'Деньги никуда не переводятся: сумма помечается под эту покупку, и на «Планах» растёт её готовность. ' +
+      'Со знаком минус — забрать обратно.');
+    if (add.ok && !add.empty){
+      b += fmPlainNote(after > max ? '<b>Больше цены позиции</b> — хватит ' + money0(String(max - saved)) + '.'
+        : after < 0 ? '<b>Забрать можно не больше отложенного</b> — ' + money0(P.saved) + '.'
+        : 'Станет отложено <b>' + money0(String(after)) + '</b> — это ' + Math.round(after / max * 100) + '% цены.');
+    }
+    return '<div class="mod" data-k="plansave">' + fmModHead(FM_TITLES.plansave) + '<div class="mod-body">' + b + fmErr(st) + '</div>' +
+      fmMiscFoot(fmMiscSave('Отложить <span class="kbd" style="margin-left:4px">⌘↵</span>',
+        add.ok && !add.empty && add.cents !== 0 && after >= 0 && after <= max)) + '</div>';
+  }
+  if (k === 'question'){
+    var recs = [['', 'ни к какому — общий вопрос']].concat(FD.recurring.map(function(r){ return [String(r.id), r.name]; }));
+    b += fmFld('Что нужно выяснить', '<textarea class="inp" data-f="text" rows="3" maxlength="300" placeholder="Например: ' +
+      'не пора ли отключить подписку, которой не пользуюсь">' + esc(st.text) + '</textarea>');
+    b += fmFld('К какому платежу', fmSel('rec', st, recs), 'Вопрос появится в «Заметках и вопросах» и будет висеть, ' +
+      'пока вы не отметите его решённым.');
+    return '<div class="mod" data-k="question">' + fmModHead(FM_TITLES.question) + '<div class="mod-body">' + b + fmErr(st) + '</div>' +
+      fmMiscFoot(fmMiscSave('Добавить <span class="kbd" style="margin-left:4px">⌘↵</span>', !!st.text.trim())) + '</div>';
+  }
   if (k === 'cat'){
     var types = FD.catTypes.map(function(t){ return [t, t]; });
     b += fmFld('Название', fmInp('name', st, 'Например, Хобби', st.system ? ' readonly' : ''));
@@ -1094,6 +1146,15 @@ function fmSaveMisc(k, st){
     text = 'Категории объединены';
   } else if (k === 'import'){
     call = window.api.importApply(st.report.token, !!st.withDups);
+  } else if (k === 'plansave'){
+    var amt = fmParse(st.amount);
+    if (!st.plan || !amt.ok || amt.empty || !amt.cents) return;
+    call = window.api.setAside(st.plan.id, String(amt.cents));
+    text = amt.cents > 0 ? 'Отложено под «' + st.plan.name + '»' : 'Забрано из отложенного под «' + st.plan.name + '»';
+  } else if (k === 'question'){
+    if (!st.text.trim()) return;
+    call = window.api.addQuestion({ text: st.text, recurringId: st.rec ? Number(st.rec) : null });
+    text = 'Вопрос добавлен';
   }
   if (!call) return;
   fmBusy = true;
@@ -1183,13 +1244,31 @@ function fmOpen(kind, pre, data){
   return (data ? Promise.resolve(data) : window.api.formData()).then(function(d){
     if (!d || d.error){ toast('Окно не открылось: ' + ((d && d.error) || 'нет данных')); return; }
     FD = d;
+    var fresh = !fmKind;
     if (!fmKind) fmReturnTo = document.activeElement;
     fmKind = kind;
+    fmCloseTok++;
     fmSt = FM_OPS.indexOf(kind) >= 0 ? fmNewOp(kind, pre) : kind === 'recon' ? fmNewRecon()
          : FM_MISC.indexOf(kind) >= 0 ? fmNewMisc(kind, pre || {}) : fmNewRef(kind, pre);
     fmRender();
-    document.getElementById('fmOv').classList.add('is-open');
     var ov = document.getElementById('fmOv');
+    /* Появление — после того как окно собрано и нарисовано: затемнение
+       проявляется, окно чуть поднимается. Пока оно собирается — невидимо. */
+    if (fresh && !REDUCED && ov.animate){
+      ov.style.opacity = '0';
+      ov.classList.add('is-open');
+      afterPaint(function(){
+        ov.style.opacity = '';
+        if (fmKind !== kind) return;
+        ov.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 170, easing: 'ease-out' });
+        var m = ov.querySelector('.mod');
+        if (m) m.animate([{ opacity: 0, transform: 'translateY(10px) scale(.99)' }, { opacity: 1, transform: 'none' }],
+                         { duration: 240, easing: 'cubic-bezier(.16, 1, .3, 1)' });
+      });
+    } else {
+      ov.style.opacity = '';
+      ov.classList.add('is-open');
+    }
     var first = ov.querySelector(pre && pre.focus ? '[data-f="' + pre.focus + '"]' : '[data-f="raw"], [data-f="name"], ' +
       '[data-f="creditor"], [data-recon]');
     if (first) first.focus();
@@ -1199,11 +1278,18 @@ function fmOpen(kind, pre, data){
 }
 /* Закрытое окно возвращает фокус туда, откуда его открыли. */
 var fmReturnTo = null;
+var fmCloseTok = 0;
 function fmClose(){
   if (!fmKind) return;
-  document.getElementById('fmOv').classList.remove('is-open');
-  document.getElementById('fmOv').innerHTML = '';
+  var ov = document.getElementById('fmOv'), tok = ++fmCloseTok;
   fmKind = null; fmSt = null;
+  /* Уход — короткое затухание; новое окно, открытое тут же, его отменяет. */
+  var gone = function(){ if (tok !== fmCloseTok || fmKind) return; ov.classList.remove('is-open'); ov.innerHTML = ''; ov.style.opacity = ''; };
+  if (!REDUCED && ov.animate){
+    ov.style.pointerEvents = 'none';
+    var a = ov.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 130, easing: 'ease-in', fill: 'forwards' });
+    a.onfinish = function(){ ov.style.pointerEvents = ''; a.cancel(); if (tok === fmCloseTok && !fmKind) ov.style.opacity = '0'; gone(); };
+  } else gone();
   if (fmReturnTo && fmReturnTo.focus && document.body.contains(fmReturnTo)) fmReturnTo.focus();
   fmReturnTo = null;
 }
@@ -1288,10 +1374,15 @@ function fmPayload(){
   if (k === 'goal') return { id: st.id, name: st.name, accId: st.accId, target: c(st.target),
     deadline: exParseDate(st.deadlineTxt) || (st.deadlineTxt ? 'x' : ''), monthly: c(st.monthly) };
   if (k === 'account' && st.id) return { id: st.id, name: st.name, bank: st.bank, isPay: st.isPay, limit: c(st.limit),
-    graceDay: st.graceDay, graceRule: st.graceRule, cur: st.cur };
-  if (k === 'account') return { name: st.name, bank: st.bank, type: st.type, cur: st.cur, bal: c(st.bal),
+    graceDay: st.graceDay, graceRule: st.graceRule, cur: st.cur,
+    statementDay: st.isCredit ? st.statementDay : undefined, graceLeft: st.isCredit ? c(st.graceLeft) : undefined };
+  /* Долг кредитки пишут числом, как в приложении банка, — минус ставим сами. */
+  var debtOf = function(v){ var x = c(v); return x && x.charAt(0) !== '-' && x !== '0' ? '-' + x : x; };
+  if (k === 'account') return { name: st.name, bank: st.bank, type: st.type, cur: st.cur,
+    bal: st.type === 'credit' ? debtOf(st.bal) : c(st.bal),
     balDate: exParseDate(st.balDateTxt) || 'x', isPay: st.isPay, limit: c(st.limit), graceDay: st.graceDay,
-    graceRule: st.graceRule };
+    graceRule: st.graceRule, avail: st.type === 'credit' ? c(st.avail) : undefined,
+    statementDay: st.type === 'credit' ? st.statementDay : undefined, graceLeft: st.type === 'credit' ? c(st.graceLeft) : undefined };
   if (k === 'loan') return { creditor: st.creditor, type: st.type, rate: st.rate, pay: c(st.pay), day: st.day,
     close: exParseDate(st.closeTxt) || (st.closeTxt ? 'x' : ''), initial: c(st.initial), rest: c(st.rest),
     inOblig: st.inOblig };
@@ -1516,10 +1607,14 @@ function fmFromButton(btn){
    отменой в тосте. */
 function fmAct(btn){
   var act = btn.getAttribute('data-act'), id = btn.getAttribute('data-id');
-  var call = act === 'plan-drop' ? window.api.dropPlan(id) : window.api.pauseRecurring(id);
+  var call = act === 'plan-drop' ? window.api.dropPlan(id)
+    : act === 'pay-skip' ? window.api.skipPayment(id)
+    : window.api.pauseRecurring(id);
   call.then(function(r){
     if (!r || !r.ok){ toast('Не сохранилось: ' + ((r && r.error) || 'ошибка базы')); return; }
-    fmToast(act === 'plan-drop' ? 'Позиция убрана из очереди' : 'Платёж поставлен на паузу', r.undo);
+    fmToast(act === 'plan-drop' ? 'Позиция убрана из очереди'
+      : act === 'pay-skip' ? '«' + (r.name || 'Платёж') + '» пропущен в этом месяце'
+      : 'Платёж поставлен на паузу', r.undo);
     draw();
   });
 }

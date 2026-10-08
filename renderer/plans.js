@@ -284,11 +284,9 @@ function plCard(p){
     '<div class="q-alloc"><span>' + (saved
         ? 'Отложено ' + money0(p.saved) + ' из ' + money0(p.max)
         : 'Под эту позицию ничего не отложено — готовность считать не из чего') + '</span>' +
-      /* Окна для откладывания под позицию в макетах нет — кнопка честно
-         говорит, что оно ещё впереди. */
-      '<span class="spacer"></span><button class="btn-link" data-soon="Откладывание под позицию">Отложить</button></div>' +
+      '<span class="spacer"></span><button class="btn-link" data-form="plansave" data-id="' + p.id + '">Отложить</button></div>' +
     '<div class="q-foot">' +
-      '<button class="btn btn-sm btn-sm--acc" data-soon="Откладывание под позицию">Отложить сумму</button>' +
+      '<button class="btn btn-sm btn-sm--acc" data-form="plansave" data-id="' + p.id + '">Отложить сумму</button>' +
       '<button class="btn btn-sm" data-form="buy" data-id="' + p.id + '">Купил</button>' +
       '<button class="btn btn-sm" data-form="plan" data-id="' + p.id + '">Изменить</button>' +
       '<span class="spacer"></span>' +

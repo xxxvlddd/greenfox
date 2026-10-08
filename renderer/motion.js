@@ -12,6 +12,32 @@ var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
    чисел на загрузке — украшение, а не сведения. */
 var booted = false;
 
+/* ---------- подушки перед движением ----------
+   Движение, начатое в том же кадре, что и сборка нового содержимого,
+   теряет первые кадры: кадр со сборкой длинный, и анимация на экране
+   «перепрыгивает» начало. Поэтому движение начинается, когда новое уже
+   нарисовано, — со следующего кадра и не раньше паузы min. Лишние
+   доли секунды ожидания незаметны, рывок — заметен. */
+function afterPaint(fn, min){
+  var t0 = performance.now();
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    var wait = Math.max(0, (min || 0) - (performance.now() - t0));
+    if (wait) setTimeout(fn, wait); else fn();
+  }); });
+}
+/* То же, но ещё и дождаться, пока браузер освободится (запуск, разбор
+   данных), — не дольше max. */
+function whenIdle(fn, min, max){
+  var t0 = performance.now(), done = false;
+  var go = function(){
+    if (done) return;
+    done = true;
+    afterPaint(fn, Math.max(0, (min || 0) - (performance.now() - t0)));
+  };
+  if (window.requestIdleCallback) requestIdleCallback(go, { timeout: max || 700 });
+  setTimeout(go, max || 700);
+}
+
 /* Докрутка числа: величина пересчиталась, и видно, из чего она выросла.
    Метка счёта нужна на случай, если за время докрутки пришло новое
    значение: старый цикл обязан замолчать, иначе два цикла пишут в одну
@@ -47,9 +73,12 @@ function setNow(el, to, fmt){
 function bump(el){
   if (!el || REDUCED || !booted) return;
   el.classList.remove('is-bump');
-  void el.offsetWidth;   /* пересчёт стилей: иначе снятый и возвращённый
-                            в одном кадре класс останется незамеченным */
-  el.classList.add('is-bump');
+  /* После того как новое значение нарисовано — иначе вспышка теряет начало. */
+  afterPaint(function(){
+    void el.offsetWidth;   /* пересчёт стилей: иначе снятый и возвращённый
+                              класс останется незамеченным */
+    el.classList.add('is-bump');
+  });
 }
 /* Лестница: строки списка появляются по очереди, а не пачкой. */
 function stagger(root, sel){
@@ -58,15 +87,20 @@ function stagger(root, sel){
   /* Только начало списка: на длинной таблице волна перестаёт читаться
      как порядок и начинает читаться как рябь. */
   var n = Math.min(kids.length, 7);
+  /* Задержка первой строки — подушка: кадр со сборкой списка длинный. */
   for (var i = 0; i < n; i++){
     kids[i].classList.add('is-rise');
-    kids[i].style.animationDelay = (i * 40) + 'ms';
+    kids[i].style.animationDelay = (60 + i * 40) + 'ms';
   }
 }
 /* Появление блока на месте предыдущего. */
 function appear(el){
   if (!el || REDUCED || !booted) return;
   el.classList.remove('is-in');
-  void el.offsetWidth;
-  el.classList.add('is-in');
+  el.style.opacity = '0';
+  afterPaint(function(){
+    el.style.opacity = '';
+    void el.offsetWidth;
+    el.classList.add('is-in');
+  });
 }

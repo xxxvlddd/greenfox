@@ -146,7 +146,7 @@ function clRenderGrid(){
     if (day.marks.length > 3) marks += '<span class="cal-more">+' + (day.marks.length - 3) + '</span>';
     var exp = Number(day.exp), inc = Number(day.inc);
     var body = day.past && !day.tracked ? '<div class="cal-none">учёт не вёлся</div>'
-      : day.past && !exp && !inc ? '<div class="cal-none">без трат</div>'
+      : day.past && !exp && !inc ? '<div class="cal-none">' + (day.quiet ? 'без трат ✓' : 'без трат') + '</div>'
       : (exp ? '<div class="cal-exp">−' + money0(day.exp) + '</div>' : '') +
         (inc ? '<div class="cal-inc">+' + money0(day.inc) + '</div>' : '');
     return '<button type="button" class="' + cls + '" data-key="' + key + '" role="gridcell"' +
@@ -220,9 +220,12 @@ function clRenderPanel(animate){
     } else if (day.ops.length){
       html += day.ops.map(clOpRow).join('');
     } else {
-      html += '<div class="dp-empty"><span>Операций за этот день нет.</span>' +
-        '<span class="row"><button class="btn btn-sm" data-form="expense" data-date="' + key + '">Добавить операцию</button>' +
-        '<button class="btn btn-sm" data-soon="Отметка дня без трат">Отметить день без трат</button></span></div>';
+      /* «Без трат» — не пропуск учёта: такой день не считается
+         забытым в проверке учёта и на «Обзоре». */
+      html += '<div class="dp-empty"><span>' + (day.quiet ? 'Отмечено: в этот день трат не было.' : 'Операций за этот день нет.') +
+        '</span><span class="row"><button class="btn btn-sm" data-form="expense" data-date="' + key + '">Добавить операцию</button>' +
+        '<button class="btn btn-sm" data-quiet="' + key + '" data-on="' + (day.quiet ? '0' : '1') + '">' +
+        (day.quiet ? 'Снять отметку' : 'Отметить день без трат') + '</button></span></div>';
     }
     html += '</div>';
   } else {

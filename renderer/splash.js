@@ -39,6 +39,8 @@ function spStart(){
   if (!root) return;
   try { spScene = new ObFxScene(root, { still: REDUCED, speed: SP_SPEED }); }
   catch (e) { spScene = null; root.classList.add('is-plain'); }
+  /* Прогрев холста — пока на экране только название. */
+  if (spScene && spScene.warm) spScene.warm();
   spTimer = setTimeout(spFinish, SP_LIMIT);
 }
 /* Можно начинать движение: окно на экране, шрифт названия загружен. Окно
@@ -59,17 +61,19 @@ function spWait(){
 function spReady(){
   if (spState !== 'wait' || !spEl()) return;
   spState = 'play';
-  spWait().then(function(){
+  /* Подушка: движение — когда первый экран нарисован и браузер свободен. */
+  spWait().then(function(){ whenIdle(spGo, 220, 800); });
+}
+function spGo(){
+  if (spState !== 'play') return;
+  spStatus('Считаю остатки и лимит на сегодня…');
+  if (spScene) spScene.play();
+  var hold = spScene && !REDUCED ? spScene.assembled : 450;
+  setTimeout(function(){
     if (spState !== 'play') return;
-    spStatus('Считаю остатки и лимит на сегодня…');
-    if (spScene) spScene.play();
-    var hold = spScene && !REDUCED ? spScene.assembled : 450;
-    setTimeout(function(){
-      if (spState !== 'play') return;
-      spStatus('Готово');
-      setTimeout(spFinish, REDUCED ? 250 : 420);
-    }, hold);
-  });
+    spStatus('Готово');
+    setTimeout(spFinish, REDUCED ? 250 : 420);
+  }, hold);
 }
 /* Уход: знак рассыпается поверх приложения, фон и надписи гаснут. */
 function spFinish(){

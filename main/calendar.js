@@ -35,9 +35,11 @@ function build(db, todayIso, q) {
   const accounts = db.prepare('SELECT * FROM accounts WHERE archived = 0 ORDER BY sort_order').all();
   const accName = {};
   for (const a of accounts) accName[a.id] = a.name;
-  const recurring = book.recurring(db, 'WHERE active = 1');
   const tech = overview.techCategories(db);
-  const hist = book.load(db).hist;
+  const BB = book.load(db);
+  const hist = BB.hist;
+  /* Пополнение кредитки — тем, что осталось внести до грейса. */
+  const recurring = book.schedule(db, accounts, BB, today).recurring;
   const firstDay = hist[0].d;
   const [fy, fm] = firstDay.split('-').map(Number);
 
@@ -72,7 +74,7 @@ function build(db, todayIso, q) {
   const days = {};
   for (const d of cells) {
     days[d] = { past: d <= today, tracked: d >= firstDay, exp: 0n, inc: 0n, mov: 0n, bal: null,
-                marks: [], ops: [], plans: [], note: '' };
+                marks: [], ops: [], plans: [], note: '', quiet: false };
   }
 
   /* ── Прошедшие дни: операции ── */
@@ -145,12 +147,17 @@ function build(db, todayIso, q) {
   for (const n of db.prepare('SELECT date, text FROM day_notes WHERE date BETWEEN ? AND ?').all(gridFrom, gridTo)) {
     if (days[n.date]) days[n.date].note = n.text;
   }
+  /* Отмеченные «без трат». */
+  for (const q of db.prepare('SELECT date FROM quiet_days').all()) {
+    if (days[q.date]) days[q.date].quiet = true;
+  }
 
   const out = {};
   for (const d of cells) {
     const x = days[d];
     out[d] = { past: x.past, tracked: x.tracked, exp: String(x.exp), inc: String(x.inc), mov: String(x.mov),
-               bal: x.bal === null ? null : String(x.bal), marks: x.marks, ops: x.ops, plans: x.plans, note: x.note };
+               bal: x.bal === null ? null : String(x.bal), marks: x.marks, ops: x.ops, plans: x.plans, note: x.note,
+               quiet: x.quiet };
   }
   const income = R.upcoming(recurring, R.addDays(today, 1), 62).filter(u => u.dir === 'доход')[0] || null;
   return {
@@ -181,4 +188,20 @@ function setNote(db, date, text) {
   return { ok: true };
 }
 
-module.exports = { build, setNote };
+/* «День без трат»: записей за день нет, и это не пропуск учёта. on —
+   отметить, иначе снять. Будущий день отметить нельзя. */
+function setQuiet(db, date, on, today) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date))) throw new Error('дата не датой: ' + date);
+  const fail = m => { const e = new Error(m); e.user = true; throw e; };
+  if (today && date > today) fail('Отметить можно только прошедший или сегодняшний день');
+  if (on) {
+    const ops = db.prepare("SELECT COUNT(*) n FROM transactions WHERE date = ? AND direction = 'расход'").get(date).n;
+    if (ops) fail('В этот день уже есть траты — день не «без трат»');
+    db.prepare('INSERT OR REPLACE INTO quiet_days(date, at) VALUES(?, ?)').run(date, new Date().toISOString());
+  } else {
+    db.prepare('DELETE FROM quiet_days WHERE date = ?').run(date);
+  }
+  return { ok: true, date, quiet: !!on };
+}
+
+module.exports = { build, setNote, setQuiet };

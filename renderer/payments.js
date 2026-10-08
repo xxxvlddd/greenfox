@@ -13,8 +13,8 @@ var pmOpen = {};                /* раскрытые группы */
 
 /* Короткие месяцы — как в макете этого экрана: «май», а не «мая». */
 var PM_MON = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-var PM_CYCLE_CLS = { done: 'is-done', wait: 'is-wait', miss: 'is-miss' };
-var PM_CYCLE_DOT = { done: 'var(--positive)', wait: 'var(--text-3)', miss: 'var(--warning)' };
+var PM_CYCLE_CLS = { done: 'is-done', wait: 'is-wait', miss: 'is-miss', skip: 'is-wait' };
+var PM_CYCLE_DOT = { done: 'var(--positive)', wait: 'var(--text-3)', miss: 'var(--warning)', skip: 'var(--text-3)' };
 var PM_NUM = ['', 'Один открытый вопрос', 'Два открытых вопроса', 'Три открытых вопроса', 'Четыре открытых вопроса'];
 
 function pmDdmm(iso){ return iso ? iso.slice(8, 10) + '.' + iso.slice(5, 7) : '—'; }
@@ -47,13 +47,14 @@ function pmVisible(gid){
 function pmCycleText(p){
   var c = p.cstate;
   if (c.t === 'paid') return 'внесено ' + money(c.sum);
-  if (c.t === 'until') return 'до ' + pmDdmm(c.date);
+  if (c.t === 'until') return (c.left ? 'ещё ' + money0(c.left) + ' ' : '') + 'до ' + pmDdmm(c.date);
   if (c.t === 'came') return 'поступило ' + pmDdmm(c.date);
   if (c.t === 'put') return 'внесено ' + pmDdmm(c.date);
   if (c.t === 'charged') return 'списано ' + pmDdmm(c.date);
   if (c.t === 'next') return c.date ? 'следующее ' + pmDdmm(c.date) + '.' + c.date.slice(0, 4) : '—';
   if (c.t === 'notCame') return 'не поступило ' + pmDdmm(c.date);
   if (c.t === 'notCharged') return 'не списано ' + pmDdmm(c.date);
+  if (c.t === 'skipped') return 'пропущен в этом месяце';
   return 'ожидается ' + pmDdmm(c.date);
 }
 function pmSubText(p){
@@ -154,7 +155,7 @@ function renderPayments(d){
         'То, что требует решения, но платежом пока не является. Вопросы собираются из заметок учёта — к покупкам ' +
         'и к регулярным платежам',
         '<p class="sec-sub" id="pmQSub"></p>',
-        '<button class="btn btn-sm" data-soon="Вопросы к платежам"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" ' +
+        '<button class="btn btn-sm" data-form="question"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" ' +
         'aria-hidden="true"><path d="M6 1.5v9M1.5 6h9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
         '</svg>Новый вопрос</button>') +
       '<div class="qs" id="pmQuestions"></div>' +
@@ -323,7 +324,7 @@ function pmRow(p){
           (p.flow === 'in' ? 'inc' : p.flow === 'mov' ? 'mov' : 'due') + '" data-sum="' + esc(p.cur && p.cur !== 'RUB' ? p.hiNat : p.hi) +
           '" data-name="' + esc(p.name) + '" data-cat="' + esc(p.cat) + '" data-acc="' + esc(p.accId || '') +
           '">Внести</button>' +
-        '<button class="btn btn-sm" data-soon="Пропуск платежа">Пропустить</button>'
+        '<button class="btn btn-sm" data-act="pay-skip" data-id="' + p.id + '">Пропустить</button>'
       : '<button class="btn btn-sm" data-form="recur" data-id="' + p.id + '">Изменить</button>' +
         '<button class="btn btn-sm" data-act="rec-pause" data-id="' + p.id + '">На паузу</button>') + '</span></td>' +
   '</tr>';

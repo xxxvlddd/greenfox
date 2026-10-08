@@ -29,7 +29,7 @@ const LOAN_CAT = 'Платежи по кредитам';
 const TAGS = ['спонтанная', 'по плану', 'регулярный', 'поздняя запись', 'требует уточнения'];
 const CAT_TYPES = ['базовые', 'обязательные', 'дискреционные', 'сбережения', 'прочее', 'доход'];
 const ACC_TYPE = { debit: 'дебетовая карта', credit: 'кредитная карта', current: 'текущий',
-                   cash: 'наличные', broker: 'брокерский', crypto: 'крипто' };
+                   cash: 'наличные', savings: 'копилка', broker: 'брокерский', crypto: 'крипто' };
 const PERIOD = { m: 'month', w: 'week', q: 'quarter', y: 'year' };
 const UNDO_MS = 60000;
 
@@ -48,6 +48,32 @@ function cents(v, what, allowZero, allowNeg) {
   if (!allowZero && b === 0n) fail(what + ': нужна сумма больше нуля');
   if (b > 100000000000n || b < -100000000000n) fail(what + ': слишком большая сумма');
   return b;
+}
+const blank = v => v === '' || v === null || v === undefined;
+/* Кредитка: день выписки и «сколько осталось внести до грейса» на дату.
+   Сказанное относится к ближайшему дню грейса после этой даты
+   (main/grace.js). debt — долг на ту же дату: внести больше долга нельзя. */
+function cardExtra(a, graceDay, debt, asOf) {
+  const out = {};
+  if (a.statementDay !== undefined) {
+    if (blank(a.statementDay)) out.statement_day = null;
+    else {
+      const d = Number(a.statementDay);
+      if (!(Number.isInteger(d) && d >= 1 && d <= 28)) fail('День выписки: от 1 до 28');
+      out.statement_day = d;
+    }
+  }
+  if (a.graceLeft !== undefined) {
+    if (blank(a.graceLeft)) { out.grace_need = null; out.grace_need_at = null; out.grace_need_due = null; }
+    else {
+      const left = cents(a.graceLeft, 'Осталось внести до грейса', true);
+      if (debt !== null && left > debt) fail('Осталось внести до грейса: не больше долга по карте');
+      out.grace_need = String(left);
+      out.grace_need_at = asOf;
+      out.grace_need_due = R.graceCycle(asOf, graceDay).due;
+    }
+  }
+  return out;
 }
 function text(v, max) { return String(v || '').replace(/\s+/g, ' ').trim().slice(0, max || 200); }
 function now() { return new Date().toISOString(); }
@@ -130,19 +156,10 @@ function formData(db, todayIso) {
       sum: String(o.amount), dir: o.direction, acc: accName[o.account_from] || accName[o.account_to] || '' });
   }
 
-  /* Грейс кредитки: внесённое за цикл — то же, что на «Капитале». */
-  const card = accounts.filter(a => a.type === 'кредитная карта')[0] || null;
-  const graceRule = db.prepare("SELECT * FROM recurring WHERE active = 1 AND category = ? AND obligatory = 1 " +
-                               'AND day_of_month IS NOT NULL').get(SELF);
-  let grace = null;
-  if (card && graceRule && B.hist.length) {
-    const cyc = R.graceCycle(today, graceRule.day_of_month);
-    let paid = 0n;
-    for (const r of B.rows) if (r.to === card.id && r.d >= cyc.start && r.d <= today) paid += r.a;
-    const before = R.balanceOn(B.hist, R.addDays(cyc.start, -1)).bal[card.id] || 0n;
-    grace = { cardId: card.id, start: cyc.start, due: cyc.due, paid: String(paid),
-              need: String(before < 0n ? -before : 0n) };
-  }
+  /* Грейс кредитки — один расчёт для всех экранов (main/grace.js). */
+  const G = B.hist.length ? book.schedule(db, accounts, B, today).grace : null;
+  const grace = G ? { cardId: G.cardId, start: G.start, due: G.due, paid: String(G.paid), need: String(G.need),
+                      left: String(G.left) } : null;
 
   const loanRow = db.prepare("SELECT * FROM liabilities WHERE account_id IS NULL AND type != 'кредитная карта'").get();
   const base = B.hist.length ? capital.reserveBase(db, today, accounts, snap.bal) : null;
@@ -161,6 +178,9 @@ function formData(db, todayIso) {
       reconciledAt: a.reconciled_at,
       graceNote: a.grace_note || '',
       graceDay: a.type === 'кредитная карта' ? ((graceRuleFor(db, a) || {}).day_of_month || null) : null,
+      statementDay: a.statement_day || null,
+      /* Сказанное «осталось внести до грейса» — на сегодня, за вычетом внесённого. */
+      graceLeft: G && G.cardId === a.id && G.source === 'manual' ? String(G.left) : null,
     })),
     cats: {
       exp: cats.filter(c => c.type !== 'доход' && c.type !== 'техническая').map(c => ({ name: c.name, type: c.type })),
@@ -179,7 +199,7 @@ function formData(db, todayIso) {
                    monthly: g.monthly === null ? null : String(g.monthly) })),
     plans: db.prepare("SELECT * FROM planned WHERE status = 'queue' ORDER BY id").all().map(x => ({
       id: x.id, name: x.name, cat: x.category, min: String(x.price_min), max: String(x.price_max),
-      need: x.need, urg: x.urgency, repl: !!x.replaceable, own: String(x.recurring_cost || 0),
+      need: x.need, urg: x.urgency, repl: !!x.replaceable, own: String(x.recurring_cost || 0), saved: String(x.saved || 0),
       deadline: x.deadline, note: x.note })),
     recurring: book.recurring(db, 'WHERE active = 1 ORDER BY id').map(x => ({
       id: x.id, name: x.name, cat: x.category, amount: String(x.amount_native), cur: x.currency,
@@ -369,6 +389,20 @@ function updateRow(db, table, id, fields) {
   }) };
 }
 
+/* «Отложить» под позицию очереди: деньги не переводятся, а помечаются —
+   от отложенного считается готовность покупки на «Планах». amount — сколько
+   добавить; отрицательное — забрать обратно. */
+function setAside(db, id, amount) {
+  const p = db.prepare("SELECT * FROM planned WHERE id = ? AND status = 'queue'").get(Number(id));
+  if (!p) fail('Позиция уже не в очереди');
+  const add = cents(amount, 'Сумма', false, true);
+  const next = BigInt(p.saved || 0) + add;
+  if (next < 0n) fail("Забрать больше, чем отложено, нельзя — отложено " + M.say(BigInt(p.saved || 0)));
+  if (next > BigInt(p.price_max)) fail('Отложено будет больше цены позиции (' + M.say(BigInt(p.price_max)) + ') — хватит ' + M.say(BigInt(p.price_max) - BigInt(p.saved || 0)));
+  const r = updateRow(db, 'planned', p.id, { saved: String(next) });
+  return Object.assign(r, { saved: String(next), name: p.name });
+}
+
 function savePlan(db, p, todayIso) {
   const today = todayIso || R.iso(new Date());
   const name = text(p.name, 80);
@@ -482,15 +516,29 @@ function saveAccount(db, a, todayIso) {
   const cur = a.cur || 'RUB';
   if (!fx.isCur(cur)) fail('Валюта: рубли, доллары или евро');
   if (type === 'кредитная карта' && cur !== 'RUB') fail('Кредитная карта — только в рублях: долг и грейс считаются в рублях');
-  const bal = a.bal === '' || a.bal === null || a.bal === undefined ? 0n : cents(a.bal, 'Начальный баланс', true, true);
+  let bal = a.bal === '' || a.bal === null || a.bal === undefined ? 0n : cents(a.bal, 'Начальный баланс', true, true);
   if (type === 'кредитная карта' && bal > 0n) fail('Остаток кредитки — это долг: задайте его со знаком минус');
   if (type !== 'кредитная карта' && bal < 0n) fail('Остаток этого счёта не может быть отрицательным');
   if (!isDate(a.balDate) || a.balDate > today) fail('Дата баланса: не позже сегодняшней');
-  let limit = null, graceDay = null;
+  let limit = null, graceDay = null, extra = {};
   if (type === 'кредитная карта') {
-    limit = cents(a.limit, 'Кредитный лимит');
+    /* Долг, лимит и «доступно» связаны: доступно = лимит − долг. Любые
+       два — третье достраивается; все три — должны сойтись. */
+    const avail = blank(a.avail) ? null : cents(a.avail, 'Доступно', true);
+    let lim = blank(a.limit) ? null : cents(a.limit, 'Кредитный лимит');
+    if (blank(a.bal) && lim !== null && avail !== null) {
+      if (avail > lim) fail('Доступно не может быть больше лимита');
+      bal = -(lim - avail);
+    }
+    if (lim === null && avail !== null) lim = -bal + avail;
+    if (lim === null) fail('Кредитный лимит: сколько банк разрешает потратить — или укажите, сколько доступно');
+    if (avail !== null && lim + bal !== avail) {
+      fail('Долг, лимит и «доступно» не сходятся: лимит − долг = доступно. Оставьте два из трёх — третье посчитается само');
+    }
+    limit = lim;
     graceDay = Number(a.graceDay);
     if (!(Number.isInteger(graceDay) && graceDay >= 1 && graceDay <= 28)) fail('День грейса: от 1 до 28');
+    extra = cardExtra(a, graceDay, -bal, a.balDate);
   }
   let id = slug(name), n = 2;
   while (db.prepare('SELECT 1 FROM accounts WHERE id = ?').get(id)) id = slug(name) + '_' + n++;
@@ -504,6 +552,8 @@ function saveAccount(db, a, todayIso) {
       'is_payment,reconciled_balance,reconciled_at,sort_order,archived) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,0)')
       .run(id, name, text(a.bank, 40) || '—', type, cur, String(bal), a.balDate, limit === null ? null : String(limit),
            text(a.graceRule, 300), a.isPay && type !== 'кредитная карта' ? 1 : 0, String(bal), a.balDate, order);
+    const ek = Object.keys(extra);
+    if (ek.length) db.prepare('UPDATE accounts SET ' + ek.map(k => k + ' = ?').join(', ') + ' WHERE id = ?').run(...ek.map(k => extra[k]), id);
     /* Правило грейса живёт в расписании — как у перенесённой кредитки. */
     if (type === 'кредитная карта' && payer) {
       recId = Number(db.prepare('INSERT INTO recurring(name,amount,amount_max,direction,period,day_of_month,category,' +
@@ -751,6 +801,10 @@ function editAccount(db, a) {
     fields.grace_note = text(a.graceRule === undefined ? prev.grace_note : a.graceRule, 300);
     const day = Number(a.graceDay);
     if (!(Number.isInteger(day) && day >= 1 && day <= 28)) fail('День грейса: от 1 до 28');
+    /* «Осталось внести до грейса» — на сегодня, к ближайшему дню грейса. */
+    const today = a.today || R.iso(new Date());
+    const owe = balanceNow(db, prev.id, today);
+    Object.assign(fields, cardExtra(a, day, owe < 0n ? -owe : 0n, today));
     rule = graceRuleFor(db, prev);
     if (rule) {
       ruleFields = { day_of_month: day };
@@ -785,7 +839,8 @@ function editAccount(db, a) {
 function setCardTerms(db, t) {
   const card = db.prepare("SELECT * FROM accounts WHERE type = 'кредитная карта' AND archived = 0 ORDER BY sort_order").get();
   if (!card) fail('Кредитной карты в учёте нет');
-  return editAccount(db, { id: card.id, name: card.name, bank: card.bank, limit: t.limit, graceDay: t.graceDay });
+  return editAccount(db, { id: card.id, name: card.name, bank: card.bank, limit: t.limit, graceDay: t.graceDay,
+                          statementDay: t.statementDay, graceLeft: t.graceLeft, today: t.today });
 }
 
 function reorderAccounts(db, ids) {
@@ -949,7 +1004,7 @@ function setLoanRate(db, raw) {
   return updateRow(db, 'liabilities', loan.id, { rate_bp: bp, rate_month: monthRate(rate) });
 }
 
-module.exports = { formData, reconCalc, addOperation, addOperations, checkOp, addCategory, savePlan, saveRecurring, saveGoal,
+module.exports = { formData, reconCalc, addOperation, addOperations, checkOp, addCategory, savePlan, setAside, saveRecurring, saveGoal,
                    saveAccount, saveLoan, saveRecon, loanPreview, dropPlan, pauseRecurring, undo, TAGS,
                    editAccount, setCardTerms, reorderAccounts, archiveAccount, restoreAccount,
                    editCategory, mergeCategory, archiveCategory, restoreCategory, deleteCategory, catUsage,

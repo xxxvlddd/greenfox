@@ -87,7 +87,7 @@ function renderCapital(d){
 /* ---------- чистый капитал и запас прочности ---------- */
 function cpTop(d){
   var up = String(d.delta).charAt(0) !== '-';
-  var KIND = { 'наличные': 'наличные', 'брокерский': 'инвестиции', 'крипто': 'крипту' };
+  var KIND = { 'наличные': 'наличные', 'копилка': 'копилку', 'брокерский': 'инвестиции', 'крипто': 'крипту' };
   var DEBT = { loan: 'кредит', card: 'кредитная карта' };
   var assetsNote = nAcc(d.assetsCount) + (d.assetKinds.length
     ? ', включая ' + cpJoin(d.assetKinds.map(function(k){ return KIND[k]; })) : '');
@@ -319,16 +319,16 @@ function cpCardCard(c){
   var used = c.limit && rub(c.limit) > 0 ? rub(c.debt) / rub(c.limit) * 100 : null;
   var terms = [];
   if (c.limit) terms.push('Лимит ' + money0(c.limit));
+  if (c.statementDay) terms.push('выписка ' + c.statementDay + ' числа');
   if (c.graceDay) terms.push('грейс-период до ' + c.graceDay + ' числа');
 
   var paidCell = '<div></div>', prog = '';
   if (cy){
     var need = rub(cy.debtStart), paid = rub(cy.paid);
-    var rest = String(BigInt(cy.debtStart) - BigInt(cy.paid));
-    paidCell = '<div><div class="k">Внесено в цикле</div><div class="v">' + money(cy.paid) + '</div>' +
+    paidCell = '<div><div class="k">Внесено к грейсу</div><div class="v">' + money(cy.paid) + '</div>' +
       '<div class="s">' + (need > 0
-        ? 'из ' + money0(cy.debtStart) + ' · ' + (paid >= need ? 'выполнено' : 'осталось ' + money0(rest))
-        : 'долга на начало цикла не было') + '</div></div>';
+        ? 'из ' + money0(cy.debtStart) + ' · ' + (paid >= need ? 'выполнено' : 'осталось ' + money0(cy.left))
+        : 'к этому грейсу вносить нечего') + '</div></div>';
     var pct = need > 0 ? Math.min(paid / need, 1) * 100 : 100;
     var lead = cy.daysLeft === 0 ? 'Сегодня последний день цикла.'
       : 'Осталось ' + nDays(cy.daysLeft) + ' до ' + humanDate(cy.due) + '.';
@@ -339,7 +339,9 @@ function cpCardCard(c){
         humanDate(cy.start) + ' ' + (one ? 'дало' : 'дали') + ' ' + money(cy.paid);
     prog = '<div class="liab-prog">' +
       '<div class="liab-track"><i style="width:' + pct.toFixed(1) + '%"></i></div>' +
-      '<div class="cap"><b>' + lead + '</b> Условие цикла — внести за него всю сумму долга, можно частями. ' +
+      '<div class="cap"><b>' + lead + '</b> Условие грейса — внести до этого дня ' +
+        (cy.source === 'manual' ? 'сумму, которую вы указали' : cy.source === 'statement' ? 'долг по выписке' : 'долг на начало цикла') +
+        ', можно частями. ' +
         tops + '</div>' +
     '</div>';
   }

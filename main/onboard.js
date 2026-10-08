@@ -81,7 +81,7 @@ const RECURRING = [
   { kind: 'out', name: 'Мобильная связь', cat: 'Подписки и связь' },
   { kind: 'out', name: 'Домашний интернет', cat: 'Подписки и связь' },
 ];
-const TYPE_KEY = { 'дебетовая карта': 'debit', 'кредитная карта': 'credit', 'текущий': 'current', 'наличные': 'cash',
+const TYPE_KEY = { 'дебетовая карта': 'debit', 'кредитная карта': 'credit', 'текущий': 'current', 'наличные': 'cash', 'копилка': 'savings',
                    'брокерский': 'broker', 'крипто': 'crypto' };
 
 function fail(msg) { const e = new Error(msg); e.user = true; throw e; }
@@ -166,8 +166,9 @@ function apply(db, p, todayIso) {
       for (const a of fresh) {
         const name = String(a.name || '').trim();
         try {
-          entry.saveAccount(db, { name, type: a.type, bal: a.bal === '' ? '0' : String(a.bal), balDate: date,
-            isPay: !!a.isPay, limit: a.limit, graceDay: a.graceDay, bank: '', cur: a.type === 'credit' ? 'RUB' : (a.cur || 'RUB') }, today);
+          entry.saveAccount(db, { name, type: a.type, bal: a.bal === '' ? (a.type === 'credit' && a.avail ? '' : '0') : String(a.bal), balDate: date,
+            isPay: !!a.isPay, limit: a.limit, graceDay: a.graceDay, bank: '', cur: a.type === 'credit' ? 'RUB' : (a.cur || 'RUB'),
+            avail: a.avail, statementDay: a.statementDay, graceLeft: a.graceLeft }, today);
         } catch (e) { if (e.user) fail('Шаг 1, счёт «' + (name || 'без названия') + '»: ' + e.message); throw e; }
       }
     }

@@ -27,11 +27,11 @@ function build(db, todayIso) {
   if (ov.empty) return { empty: true };
   const today = ov.today;
   const accounts = db.prepare('SELECT * FROM accounts WHERE archived = 0 ORDER BY sort_order').all();
-  const recurring = book.recurring(db, 'WHERE active = 1');
   const catType = {};
   for (const c of db.prepare('SELECT name, type FROM categories').all()) catType[c.name] = c.type;
 
   const B = book.load(db);
+  const recurring = book.schedule(db, accounts, B, today).recurring;
   const rows = B.rows;
   const snap = R.balanceOn(B.hist, today);
   const base = capital.reserveBase(db, today, accounts, snap.bal);

@@ -23,14 +23,14 @@ const EVENT_MAX  = 5;
 /* Цвет счёта. Копилка, брокерский и крипта держат цвета макета,
    карты и текущие счета получают по порядку следующие из палитры. */
 const TYPE_COLOR = {
-  'наличные': 'var(--cat-8)', 'брокерский': 'var(--cat-6)', 'крипто': 'var(--cat-3)',
+  'наличные': 'var(--cat-8)', 'копилка': 'var(--cat-8)', 'брокерский': 'var(--cat-6)', 'крипто': 'var(--cat-3)',
   'кредитная карта': 'var(--cat-2)',
 };
 const SPARE_COLORS = ['var(--cat-1)', 'var(--cat-11)', 'var(--cat-7)', 'var(--cat-9)',
                       'var(--cat-5)', 'var(--cat-10)'];
 const LOAN_COLOR = 'var(--cat-4)';
 const TYPE_LABEL = {
-  'дебетовая карта': 'дебетовая', 'текущий': 'текущий счёт', 'наличные': 'наличные',
+  'дебетовая карта': 'дебетовая', 'текущий': 'текущий счёт', 'наличные': 'наличные', 'копилка': 'копилка',
   'брокерский': 'брокерский счёт', 'крипто': 'криптокошелёк', 'кредитная карта': 'кредитная',
 };
 
@@ -75,7 +75,8 @@ function reserveBase(db, today, accounts, bal) {
   const avgDay = ref.noData || ref.empty ? 0n : BigInt(ref.avgDay);
   let liquid = 0n;
   for (const a of accounts) {
-    if (!a.is_payment && a.type !== 'наличные') continue;
+    /* Ликвидное — платёжные счета, наличные и копилка: взять можно сразу. */
+    if (!a.is_payment && a.type !== 'наличные' && a.type !== 'копилка') continue;
     const v = bal[a.id] || 0n;
     if (v > 0n) liquid += v;
   }
@@ -85,7 +86,6 @@ function reserveBase(db, today, accounts, bal) {
 function build(db, todayIso) {
   const accounts = db.prepare('SELECT * FROM accounts WHERE archived = 0 ORDER BY sort_order').all();
   const liabilities = db.prepare('SELECT * FROM liabilities').all();
-  const recurring = book.recurring(db, 'WHERE active = 1');
   const tech = overview.techCategories(db);
 
   const B = book.load(db);
@@ -93,6 +93,8 @@ function build(db, todayIso) {
   const hist = B.hist;
   if (!hist.length) return { empty: true };
   const today = todayIso || R.iso(new Date());
+  const S = book.schedule(db, accounts, B, today);
+  const recurring = S.recurring, G = S.grace;
   const firstDay = hist[0].d;
   const ids = accounts.map(a => a.id);
   const snap = R.balanceOn(hist, today);
@@ -176,8 +178,8 @@ function build(db, todayIso) {
     const v = snap.bal[a.id] || 0n;
     if (v >= 0n) continue;
     const tags = [];
-    if (a.type === 'кредитная карта' && graceRule) {
-      tags.push({ kind: 'grace', days: R.daysBetween(today, R.graceCycle(today, graceRule.day_of_month).due) });
+    if (a.type === 'кредитная карта' && G && G.cardId === a.id && G.left > 0n) {
+      tags.push({ kind: 'grace', days: G.daysLeft });
     }
     debtsList.push({ kind: 'card', name: a.name, limit: a.credit_limit === null ? null : String(a.credit_limit),
       graceDay: graceRule ? graceRule.day_of_month : null,
@@ -210,21 +212,15 @@ function build(db, todayIso) {
     const v = snap.bal[card.id] || 0n;
     const debt = v < 0n ? -v : 0n;
     const limit = card.credit_limit === null ? null : BigInt(card.credit_limit);
+    /* Цикл грейса — один расчёт для всех экранов (main/grace.js). */
     let cycle = null;
-    if (graceRule) {
-      const cyc = R.graceCycle(today, graceRule.day_of_month);
-      const cs = cyc.start, due = cyc.due;
-      let paid = 0n, count = 0;
-      for (const r of rows) {
-        if (r.d < cs || r.d > today || r.to !== card.id) continue;
-        paid += r.a; count++;
-      }
-      const before = R.balanceOn(hist, R.addDays(cs, -1)).bal[card.id] || 0n;
+    if (G && G.cardId === card.id) {
+      const before = R.balanceOn(hist, R.addDays(G.start, -1)).bal[card.id] || 0n;
       const debtStart = before < 0n ? -before : 0n;
-      cycle = { start: cs, due, daysLeft: R.daysBetween(today, due),
-                paid: String(paid), count, debtStart: String(debtStart),
+      cycle = { start: G.start, due: G.due, daysLeft: G.daysLeft, source: G.source, statementDay: G.statementDay,
+                paid: String(G.paid), count: G.ops.length, debtStart: String(G.need), left: String(G.left),
                 change: String(debt - debtStart),
-                stuck: paid > 0n && debt > 0n && debt >= debtStart };
+                stuck: G.paid > 0n && debt > 0n && debt >= debtStart && G.left > 0n };
     }
     cardOut = {
       name: 'Кредитная карта',
@@ -232,6 +228,7 @@ function build(db, todayIso) {
       debt: String(debt), limit: limit === null ? null : String(limit),
       free: limit === null ? null : String(limit - debt),
       graceDay: graceRule ? graceRule.day_of_month : null,
+      statementDay: card.statement_day || null,
       reconciledAt: card.reconciled_at,
       alert: limit !== null && limit > 0n && debt * 10n >= limit * 9n,
       cycle,
@@ -293,7 +290,7 @@ function build(db, todayIso) {
     delta: String(now.nw - was.nw),
     assetsCount: assetsList.length,
     assetKinds: Array.from(new Set(assetsList.map(a => a.type)
-      .filter(t => t === 'наличные' || t === 'брокерский' || t === 'крипто'))),
+      .filter(t => t === 'наличные' || t === 'копилка' || t === 'брокерский' || t === 'крипто'))),
     debtKinds: Array.from(new Set(debtsList.map(d => d.kind))),
     lastRecon,
     series: {

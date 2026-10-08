@@ -21,7 +21,7 @@ function alertsHTML(d){
   var items = [];
   if (d.staleDays && d.staleDays >= 2){
     items.push(['var(--warning)', 'Данные не свежие.',
-      'Последняя операция ' + humanDate(d.lastDay) + ' — ' + nDays(d.staleDays) +
+      'Последняя запись ' + humanDate(d.lastDay) + ' — ' + nDays(d.staleDays) +
       ' назад. Числа ниже посчитаны так, будто с тех пор вы ничего не тратили']);
   }
   (d.alerts || []).forEach(function(a){

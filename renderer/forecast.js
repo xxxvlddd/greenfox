@@ -377,12 +377,17 @@ function fcGraceCol(d){
   }
   var need = BigInt(g.need), paid = BigInt(g.paid);
   var done = paid >= need;
+  /* Откуда взялась сумма к грейсу — так и сказано. */
+  var how = g.source === 'manual'
+      ? 'Сумма к грейсу — как вы указали на ' + humanDate(g.start) + '; внесённое с этого дня вычитается'
+    : g.source === 'statement'
+      ? 'Выписка ' + g.statementDay + ' числа, грейс до ' + g.graceDay + ' числа: до него нужно внести долг на день выписки'
+      : 'Цикл идёт с ' + (g.graceDay + 1) + ' числа по ' + g.graceDay + ' число следующего месяца: до его конца нужно ' +
+        'внести долг на начало цикла. День выписки уточняет расчёт — его можно указать в «Настройках»';
   var hit = fcGraceHit();
   var nOpsTxt = nOps(g.ops.length);
   return '<div style="display:flex;flex-direction:column">' +
-    fcHead('Грейс кредитки',
-      'Цикл идёт с ' + (g.graceDay + 1) + ' числа по ' + g.graceDay + ' число следующего месяца. Условие ' +
-      'считается по сумме всех пополнений карты за цикл',
+    fcHead('Грейс кредитки', how,
       '<p class="sec-sub"><span class="badge badge--fact">факт</span> ' + (g.bank ? esc(g.bank) + ' · ' : '') +
         'цикл ' + humanDate(g.start) + ' – ' + humanDate(g.due) + '</p>',
       done ? '<span class="badge badge--ok">условие выполнено</span>'
@@ -391,9 +396,9 @@ function fcGraceCol(d){
       '<div style="min-width:0">' +
         '<div class="gr-sum ' + (done ? 'c-pos' : 'c-warn') + '">' + money(g.paid) + '</div>' +
         '<div class="gr-of">' + (need > 0n
-          ? 'внесено за цикл при условии ' + money0(g.need) + ' — это ' +
-            Math.round(Number(g.paid) / Number(g.need) * 100) + '% от нужного'
-          : 'внесено за цикл — на начало цикла долга не было') + '</div>' +
+          ? 'внесено из ' + money0(g.need) + ' — ' + (done ? 'условие выполнено'
+              : 'осталось ' + money0(g.left) + ', это ' + Math.round(Number(g.paid) / Number(g.need) * 100) + '% от нужного')
+          : 'внесено — к этому грейсу вносить нечего') + '</div>' +
       '</div>' +
       '<span class="spacer"></span>' +
       '<div class="gr-count"><div class="d">' + g.daysLeft + '</div>' +
@@ -417,9 +422,9 @@ function fcGraceCol(d){
       return '<div class="gr-op"><span class="dt">' + o.date + '</span><span class="ds">' + esc(o.desc) + '</span>' +
              '<span class="am c-pos">+' + money(o.sum) + '</span></div>';
     }).join('') + '</div>' +
-    '<div class="gr-rule"><b>Правило банка:</b> в течение цикла, до ' + g.graceDay + ' числа, на карту должна ' +
-      'быть внесена вся сумма долга. Вносить можно частями — погашать долг одним платежом не требуется, важна ' +
-      'сумма внесений за цикл.</div>' +
+    '<div class="gr-rule"><b>Правило банка:</b> до ' + g.graceDay + ' числа на карту должна быть внесена сумма ' +
+      (g.statementDay ? 'по выписке ' + g.statementDay + ' числа' : 'долга на начало цикла') + '. Вносить можно частями — ' +
+      'важна сумма внесений, а покупки после выписки уходят в следующий цикл.</div>' +
     (g.stuck
       ? '<div class="note-warn" style="margin-top:14px"><span class="dot"></span><span><b>Долг при этом не ' +
         'уменьшается: ' + money(g.debt) + (g.limit ? ' при лимите ' + money0(g.limit) : '') + '.</b> Каждое ' +
@@ -429,7 +434,7 @@ function fcGraceCol(d){
           : '') + '</span></div>'
       : '') +
     '<div class="gr-foot">' +
-      '<button class="btn btn-sm" data-soon="Настройки">Уточнить правило банка</button>' +
+      '<button class="btn btn-sm" data-goto-settings="calc">Уточнить правило банка</button>' +
       '<span class="spacer"></span>' +
       '<button class="btn btn-sm btn-sm--acc" data-form="cardtopup">Пополнить карту</button>' +
     '</div>' +
