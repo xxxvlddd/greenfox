@@ -177,9 +177,9 @@ function fcScenSection(d){
      сетки. 16 пикселей — тот же зазор, что у остальных заголовков. */
   return '<section class="sec" style="border-top:none;padding-bottom:16px">' +
       fcHead('На сколько хватит денег',
-        'Считается от ' + a + ' на платёжных счетах. Копилка, инвестиции и лимит кредитной карты не ' +
+        'Считается от ' + a + ' на повседневных счетах. Копилка, инвестиции и лимит кредитной карты не ' +
         'учитываются. В каждый сценарий добавлены известные поступления и обязательные платежи горизонта',
-        '<p class="sec-sub">Три темпа трат от одних и тех же ' + a + ' на платёжных счетах. На графиках — ' +
+        '<p class="sec-sub">Три темпа трат от одних и тех же ' + a + ' на повседневных счетах. На графиках — ' +
         'остаток на счетах по дням, у каждого сценария своя шкала · нажмите карточку, чтобы закрепить ' +
         'сценарий</p>', '', 'margin-bottom:0') +
     '</section>' +
@@ -523,7 +523,7 @@ function fcGoalsSection(d){
     var left = avail - plan, perDay = left / f.toIncome;
     if (perDay < Number(f.usual)){
       warn = '<div class="note-warn" style="margin-top:14px"><span class="dot"></span><span><b>Плановые взносы ' +
-        'больше, чем позволяет остаток.</b> На платёжных счетах ' + money(f.avail) + ', до поступления ' +
+        'больше, чем позволяет остаток.</b> На повседневных счетах ' + money(f.avail) + ', до поступления ' +
         fcGDays(f.toIncome) + '. Если отложить все ' + money0(f.plan) + ' сейчас, останется ' + fcC(left) + ' на ' +
         nDays(f.toIncome) + ' — это ' + fcC(perDay) + ' в день при обычном темпе ' + money0(f.usual) + '.</span></div>';
     }
@@ -539,7 +539,7 @@ function fcGoalsSection(d){
     '<div class="goals-foot">' +
       '<div><div class="k">Накоплено всего</div><div class="v">' + money(f.saved) + '</div></div>' +
       '<div><div class="k">Плановый взнос в месяц</div><div class="v">' + money(f.plan) + '</div></div>' +
-      '<div><div class="k">Свободно на платёжных счетах</div>' +
+      '<div><div class="k">Свободно на повседневных счетах</div>' +
         '<div class="v' + (avail < plan ? ' c-warn' : '') + '">' + money(f.avail) + '</div></div>' +
       '<span class="spacer"></span>' +
     '</div>' +

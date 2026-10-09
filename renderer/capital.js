@@ -152,7 +152,7 @@ function cpSafety(s){
   var mark = months === null ? 0 : Math.max(0.5, Math.min(zonePct(months), 99.5));
 
   return cpHead('Запас прочности',
-      'Сколько вы протянете без новых доходов. Считается по ликвидным активам — платёжным счетам и копилке. Кредитный лимит не учитывается',
+      'Сколько вы протянете без новых доходов. Считается по ликвидным активам — повседневным счетам и копилке. Кредитный лимит не учитывается',
       '', '<span class="badge badge--est">оценка</span>') +
     '<div class="safety">' +
       '<div class="safety-item">' +
@@ -163,7 +163,7 @@ function cpSafety(s){
         '<div class="s">' + note1 + '</div>' +
       '</div>' +
       '<div class="safety-item">' +
-        '<div class="k">Дней до нуля на платёжных счетах</div>' +
+        '<div class="k">Дней до нуля на повседневных счетах</div>' +
         '<div class="v"><b class="' + dCls + '">' +
           (s.daysLeft === null ? '—' : '≈' + NBSP + s.daysLeft + NBSP + 'дн.') + '</b>' +
           '<span>' + (s.zeroDate ? 'кончатся ' + humanDate(s.zeroDate) : '') + '</span></div>' +
@@ -201,7 +201,7 @@ function cpDyn(d){
 
 /* ---------- активы и долги ---------- */
 function cpTag(t){
-  if (t.kind === 'payment') return '<span class="badge badge--muted">не платёжный</span>';
+  if (t.kind === 'payment') return '<span class="badge badge--muted">не в дневном лимите</span>';
   if (t.kind === 'stale') return '<span class="badge badge--stale">сверен ' + nDays(t.days) + ' назад</span>';
   if (t.kind === 'grace') return '<span class="badge badge--stale">грейс ' + cpIn(t.days) + '</span>';
   return '';

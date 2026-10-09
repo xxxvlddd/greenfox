@@ -399,7 +399,7 @@
 .scr-ob .ob-date .l{font-size:12px;color:var(--text-2);}
 .scr-ob .ob-date .inp{width:130px;font-family:var(--font-mono);font-size:13px;}
 .scr-ob .ob-date .h{font-size:11px;line-height:15px;color:var(--text-3);flex:1;min-width:220px;}
-/* Строка счёта: название, тип, остаток, «платёжный», убрать. */
+/* Строка счёта: название, тип, остаток, «в дневной лимит», убрать. */
 .scr-ob .ac-row.is-edit .ac-nm .inp{width:100%;}
 .scr-ob .ac-ty{flex:none;width:200px;}
 /* Валюта счёта — рядом с остатком; у кредитки — только рубли, знаком. */
@@ -410,7 +410,7 @@
 .scr-ob .ac-in.ac-fixed{text-align:right;font-family:var(--font-mono);font-size:13px;word-spacing:-.22em;white-space:nowrap;color:var(--text-2);}
 .scr-ob .ac-x-sp{flex:none;width:26px;}
 .scr-ob .ac-pay{
-  flex:none;width:112px;display:flex;align-items:center;gap:7px;padding:0;border:none;background:none;cursor:pointer;
+  flex:none;width:136px;display:flex;align-items:center;gap:7px;padding:0;border:none;background:none;cursor:pointer;
   font-family:inherit;font-size:12px;color:var(--text-2);
 }
 .scr-ob .ac-pay.is-na{cursor:default;color:var(--text-3);font-size:11px;}
@@ -574,5 +574,5 @@
   .scr-ob .ac-ty{width:150px;}
   .scr-ob .ac-cur{width:58px;}
   .scr-ob .ac-in{width:128px;}
-  .scr-ob .ac-pay{width:104px;}
+  .scr-ob .ac-pay{width:126px;}
 }

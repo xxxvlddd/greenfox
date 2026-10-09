@@ -93,7 +93,7 @@ function sgGeneral(){
 
 function sgAccItem(a, i, n){
   var fx = a.cur && a.cur !== 'RUB';
-  var sub = [a.bank, a.typeWord].filter(Boolean).join(' · ') + (a.isPayment ? ' · платёжный' : '') +
+  var sub = [a.bank, a.typeWord].filter(Boolean).join(' · ') + (a.isPayment ? ' · в дневном лимите' : '') +
     (fx ? ' · в ' + ({ USD: 'долларах', EUR: 'евро' }[a.cur] || a.cur) + ', ≈ ' + money0(a.balance) : '');
   return '<div class="set-item' + (a.archived ? ' is-arch' : '') + '"' + (a.archived ? '' : ' data-acc="' + esc(a.id) + '"') + '>' +
     (a.archived ? '' : '<button type="button" class="grip" data-grip="' + esc(a.id) + '" aria-label="Переместить «' +
@@ -117,7 +117,7 @@ function sgAccounts(){
       ? '<div class="set-list">' + arch.map(sgAccItem).join('') + '</div>'
       : '<p class="row-hint">В архиве ничего нет.</p>') + '</div>' : '') +
   '<div class="note-warn"><span class="dot"></span><span>' +
-    '<b>Флаг «платёжный счёт» решает многое.</b> Только такие счета попадают в «Доступно на счетах», ' +
+    '<b>Флаг «в дневной лимит» решает многое.</b> Только такие счета попадают в «Доступно на счетах», ' +
     'в дневной лимит и в расчёт дней до нуля. Копилка, брокерский счёт и криптокошелёк видны в капитале, ' +
     'но тратить их каждый день не предполагается.</span></div>' +
   '<div class="set-foot">' + sgBtn('Добавить счёт', 'acc-add', '', true) +

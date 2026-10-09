@@ -160,7 +160,7 @@ function apply(db, p, todayIso) {
     /* Категории нужны всегда: без них не записать ни одной операции. */
     applyCats(db, p.cats, !!steps.s2);
     if (steps.s1) {
-      /* Сначала платёжные: кредитке нужен счёт, с которого её гасят. */
+      /* Сначала повседневные: кредитке нужен счёт, с которого её гасят. */
       const fresh = (p.accounts || []).filter(a => !a.existing && (String(a.name || '').trim() || String(a.bal || '') !== ''));
       fresh.sort((a, b) => (a.type === 'credit') - (b.type === 'credit'));
       for (const a of fresh) {
@@ -173,7 +173,7 @@ function apply(db, p, todayIso) {
       }
     }
     if (steps.s3) {
-      /* Суммы шага 3 — в рублях: платежи ложатся на рублёвый платёжный счёт. */
+      /* Суммы шага 3 — в рублях: платежи ложатся на рублёвый повседневный счёт. */
       const payer = db.prepare("SELECT id FROM accounts WHERE is_payment = 1 AND archived = 0 AND currency = 'RUB' ORDER BY sort_order").get();
       const fresh = (p.recurring || []).filter(r => !r.existing && r.on);
       /* Категорию, выбранную у платежа, включаем: выключенная не
@@ -181,8 +181,8 @@ function apply(db, p, todayIso) {
       for (const r of fresh) if (r.cat) db.prepare('UPDATE categories SET active = 1 WHERE name = ?').run(r.cat);
       if (fresh.length && !payer) {
         fail(db.prepare('SELECT 1 FROM accounts WHERE is_payment = 1 AND archived = 0').get()
-          ? 'Шаг 3: суммы платежей — в рублях, а платёжные счета на шаге 1 все в валюте. Добавьте рублёвую карту или наличные'
-          : 'Шаг 3: сначала нужен платёжный счёт — карта или наличные, на шаге 1');
+          ? 'Шаг 3: суммы платежей — в рублях, а повседневные счета на шаге 1 все в валюте. Добавьте рублёвую карту или наличные'
+          : 'Шаг 3: сначала нужен повседневный счёт — карта или наличные, на шаге 1');
       }
       for (const r of fresh) {
         const name = String(r.name || '').trim();

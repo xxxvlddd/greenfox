@@ -71,7 +71,7 @@ function plHeadLabel(d){
 }
 
 /* ---------- запас прочности ---------- */
-/* Дни до нуля на платёжных счетах — тем же расчётом, что обычный темп
+/* Дни до нуля на повседневных счетах — тем же расчётом, что обычный темп
    на «Прогнозах»: дневной темп плюс поступления и платежи по расписанию. */
 function plZeroDay(start){
   var r = PL.reserve, bal = start;
@@ -172,12 +172,12 @@ function renderPlans(d){
     '<section class="sec">' +
       plHead('Влияние на запас прочности',
         'Запас прочности — на сколько месяцев хватит ликвидных активов при среднем расходе. Дни до нуля считаются ' +
-        'только по платёжным счетам и только до ближайшего поступления',
+        'только по повседневным счетам и только до ближайшего поступления',
         '<p class="sec-sub"><span class="badge badge--forecast">прогноз</span> Нажмите позиции, которые примеряете — ' +
         'итог пересчитается</p>',
         '<span class="lbl">Платить</span>' +
         '<div class="seg" id="plSrcSeg">' +
-          '<button type="button" data-src="card"' + (plSrc === 'card' ? ' class="is-active"' : '') + '>с платёжных счетов</button>' +
+          '<button type="button" data-src="card"' + (plSrc === 'card' ? ' class="is-active"' : '') + '>с повседневных счетов</button>' +
           '<button type="button" data-src="cash"' + (plSrc === 'cash' ? ' class="is-active"' : '') + '>из копилки</button>' +
         '</div>' +
         '<button class="btn btn-sm" id="plImpAll">Отметить все</button>') +
@@ -187,7 +187,7 @@ function renderPlans(d){
       '<div class="res-cell"><div class="k">Отмечено</div>' +
         '<div class="res-flow"><b id="plResSum">' + money0('0') + '</b></div>' +
         '<div class="s" id="plResSumSub"></div></div>' +
-      '<div class="res-cell"><div class="k">Дней до нуля на платёжных счетах</div>' +
+      '<div class="res-cell"><div class="k">Дней до нуля на повседневных счетах</div>' +
         '<div class="res-flow"><b class="was" id="plDaysWas"></b><span class="arr">→</span><b id="plResDays"></b></div>' +
         '<div class="s" id="plResDaysSub"></div></div>' +
       '<div class="res-cell"><div class="k">Запас прочности</div>' +
@@ -377,7 +377,7 @@ function plRecalc(){
   /* Значение бывает словом «хватит», докручивать нечего — только вспышка. */
   bump(dEl);
   document.getElementById('plResDaysSub').textContent =
-    plSrc === 'cash' ? 'оплата из копилки платёжные счета не трогает'
+    plSrc === 'cash' ? 'оплата из копилки повседневные счета не трогает'
     : !sum ? (inc ? plLower(inc.name) + ' придёт ' + humanDate(inc.date) + ' — через ' + nDays(inc.day)
                   : 'поступлений в ближайший месяц не ждём')
     : (st.days === null ? 'до поступления хватает' : 'деньги кончатся ' + plDayLabel(st.days));
@@ -398,18 +398,18 @@ function plRenderImpVerdict(sum, count, st, base, baseM){
   var cls = 'res-verdict', txt;
   if (!count){
     txt = 'Ничего не отмечено — показано текущее состояние: <b>' + plDaysText(base) +
-          '</b> до нуля на платёжных счетах и запас <b>' + plMonths(baseM) +
+          '</b> до нуля на повседневных счетах и запас <b>' + plMonths(baseM) +
           '</b> Нажмите позицию выше, чтобы примерить покупку.';
   } else if (plSrc === 'cash'){
     cls += st.months !== null && st.months < ZONES[0] ? ' is-neg' : ' is-warn';
-    txt = '<b>Оплата из копилки не трогает платёжные счета</b> — дней до поступления останется столько же (' +
+    txt = '<b>Оплата из копилки не трогает повседневные счета</b> — дней до поступления останется столько же (' +
           plDaysText(base) + '). Но запас прочности падает так же: ' + plMonths(baseM) + ' → <b>' + plMonths(st.months) +
           '</b>' + (st.months !== null && st.months < ZONES[0] ? ' Это критическая зона — ' + zoneCritText() + ' жизни на сбережениях.' : '');
   } else if (st.tone === 'negative'){
     cls += ' is-neg';
     txt = (st.months !== null && st.months < ZONES[0]
             ? '<b>Запас прочности уходит в критическую зону</b> — ' + zoneCritText() + ' жизни на сбережениях. ' : '') +
-          'Платёжные счета обнулятся <b>' + (st.days === null ? 'не раньше поступления' : plDayLabel(st.days)) + '</b>' +
+          'Повседневные счета обнулятся <b>' + (st.days === null ? 'не раньше поступления' : plDayLabel(st.days)) + '</b>' +
           (st.days !== null && inc && inc.day > st.days ? ' — за ' + plGDays(inc.day - st.days) + ' до поступления' : '') +
           '. Разрыв придётся закрывать кредиткой или копилкой.';
   } else if (st.tone === 'warning'){

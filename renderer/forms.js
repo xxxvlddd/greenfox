@@ -582,7 +582,7 @@ function fmAccList(){
 }
 function fmNum(v){ var r = fmParse(v); return r.ok ? r.cents : 0; }
 /* Сколько уже лежит под цель: на отдельном счёте — его остаток, на
-   платёжном — ничего, как на «Прогнозах». */
+   повседневном — ничего, как на «Прогнозах». */
 function fmGoalCur(accId){
   var a = fmAcc(accId);
   return a && !a.isPayment && !a.isCredit && Number(a.balance) > 0 ? Number(a.balance) : 0;
@@ -738,7 +738,7 @@ function fmRefHTML(st){
     var ga = fmAcc(st.accId);
     b += fmFld('Текущая сумма', '<input class="inp" type="text" readonly value="' + esc(fmC(fmGoalCur(st.accId)) +
         (ga && ga.cur !== 'RUB' && fmGoalCur(st.accId) ? ' — это ' + fmIn(fmNat(ga), ga.cur) + ' по курсу ЦБ' : '')) + '">',
-      fmAcc(st.accId) && fmAcc(st.accId).isPayment ? 'На платёжном счёте отложенное от текущих денег не отделить — ' +
+      fmAcc(st.accId) && fmAcc(st.accId).isPayment ? 'На повседневном счёте отложенное от текущих денег не отделить — ' +
         'считается с нуля.' : '');
     b += fmFld('Целевая сумма', fmInp('target', st, ''), '', 'необязательно');
     b += fmFld('Срок', fmDateInp('deadlineTxt', st), '', 'необязательно');
@@ -766,7 +766,7 @@ function fmRefHTML(st){
             ' — то же число в новой валюте. Если сумма другая, поправьте её сверкой.' : '');
     }
     if (!st.isCredit){
-      b += fmCheck('isPay', st, 'Платёжный счёт — учитывать в «Доступно на счетах»',
+      b += fmCheck('isPay', st, 'В дневной лимит — повседневный счёт, его остаток идёт в «Доступно на счетах»',
         'Снимите для копилки, брокерского счёта и криптокошелька: их остаток виден в капитале, но тратить его каждый ' +
         'день не планируется.');
     } else {
@@ -794,7 +794,7 @@ function fmRefHTML(st){
     b += fmFld('Дата этого баланса', fmDateInp('balDateTxt', st), 'От неё считаются все последующие операции. Если выписки ' +
       'раньше нет — ставьте дату первой известной.');
     if (st.type !== 'credit'){
-      b += fmCheck('isPay', st, 'Платёжный счёт — учитывать в «Доступно на счетах»',
+      b += fmCheck('isPay', st, 'В дневной лимит — повседневный счёт, его остаток идёт в «Доступно на счетах»',
         'Снимите для копилки, брокерского счёта и криптокошелька: их остаток виден в капитале, но тратить его каждый ' +
         'день не планируется.');
     } else {
@@ -1579,7 +1579,7 @@ function fmFromButton(btn){
     }
     if (kind === 'cardtopup') return fmOpen('transfer', { to: a('to') || (card && card.id), from: pay.id }, d);
     /* Отложить можно только на отдельный счёт: если цель хранится на
-       платёжном, перевод вышел бы на тот же счёт. Тогда открывается
+       повседневном, перевод вышел бы на тот же счёт. Тогда открывается
        сама цель — выбрать, где копить. */
     if (kind === 'goaltopup'){
       var gAcc = fmAcc(a('to'));

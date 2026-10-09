@@ -64,7 +64,7 @@ function heroHTML(d){
 
   return '<section class="hero"><div class="hero-main">' +
     '<div class="hero-label"><span class="lbl">Доступно на счетах</span>' +
-      '<i class="info" title="Только платёжные счета. Не включает копилку, инвестиции, криптокошелёк и свободный лимит кредитной карты">i</i>' +
+      '<i class="info" title="Только повседневные счета — те, что идут в дневной лимит. Не включает копилку, инвестиции, криптокошелёк и свободный лимит кредитной карты">i</i>' +
       (d.reconciledAt ? '<span class="badge badge--recon">сверено ' + humanDate(d.reconciledAt) + '</span>' : '') +
     '</div>' +
     '<div class="hero-sum"><span class="v num">' + moneyBare(d.available) + '</span>' +
@@ -185,9 +185,9 @@ function chartsHTML(){
     '<div class="chart-pane">' +
       '<div class="sec-head"><div style="min-width:0">' +
         '<div class="title-row"><h2 class="sec-title">На сколько хватит денег</h2>' +
-        '<i class="info" title="Прогноз остатка на платёжных счетах при трёх темпах расходования. Зарплата, аренда, кредит и подписки разложены по своим числам на весь горизонт">i</i></div>' +
+        '<i class="info" title="Прогноз остатка на повседневных счетах при трёх темпах расходования. Зарплата, аренда, кредит и подписки разложены по своим числам на весь горизонт">i</i></div>' +
         '<p class="sec-sub"><span class="badge badge--forecast">прогноз</span> ' +
-        'Остаток на платёжных счетах, если не менять поведение</p>' +
+        'Остаток на повседневных счетах, если не менять поведение</p>' +
       '</div><span class="spacer"></span>' +
       '<div class="pane-tools">' +
         '<div class="seg" id="segRunway">' +
@@ -243,7 +243,7 @@ function upcomingHTML(d){
       '<th style="width:220px">Счёт</th>' +
       '<th class="col-sum" style="width:150px">Сумма</th>' +
       '<th class="col-bal" style="width:200px">Остаток после ' +
-        '<i class="info" title="Остаток на платёжных счетах после этого события при обычном темпе трат. Та же модель, что на графике «На сколько хватит денег»">i</i>' +
+        '<i class="info" title="Остаток на повседневных счетах после этого события при обычном темпе трат. Та же модель, что на графике «На сколько хватит денег»">i</i>' +
       '</th>' +
     '</tr></thead><tbody id="upcomingBody"></tbody></table></div>' +
     '<div class="tbl-foot" id="upcomingFoot"></div>' +
