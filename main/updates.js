@@ -19,10 +19,23 @@
    закроется, переставляет папки и запускает новую версию. Учёт лежит
    отдельно и не трогается; перед заменой делается копия базы.
 
+   Заплатка вместо установщика. Из ~300 файлов приложения от версии к
+   версии меняется десяток — код и подписи, около мегабайта в архиве; всё
+   остальное — встроенный браузер — то же самое. Поэтому в релизе рядом
+   с установщиком лежит заплатка: изменённые файлы относительно прошлой
+   версии (patch.from) и опись всего нового приложения — путь, сумма
+   SHA-256, исполняемый ли файл, куда ведёт ссылка. Опись входит в
+   подписанное описание. Стоит ровно прошлая версия — качается заплатка:
+   копия установленного приложения, поверх — изменённые файлы, лишнее
+   убирается, и вся копия сверяется с описью до последнего байта, потом —
+   подпись кода. Не сошлось что угодно — молча качается полный установщик.
+
    В проверках сеть, ключ и системные шаги подменяются: useFetch, useKey,
    useSys.
    ============================================================ */
-const fs = require('fs');
+/* Файлы — без подмены Electron: для него app.asar — папка-архив, а здесь
+   это просто файл, который надо сверить, скопировать или удалить. */
+const fs = (() => { try { return require('original-fs'); } catch (e) { return require('fs'); } })();
 const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
@@ -35,6 +48,7 @@ const FEED = 'https://api.github.com/repos/' + REPO + '/releases/latest';
 const PAGE = 'https://github.com/' + REPO + '/releases/latest';
 const COMMAND = 'curl -fsSL https://raw.githubusercontent.com/' + REPO + '/main/scripts/install.sh | bash';
 const ASSET = 'GREENFOX-arm64.dmg';
+const PATCH = 'GREENFOX-arm64.patch.tgz';
 const MANIFEST = 'update.json';
 const SIG = 'update.json.sig';
 const APP_NAME = 'GREENFOX.app';
@@ -81,7 +95,57 @@ function verifyManifest(text, sig, pem) {
     fail('описание обновления неполное — его не ставим');
   }
   const notes = (Array.isArray(m.notes) ? m.notes : []).slice(0, 4).map(n => String(n).slice(0, 300));
-  return { version: String(m.version), sha256: m.sha256, size: m.size, notes, date: String(m.date || '').slice(0, 10) };
+  return { version: String(m.version), sha256: m.sha256, size: m.size, notes, date: String(m.date || '').slice(0, 10),
+           patch: patchOf(m.patch) };
+}
+/* Заплатка в описании — по всем правилам или никак: кривая не ломает
+   обновление, оно просто пойдёт полным установщиком. */
+function patchOf(p) {
+  if (!p || p.file !== PATCH || !parseVersion(p.from) || !/^[0-9a-f]{64}$/.test(String(p.sha256 || '')) ||
+      !(Number.isInteger(p.size) && p.size > 0 && p.size < 2 ** 31) || !p.index || typeof p.index !== 'object') return null;
+  const keys = Object.keys(p.index);
+  if (!keys.length || keys.length > 20000) return null;
+  for (const k of keys) {
+    const v = p.index[k];
+    if (typeof v !== 'string' || !/^Contents(\/|$)/.test(k) || k.split('/').some(x => x === '..' || x === '.' || x === '')) return null;
+    if (!(v === 'd' || /^[fx]:[0-9a-f]{64}$/.test(v) || /^l:.{1,1024}$/.test(v))) return null;
+  }
+  return { from: String(p.from).replace(/^v/, ''), size: p.size, sha256: p.sha256, index: p.index };
+}
+
+/* ---------- опись приложения ---------- */
+function sha256File(file) {
+  return new Promise((res, rej) => {
+    const h = crypto.createHash('sha256');
+    fs.createReadStream(file).on('error', rej).on('data', d => h.update(d)).on('end', () => res(h.digest('hex')));
+  });
+}
+/* Путь от корня .app → «d» — папка, «l:цель» — ссылка, «f:сумма» или
+   «x:сумма» — файл (x — исполняемый). hash: false — без сумм, только
+   что где лежит. */
+async function indexBundle(root, opts) {
+  const hash = !opts || opts.hash !== false;
+  const out = {};
+  async function walk(rel) {
+    for (const name of fs.readdirSync(path.join(root, rel)).sort()) {
+      const r = rel ? rel + '/' + name : name;
+      const p = path.join(root, r);
+      const st = fs.lstatSync(p);
+      if (st.isSymbolicLink()) out[r] = 'l:' + fs.readlinkSync(p);
+      else if (st.isDirectory()) { out[r] = 'd'; await walk(r); }
+      else if (st.isFile()) out[r] = ((st.mode & 0o111) ? 'x:' : 'f:') + (hash ? await sha256File(p) : '');
+      else out[r] = '?';
+    }
+  }
+  await walk('');
+  return out;
+}
+/* Чем опись a отличается от b: пути, которых нет или которые другие. */
+function indexDiff(want, have) {
+  const bad = [];
+  for (const k of Object.keys(want)) if (have[k] !== want[k]) bad.push(k);
+  for (const k of Object.keys(have)) if (!(k in want)) bad.push(k);
+  return bad;
 }
 
 /* ---------- сеть ---------- */
@@ -109,10 +173,18 @@ function json(db, key) {
 let run = null;                  /* идёт установка: { phase, got, total, error, reason } */
 /* mode: on — проверяет; off — выключено в настройках; dev — песочница или
    запуск из исходников, где ставить некуда. */
+/* Что предложено: для окна — без описи, с тем размером, который скачается:
+   заплатка, если стоит ровно та версия, от которой она, иначе установщик. */
+function offered(db, current) {
+  const a = json(db, 'update.available');
+  return a && newer(a.version, current) ? a : null;
+}
+function patchFor(a, current) { return a && a.patch && a.patch.url && a.patch.from === current ? a.patch : null; }
 function state(db, current, mode, now) {
   const t = now || Date.now();
-  const a = json(db, 'update.available');
-  const available = a && newer(a.version, current) ? a : null;
+  const a = offered(db, current);
+  const p = patchFor(a, current);
+  const available = a ? Object.assign({}, a, { patch: undefined, full: a.size, size: p ? p.size : a.size, light: !!p }) : null;
   const later = json(db, 'update.later');
   const off = prefs.get(db, 'upd.check') !== 'on';
   return {
@@ -144,9 +216,13 @@ function check(db, current, opts) {
         const asset = n => (Array.isArray(rel.assets) ? rel.assets : []).filter(x => x && x.name === n)[0];
         const dmg = asset(ASSET), man = asset(MANIFEST), sig = asset(SIG);
         if (!dmg || !man || !sig) fail('в релизе ' + ver + ' нет подписанного описания — его не ставим');
-        const m = verifyManifest(await get(man.browser_download_url, 65536), await get(sig.browser_download_url, 4096));
+        /* С описью приложения описание — десятки килобайт. */
+        const m = verifyManifest(await get(man.browser_download_url, 4e6), await get(sig.browser_download_url, 4096));
         if (m.version !== ver) fail('версия в подписанном описании не совпадает с релизом — его не ставим');
         if (dmg.size && dmg.size !== m.size) fail('размер установщика не совпадает с подписанным — его не ставим');
+        const pa = asset(PATCH);
+        if (m.patch && (!pa || (pa.size && pa.size !== m.patch.size))) m.patch = null;
+        if (m.patch) m.patch.url = String(pa.browser_download_url);
         found = Object.assign(m, { url: String(dmg.browser_download_url) });
       }
       DB.setSetting(db, 'update.available', found ? JSON.stringify(found) : '');
@@ -175,17 +251,18 @@ function check(db, current, opts) {
    командой или ошибка при этом тоже убираются. */
 function later(db, current) {
   if (run && !/download|verify|restart/.test(run.phase)) run = null;
-  const a = state(db, current).available;
+  const a = offered(db, current);
   if (a) DB.setSetting(db, 'update.later', JSON.stringify({ version: a.version, until: Date.now() + DAY }));
   return state(db, current);
 }
 
 /* ---------- скачать и проверить ---------- */
-async function download(av, dir, onProgress) {
+/* av: url, size, sha256; name — как назвать файл (установщик или заплатка). */
+async function download(av, dir, onProgress, name) {
   const res = await fetchImpl(av.url, { redirect: 'follow', headers: { 'User-Agent': 'GREENFOX-updater' } })
     .catch(() => fail('нет связи с GitHub — установщик не скачался'));
   if (!res.ok || !res.body) fail('установщик не скачался: GitHub ответил ' + res.status);
-  const file = path.join(dir, ASSET);
+  const file = path.join(dir, name || ASSET);
   const out = fs.createWriteStream(file, { mode: 0o600 });
   const hash = crypto.createHash('sha256');
   const reader = res.body.getReader();
@@ -239,6 +316,35 @@ async function unpack(dmg, version, target, work) {
   return fresh;
 }
 
+/* Заплатка: копия установленного приложения рядом с ним, поверх — файлы
+   из заплатки, лишнее — прочь; копия должна совпасть с описью целиком. */
+async function applyPatch(file, version, patch, target, work) {
+  const fresh = path.join(path.dirname(target), '.GREENFOX-' + version + '.app');
+  fs.rmSync(fresh, { recursive: true, force: true });
+  try {
+    await sh('/usr/bin/ditto', [target, fresh]).catch(() => fail('не удалось скопировать приложение для заплатки'));
+    /* tar без -P не пишет за пределы папки и не идёт по ссылкам наружу. */
+    await sh('/usr/bin/tar', ['-xzf', file, '-C', fresh, '--no-same-owner']).catch(() => fail('заплатка не распаковалась'));
+    const want = patch.index;
+    const have = await indexBundle(fresh, { hash: false });
+    for (const k of Object.keys(have).sort().reverse()) {
+      if (!(k in want)) fs.rmSync(path.join(fresh, k), { recursive: true, force: true });
+    }
+    const bad = indexDiff(want, await indexBundle(fresh));
+    if (bad.length) fail('после заплатки приложение не совпало с опубликованным (' + bad.slice(0, 3).join(', ') + ')');
+    const plist = path.join(fresh, 'Contents', 'Info.plist');
+    const id = (await sh('/usr/bin/plutil', ['-extract', 'CFBundleIdentifier', 'raw', '-o', '-', plist]).catch(() => '')).trim();
+    const ver = (await sh('/usr/bin/plutil', ['-extract', 'CFBundleShortVersionString', 'raw', '-o', '-', plist]).catch(() => '')).trim();
+    if (id !== BUNDLE_ID || ver !== version) fail('после заплатки не та версия приложения');
+    await sh('/usr/bin/codesign', ['--verify', '--deep', '--strict', fresh]).catch(() => fail('подпись кода после заплатки не сошлась'));
+    await sh('/usr/bin/xattr', ['-dr', 'com.apple.quarantine', fresh]).catch(() => {});
+    return fresh;
+  } catch (e) {
+    fs.rmSync(fresh, { recursive: true, force: true });
+    throw e;
+  }
+}
+
 /* Сценарий замены. Аргументы — номер процесса, где стоит приложение, где
    новая версия; дальше — ключи запуска (песочница). Пути приходят
    аргументами, не вклеиваются в текст сценария. */
@@ -264,8 +370,8 @@ function swap(target, fresh, args, work) {
   fs.writeFileSync(file, SWAP, { mode: 0o700 });
   spawn('/bin/sh', [file, String(process.pid), target, fresh].concat(args || []), { detached: true, stdio: 'ignore' }).unref();
 }
-let sys = { unpack, swap };
-function useSys(s) { sys = Object.assign({ unpack, swap }, s || {}); }
+let sys = { unpack, swap, applyPatch };
+function useSys(s) { sys = Object.assign({ unpack, swap, applyPatch }, s || {}); }
 
 /* Остатки прерванной замены рядом с приложением. */
 function tidy(target) {
@@ -284,7 +390,7 @@ function tidy(target) {
 /* env: target() → { path } или { error }; beforeRestart() — копия базы;
    quit() — выход; args — ключи запуска для новой версии; push(state). */
 async function install(db, current, env) {
-  const a = state(db, current).available;
+  const a = offered(db, current);
   if (!a) fail('Новой версии нет — устанавливать нечего');
   if (run && /download|verify|restart/.test(run.phase)) return { ok: false, error: 'Обновление уже идёт' };
   const push = () => { if (env.push) env.push(state(db, current)); };
@@ -296,17 +402,36 @@ async function install(db, current, env) {
   }
   const work = fs.mkdtempSync(path.join(os.tmpdir(), 'greenfox-update-'));
   let last = 0;
-  try {
-    run = { phase: 'download', got: 0, total: a.size };
+  const fetchOne = async (av, name) => {
+    run = { phase: 'download', got: 0, total: av.size };
     push();
-    const file = await download(a, work, got => {
-      run = { phase: 'download', got, total: a.size };
+    const file = await download(av, work, got => {
+      run = { phase: 'download', got, total: av.size };
       if (Date.now() - last > 250) { last = Date.now(); push(); }
-    });
+    }, name);
     run = { phase: 'verify' };
     push();
-    const fresh = await sys.unpack(file, a.version, where.path, work);
-    fs.rmSync(file, { force: true });
+    return file;
+  };
+  try {
+    let fresh = null;
+    const p = patchFor(a, current);
+    if (p) {
+      try {
+        const pf = await fetchOne(p, PATCH);
+        fresh = await sys.applyPatch(pf, a.version, p, where.path, work);
+        fs.rmSync(pf, { force: true });
+      } catch (e) {
+        /* Заплатка не подошла — ставим как раньше, полным установщиком. */
+        fresh = null;
+        lastPatchError = e.message;
+      }
+    }
+    if (!fresh) {
+      const file = await fetchOne(a, ASSET);
+      fresh = await sys.unpack(file, a.version, where.path, work);
+      fs.rmSync(file, { force: true });
+    }
     run = { phase: 'restart', version: a.version };
     push();
     await env.beforeRestart();
@@ -320,8 +445,10 @@ async function install(db, current, env) {
     return { ok: false, error: run.error };
   }
 }
-function reset() { run = null; checking = null; }
+let lastPatchError = '';
+function reset() { run = null; checking = null; lastPatchError = ''; }
+function patchError() { return lastPatchError; }
 
-module.exports = { REPO, FEED, PAGE, COMMAND, ASSET, MANIFEST, SIG, BUNDLE_ID, PUBLIC_KEY, SWAP,
-  parseVersion, newer, verifyManifest, state, check, later, download, unpack, swap, tidy, install, reset,
-  useFetch, useKey, useSys };
+module.exports = { REPO, FEED, PAGE, COMMAND, ASSET, PATCH, MANIFEST, SIG, BUNDLE_ID, PUBLIC_KEY, SWAP,
+  parseVersion, newer, verifyManifest, state, check, later, download, unpack, applyPatch, swap, tidy, install, reset,
+  indexBundle, indexDiff, patchError, useFetch, useKey, useSys };

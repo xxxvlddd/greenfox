@@ -233,10 +233,12 @@ function fmNewRef(kind, pre){
                isPay: acc.isPayment, wasPay: acc.isPayment,
                limit: acc.limit === null ? '' : fmRaw(acc.limit), graceDay: String(acc.graceDay || ''),
                statementDay: acc.statementDay ? String(acc.statementDay) : '', graceLeft: acc.graceLeft ? fmRaw(acc.graceLeft) : '',
+               creditUse: acc.creditUse || 'off', creditKeep: acc.creditKeep ? fmRaw(acc.creditKeep) : '',
                graceRule: acc.graceNote || '', err: '' };
     }
     return { kind: kind, name: '', bank: FD.banks[0], type: 'debit', cur: 'RUB', bal: '', balDateTxt: exRuDate(today),
-             isPay: true, limit: '', avail: '', graceDay: '21', statementDay: '', graceLeft: '', graceRule: '', err: '' };
+             isPay: true, limit: '', avail: '', graceDay: '21', statementDay: '', graceLeft: '', graceRule: '',
+             creditUse: 'off', creditKeep: '', err: '' };
   }
   /* Кредит открывается заполненным: форма служит и для правки. */
   var l = FD.loan;
@@ -544,7 +546,20 @@ function fmCardTerms(st, isNew){
       '<div class="f"><div class="f-lbl">Грейс до … числа</div>' + fmInp('graceDay', st, '21', ' inputmode="numeric"') + '</div></div>' +
     fmFld('Осталось внести до грейса', fmInp('graceLeft', st, 'не обязательно'),
       'Из приложения банка: сколько внести до конца льготного периода, чтобы не начислялись проценты' +
-      (isNew ? ' — на дату баланса' : ' — на сегодня') + '. Пусто — приложение посчитает само: по дню выписки, если он указан.');
+      (isNew ? ' — на дату баланса' : ' — на сегодня') + '. Пусто — приложение посчитает само: по дню выписки, если он указан.') +
+    fmFld('Свободный лимит в доступных деньгах', fmSel('creditUse', st, FM_CREDIT_USE),
+      'Входит ли то, что свободно на карте, в «Доступно на счетах», дневной лимит и прогнозы. Трата с карты уменьшает ' +
+      'доступное ровно на себя.') +
+    (st.creditUse === 'part'
+      ? fmFld('Оставлять на карте', fmInp('creditKeep', st, 'пусто — половина свободного', ' inputmode="decimal"'),
+          'Эта сумма лимита не тратится — так долг гасится постепенно. В доступное идёт всё, что свободно сверх неё.')
+      : '');
+}
+var FM_CREDIT_USE = [['off', 'Не считать — только мои деньги'], ['all', 'Весь свободный лимит'],
+                     ['part', 'Часть — сколько-то оставить на карте']];
+/* «Часть» без суммы — половина того, что свободно сейчас. */
+function fmCreditUse(st){
+  return st.creditUse === 'part' && !String(st.creditKeep || '').trim() ? 'half' : (st.creditUse || 'off');
 }
 function fmFld(label, inner, hint, note){
   return '<div class="f"><div class="f-lbl">' + label +
@@ -1375,14 +1390,16 @@ function fmPayload(){
     deadline: exParseDate(st.deadlineTxt) || (st.deadlineTxt ? 'x' : ''), monthly: c(st.monthly) };
   if (k === 'account' && st.id) return { id: st.id, name: st.name, bank: st.bank, isPay: st.isPay, limit: c(st.limit),
     graceDay: st.graceDay, graceRule: st.graceRule, cur: st.cur,
-    statementDay: st.isCredit ? st.statementDay : undefined, graceLeft: st.isCredit ? c(st.graceLeft) : undefined };
+    statementDay: st.isCredit ? st.statementDay : undefined, graceLeft: st.isCredit ? c(st.graceLeft) : undefined,
+    creditUse: st.isCredit ? fmCreditUse(st) : undefined, creditKeep: st.isCredit ? c(st.creditKeep) : undefined };
   /* Долг кредитки пишут числом, как в приложении банка, — минус ставим сами. */
   var debtOf = function(v){ var x = c(v); return x && x.charAt(0) !== '-' && x !== '0' ? '-' + x : x; };
   if (k === 'account') return { name: st.name, bank: st.bank, type: st.type, cur: st.cur,
     bal: st.type === 'credit' ? debtOf(st.bal) : c(st.bal),
     balDate: exParseDate(st.balDateTxt) || 'x', isPay: st.isPay, limit: c(st.limit), graceDay: st.graceDay,
     graceRule: st.graceRule, avail: st.type === 'credit' ? c(st.avail) : undefined,
-    statementDay: st.type === 'credit' ? st.statementDay : undefined, graceLeft: st.type === 'credit' ? c(st.graceLeft) : undefined };
+    statementDay: st.type === 'credit' ? st.statementDay : undefined, graceLeft: st.type === 'credit' ? c(st.graceLeft) : undefined,
+    creditUse: st.type === 'credit' ? fmCreditUse(st) : undefined, creditKeep: st.type === 'credit' ? c(st.creditKeep) : undefined };
   if (k === 'loan') return { creditor: st.creditor, type: st.type, rate: st.rate, pay: c(st.pay), day: st.day,
     close: exParseDate(st.closeTxt) || (st.closeTxt ? 'x' : ''), initial: c(st.initial), rest: c(st.rest),
     inOblig: st.inOblig };
@@ -1515,7 +1532,10 @@ function fmInput(e){
   if (rid){ st.vals[rid] = el.value; fmRender(); return; }
   var f = el.getAttribute('data-f');
   if (!f) return;
-  if (el.type === 'checkbox') return;
+  /* Выпадающий список шлёт «input», а следом «change». Перерисовка на
+     первом заменила бы список до второго — и выбор терялся бы. Списки
+     целиком обрабатывает fmChange. */
+  if (el.type === 'checkbox' || el.tagName === 'SELECT') return;
   if (FM_DATE_FIELDS[f]){
     var masked = fmMaskDate(el);
     st[f] = masked;

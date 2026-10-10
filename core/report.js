@@ -31,13 +31,17 @@ function balanceOn(hist, day) {
   return found;
 }
 
-/* Доступно на счетах: только платёжные. Копилка, брокерский и крипта
+/* Доступно на счетах: только повседневные. Копилка, брокерский и крипта
    деньгами «на сегодня» не считаются — иначе дневной лимит вырастет
-   за счёт того, что тратить не собирались. */
+   за счёт того, что тратить не собирались. Кредитка — по выбору
+   человека: свободный лимит целиком, за вычетом того, что он оставляет
+   на карте нетронутым, или не входит вовсе (cardSpendable). */
 function available(bal, accounts) {
   let sum = 0n;
   for (const a of accounts) {
-    if (!a.is_payment || a.archived) continue;
+    if (a.archived) continue;
+    if (a.type === 'кредитная карта') { sum += cardSpendable(a, bal[a.id]); continue; }
+    if (!a.is_payment) continue;
     const v = bal[a.id];
     if (v === undefined) continue;
     /* Отрицательный остаток по кредитке — это долг, а не доступные
@@ -45,6 +49,19 @@ function available(bal, accounts) {
     if (v > 0n) sum += v;
   }
   return sum;
+}
+
+/* Сколько из свободного лимита кредитки идёт в «доступно»:
+   off — ничего; all — весь свободный лимит; part — всё, что сверх суммы,
+   которую человек оставляет на карте (credit_keep). Сумма, а не доля:
+   трата с карты уменьшает доступное ровно на себя. v — остаток карты:
+   долг отрицательный, переплата положительная. */
+function cardSpendable(a, v) {
+  const use = a.credit_use || 'off';
+  if (use === 'off' || a.credit_limit === null || a.credit_limit === undefined) return 0n;
+  const free = BigInt(a.credit_limit) + (v || 0n);
+  const keep = use === 'part' && a.credit_keep ? BigInt(a.credit_keep) : 0n;
+  return free > keep ? free - keep : 0n;
 }
 
 /* Расход за день: операции, которые действительно уменьшают траты.
@@ -87,9 +104,16 @@ function upcoming(recurring, fromDay, days) {
          грейсу — сколько осталось внести (main/grace.js). */
       const amount = hit ? (r.amountOn ? BigInt(r.amountOn(day)) : BigInt(r.amount)) : 0n;
       /* Ноль — например, к грейсу уже всё внесено: события нет. */
-      if (hit && amount > 0n) out.push({ day, name: r.name, amount, dir: r.direction,
-                          category: r.category || '', accountId: r.account_id || '',
-                          obligatory: !!r.obligatory });
+      if (hit && amount > 0n) {
+        const e = { day, name: r.name, amount, dir: r.direction,
+                    category: r.category || '', accountId: r.account_id || '',
+                    obligatory: !!r.obligatory };
+        /* cost — на сколько событие уменьшит «доступно». У пополнения
+           кредитки оно своё: если её свободный лимит входит в доступное,
+           деньги перекладываются из кармана в карман (main/grace.js). */
+        if (r.costOn) e.cost = BigInt(r.costOn(day, amount));
+        out.push(e);
+      }
     }
   }
   return out;
@@ -99,9 +123,10 @@ function upcoming(recurring, fromDay, days) {
    дней до ближайшего поступления. Свободные — это доступное минус то,
    что уже обещано другим до этого поступления, минус резерв.        */
 /* Перевод между своими счетами деньги не уменьшает — он их
-   перекладывает. Пополнение кредитки до грейса обязательно, но
-   вычитать его из доступного нельзя: оно гасит долг, который в
-   доступное и не входил. */
+   перекладывает. Кроме пополнения кредитки к грейсу: деньги уходят со
+   счетов, которые в доступном, гасить долг. Сколько из этого доступное
+   потеряет, событие несёт в cost: весь платёж, если лимит карты в
+   доступное не входит, и ноль, если входит целиком. */
 const SELF_TRANSFER = 'Переводы между своими';
 
 function dayLimit(availCents, upcomingList, reserveCents) {
@@ -113,14 +138,17 @@ function dayLimit(availCents, upcomingList, reserveCents) {
   let due = 0n;
   for (const u of horizon) {
     if (u.dir === 'доход' || !u.obligatory) continue;
-    if (u.category === SELF_TRANSFER) continue;
+    if (u.category === SELF_TRANSFER && u.cost === undefined) continue;
     if (nextIncome && u.day >= nextIncome) continue;   /* в день прихода денег уже не «до» */
-    due += u.amount;
+    due += costOf(u);
   }
   const free = availCents - due - (reserveCents || 0n);
   const days = nextIncome ? daysBetween(upcomingList.length ? upcomingList[0].day : null, nextIncome) : null;
   return { free, due, nextIncome, days };
 }
+/* На сколько событие уменьшит доступное: своя цена у пополнения кредитки,
+   у остальных — сумма. */
+function costOf(u) { return u.cost !== undefined ? u.cost : u.amount; }
 function daysBetween(a, b) {
   if (!a || !b) return null;
   const [y1, m1, d1] = a.split('-').map(Number);
@@ -128,8 +156,8 @@ function daysBetween(a, b) {
   return Math.round((new Date(y2, m2 - 1, d2) - new Date(y1, m1 - 1, d1)) / 86400000);
 }
 
-module.exports = { iso, addDays, balanceOn, available, isSpending, spentOn,
-                   upcoming, dayLimit, daysBetween, fmt };
+module.exports = { iso, addDays, balanceOn, available, cardSpendable, isSpending, spentOn,
+                   upcoming, dayLimit, costOf, daysBetween, fmt };
 
 /* ============================================================
    ТРАТЫ ПО ДНЯМ

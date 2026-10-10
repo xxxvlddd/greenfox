@@ -42,6 +42,9 @@ function alertsHTML(d){
 function heroHTML(d){
   var payment = d.accounts.filter(function(a){ return a.isPayment; });
   var card = d.accounts.filter(function(a){ return a.type === 'кредитная карта'; })[0];
+  /* Свободный лимит кредитки в доступном — по выбору в «Настройках» → «Расчёты». */
+  var use = card && card.creditLimit !== null ? card.creditUse || 'off' : 'off';
+  var inAvail = use !== 'off';
 
   var side = '';
   if (card){
@@ -50,7 +53,10 @@ function heroHTML(d){
     var pct = limit ? Math.max(0, Math.min(100, debt / limit * 100)) : 0;
     side = '<div class="hero-side">' +
       '<div class="k"><span class="lbl">Кредитная карта</span>' +
-        '<span class="badge badge--muted">не считается доступным</span></div>' +
+        '<button type="button" class="badge badge--muted badge-btn" data-goto-settings="calc" title="Входит ли свободный лимит ' +
+          'в доступные деньги — меняется в «Настройках» → «Расчёты»">' +
+          (use === 'all' ? 'весь свободный — в доступном' : use === 'part' ? 'в доступном ' + money0(card.spendable)
+            : 'в доступное не входит') + '</button></div>' +
       '<div class="credit-name">' + esc(card.bank || card.name) + ' · ' +
         esc(String(card.type).replace(/ карта$/, '')) + '</div>' +
       '<div class="credit-sum num">' + money(card.balance) + '</div>' +
@@ -64,21 +70,34 @@ function heroHTML(d){
 
   return '<section class="hero"><div class="hero-main">' +
     '<div class="hero-label"><span class="lbl">Доступно на счетах</span>' +
-      '<i class="info" title="Только повседневные счета — те, что идут в дневной лимит. Не включает копилку, инвестиции, криптокошелёк и свободный лимит кредитной карты">i</i>' +
+      '<i class="info" title="' + (inAvail
+        ? 'Повседневные счета и часть свободного лимита кредитки, которую вы решили считать. Не включает копилку, инвестиции и криптокошелёк'
+        : 'Только повседневные счета — те, что идут в дневной лимит. Не включает копилку, инвестиции, криптокошелёк и свободный лимит кредитной карты') +
+      '">i</i>' +
       (d.reconciledAt ? '<span class="badge badge--recon">сверено ' + humanDate(d.reconciledAt) + '</span>' : '') +
     '</div>' +
     '<div class="hero-sum"><span class="v num">' + moneyBare(d.available) + '</span>' +
       '<span class="c">₽</span></div>' +
-    '<p class="hero-note">Без копилки, инвестиций и кредитного лимита · ' +
+    '<p class="hero-note">' + (inAvail
+        ? 'Без копилки и инвестиций · с кредитки — ' + money0(card.spendable) + (use === 'part' ? ', ' + money0(card.creditKeep || '0') +
+            ' остаётся на карте' : ' свободного лимита')
+        : 'Без копилки, инвестиций и кредитного лимита') + ' · ' +
       'движение по счетам ' + humanDate(d.lastDay) + '</p>' +
     '<button class="acc-toggle" id="accToggle" aria-expanded="false" aria-controls="accList">' +
-      '<span id="accToggleText">' + nAcc(payment.length) + '</span>' +
+      '<span id="accToggleText">' + nAcc(payment.length + (inAvail ? 1 : 0)) + '</span>' +
       '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">' +
       '<path d="M2 4.5l4 3 4-3" stroke="currentColor" stroke-width="1.4" ' +
       'stroke-linecap="round" stroke-linejoin="round"/></svg>' +
     '</button>' +
-    '<div class="acc-list" id="accList">' + payment.map(accItem).join('') + '</div>' +
+    '<div class="acc-list" id="accList">' + payment.map(accItem).join('') + (inAvail ? cardItem(card) : '') + '</div>' +
   '</div>' + side + '</section>';
+}
+/* Кредитка в списке доступного — тем, что из её свободного лимита вошло. */
+function cardItem(c){
+  return '<div class="acc-item">' +
+    '<div class="n">' + esc(c.name) + (c.bank ? ' · ' + esc(c.bank) : '') + ', из свободного лимита</div>' +
+    '<div class="v"><span class="num">' + money(c.spendable) + '</span></div>' +
+  '</div>';
 }
 /* Валютный счёт — остаток в его валюте, под ним — в рублях по курсу:
    в «Доступно на счетах» он входит рублями. */
@@ -135,7 +154,8 @@ function metricsHTML(d){
         '<i class="info" title="Сумма расходов за вчера без переводов между своими счетами">i</i>' +
         '<span class="spacer"></span><span class="badge badge--fact">факт</span></div>' +
       '<div class="metric-val num">' + money(d.spentYesterday) + '</div>' +
-      '<p class="metric-sub">' + (vsLimit || 'сравнить не с чем — лимит не посчитан') + '</p>' +
+      '<p class="metric-sub">' + (vsLimit || (known ? 'дневного лимита нет — свободные деньги до поступления уже расписаны'
+        : 'сравнить не с чем — лимит не посчитан')) + '</p>' +
       '<div class="metric-foot"><p class="metric-sub">' +
         (d.opsYesterday
           ? nOps(d.opsYesterday) + (d.catsYesterday.length ? ': ' + d.catsYesterday.map(esc).join(', ').toLowerCase() : '')
@@ -156,8 +176,8 @@ function metricsHTML(d){
         '<div class="track"><i style="width:' + used.toFixed(1) + '%"></i></div>' +
         '<p class="metric-sub" style="margin-top:7px">' +
           (d.opsToday
-            ? 'Сегодня потрачено ' + money(d.spentToday) + ' · осталось ' +
-              (left > 0 ? money0(String(Math.round(left * 100))) : 'лимит выбран')
+            ? 'Сегодня потрачено ' + money(d.spentToday) +
+              (left > 0 ? ' · осталось ' + money0(String(Math.round(left * 100))) : ' · лимит на сегодня выбран')
             : 'Сегодня трат ещё не записано' + (known ? ' · доступно ' + money0(d.dayLimit) : '')) +
         '</p>' +
       '</div>' +

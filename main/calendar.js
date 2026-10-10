@@ -121,12 +121,12 @@ function build(db, todayIso, q) {
     }
     let bal = BigInt(ov.available);
     for (let d = R.addDays(today, 1); d <= gridTo; d = R.addDays(d, 1)) {
-      let inc = 0n, exp = rate, mov = 0n;
+      let inc = 0n, exp = rate, mov = 0n, movCost = 0n;
       const plans = [], marks = [];
       for (const e of byDay[d] || []) {
         const kind = e.dir === 'доход' ? 'inc' : e.category === SELF ? 'mov' : e.obligatory ? 'due' : 'vol';
         if (kind === 'inc') inc += e.amount;
-        else if (kind === 'mov') mov += e.amount;
+        else if (kind === 'mov') { mov += e.amount; movCost += R.costOf(e); }
         else exp += e.amount;
         if (kind !== 'vol' && marks.indexOf(kind) < 0) marks.push(kind);
         plans.push({ name: e.name, kind, sum: String(kind === 'inc' ? e.amount : -e.amount),
@@ -139,7 +139,8 @@ function build(db, todayIso, q) {
         plans.push({ name: p.name, kind: 'plan', sum: String(-BigInt(p.price_max)), meta: 'срок покупки из планов',
                      id: p.id });
       }
-      bal = bal + inc - exp - mov;
+      /* Пополнение кредитки, чей лимит входит в доступное, его не уменьшает. */
+      bal = bal + inc - exp - movCost;
       if (days[d]) Object.assign(days[d], { exp, inc, mov, bal, marks, plans });
     }
   }

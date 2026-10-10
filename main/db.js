@@ -10,7 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const SCHEMA_VERSION = 9;
+const SCHEMA_VERSION = 10;
 
 function open(Database, file) {
   const dir = path.dirname(file);
@@ -52,6 +52,8 @@ const ADDED_COLUMNS = {
     ['grace_need', 'INTEGER'],
     ['grace_need_at', 'TEXT'],
     ['grace_need_due', 'TEXT'],
+    ['credit_use', "TEXT NOT NULL DEFAULT 'off'"],
+    ['credit_keep', 'INTEGER'],
   ],
   transactions: [
     ['amount_from', 'INTEGER'],
@@ -91,7 +93,9 @@ function migrate(db) {
      8 → 9: у кредитки — день выписки и «сколько осталось внести до
      грейса» на дату: из них считается грейс (main/grace.js). Колонки
      добавляются по факту, переносить нечего. Новые таблицы — пропущенные
-     платежи, вопросы к платежам, дни без трат — создаёт schema.sql. */
+     платежи, вопросы к платежам, дни без трат — создаёт schema.sql.
+     9 → 10: у кредитки — входит ли её свободный лимит в «доступно» и
+     сколько оставлять на карте. По умолчанию — не входит, как раньше. */
   for (const table of Object.keys(ADDED_COLUMNS)) {
     const have = new Set(db.prepare('PRAGMA table_info(' + table + ')').all().map(c => c.name));
     for (const [name, def] of ADDED_COLUMNS[table]) {

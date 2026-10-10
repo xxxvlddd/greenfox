@@ -16,6 +16,13 @@
 
    Пополнение кредитки по расписанию в графиках и предупреждениях берётся
    не лимитом карты, а тем, что действительно осталось внести.
+
+   Сколько это пополнение отнимет от «доступно» — зависит от того, входит
+   ли свободный лимит карты в доступное (accounts.credit_use):
+   - не входит — весь платёж: деньги ушли со своих счетов;
+   - входит целиком — ноль: со счёта ушло, на карте освободилось столько же;
+   - входит сверх суммы, оставленной на карте, — та часть платежа, что
+     возвращает карту к этой сумме.
    ============================================================ */
 const R = require('../core/report');
 
@@ -67,15 +74,31 @@ function state(accounts, recurring, B, today) {
   };
 }
 
+/* Цена пополнения на x для «доступно», если перед ним на карте свободно free. */
+function costOfTopUp(card, free, x) {
+  const R0 = R.cardSpendable;
+  const before = R0(card, (free - BigInt(card.credit_limit)));
+  const after = R0(card, (free + x - BigInt(card.credit_limit)));
+  return x - (after - before);
+}
+
 /* Расписание с настоящей суммой пополнения кредитки: ближайший день
    грейса — сколько осталось внести, следующие — новый долг сверх этого
    (то, что попадёт в следующую выписку). */
 function applyTo(recurring, g) {
   if (!g) return recurring;
   const later = g.debt > g.left ? g.debt - g.left : 0n;
+  const counted = (g.card.credit_use || 'off') !== 'off' && g.limit !== null;
+  /* Свободно на карте сейчас и после ближайшего пополнения — от них цена
+     платежей. Траты до того дня не известны: считаем от сегодняшнего. */
+  const free0 = counted ? g.limit - g.debt : 0n;
   return recurring.map(r => {
     if (r.id !== g.ruleId) return r;
-    return Object.assign({}, r, { amount: Number(g.left), amountOn: day => (day === g.due ? g.left : later) });
+    return Object.assign({}, r, {
+      amount: Number(g.left),
+      amountOn: day => (day === g.due ? g.left : later),
+      costOn: (day, x) => (!counted ? x : costOfTopUp(g.card, day === g.due ? free0 : free0 + g.left, x)),
+    });
   });
 }
 
@@ -88,4 +111,4 @@ function out(g) {
     limit: g.limit === null ? null : String(g.limit) };
 }
 
-module.exports = { state, applyTo, out, ruleOf, cardOf, statementBefore, SELF };
+module.exports = { state, applyTo, out, ruleOf, cardOf, statementBefore, costOfTopUp, SELF };

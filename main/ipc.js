@@ -260,6 +260,7 @@ function register(ipcMain, env) {
   h('recurring-resume', write(id => entry.resumeRecurring(db(), id)));
   h('loan-rate', write(rate => entry.setLoanRate(db(), rate)));
   h('card-terms', write(t => entry.setCardTerms(db(), Object.assign({}, t, { today: today() }))));
+  h('card-use', write(t => entry.setCardUse(db(), { id: t && t.id, mode: t && t.mode, keep: t && t.keep, today: today() })));
 
   /* ── Ассистент: ключ и модели ── */
   h('ai-key-set', write(async raw => {

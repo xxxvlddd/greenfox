@@ -56,6 +56,7 @@ contextBridge.exposeInMainWorld('api', {
   resumeRecurring: (id) => ipcRenderer.invoke('recurring-resume', id),
   setLoanRate: (rate) => ipcRenderer.invoke('loan-rate', rate),
   setCardTerms: (t) => ipcRenderer.invoke('card-terms', t),
+  setCardUse: (t) => ipcRenderer.invoke('card-use', t),
   setAiKey: (key) => ipcRenderer.invoke('ai-key-set', key),
   clearAiKey: () => ipcRenderer.invoke('ai-key-clear'),
   checkAiKey: () => ipcRenderer.invoke('ai-key-check'),

@@ -80,8 +80,9 @@ function build(db, todayIso) {
     const end = R.addDays(today, days);
     due = 0n;
     for (const u of up) {
-      if (u.day > end || u.dir === 'доход' || !u.obligatory || u.category === 'Переводы между своими') continue;
-      due += u.amount;
+      if (u.day > end || u.dir === 'доход' || !u.obligatory) continue;
+      if (u.category === 'Переводы между своими' && u.cost === undefined) continue;
+      due += R.costOf(u);
     }
     free = startAvail - due - reserve;
   }
@@ -126,7 +127,8 @@ function build(db, todayIso) {
     const off = R.daysBetween(today, e.day);
     if (!off || off < 1 || off > HORIZON) continue;
     const slot = (events[off] = events[off] || { sum: 0n, names: [] });
-    slot.sum += e.dir === 'доход' ? e.amount : -e.amount;
+    /* Пополнение кредитки — по своей цене для «доступно» (main/grace.js). */
+    slot.sum += e.dir === 'доход' ? e.amount : -R.costOf(e);
     slot.names.push(e.name);
   }
   const eventsOut = {};
@@ -147,7 +149,7 @@ function build(db, todayIso) {
     const off = R.daysBetween(today, e.day);
     if (!off || off < 1 || off > TABLE_DAYS) continue;
     const signed = e.dir === 'доход' ? e.amount : -e.amount;
-    running += signed;
+    running += e.dir === 'доход' ? e.amount : -R.costOf(e);
     const bal = avail - usualRate * BigInt(off) + running;
     const [yy, mm, dd] = e.day.split('-').map(Number);
     table.push({
@@ -283,6 +285,10 @@ function build(db, todayIso) {
       native: String((snap.nat || snap.bal)[a.id] === undefined ? 0n : (snap.nat || snap.bal)[a.id]),
       cur: a.currency || 'RUB',
       creditLimit: a.credit_limit === null ? null : String(a.credit_limit),
+      /* Кредитка: свободный лимит в «доступно» — режим, оставляемое на карте, сколько вошло. */
+      creditUse: a.credit_use || 'off',
+      creditKeep: a.credit_keep === null || a.credit_keep === undefined ? null : String(a.credit_keep),
+      spendable: a.type === 'кредитная карта' ? String(R.cardSpendable(a, snap.bal[a.id] || 0n)) : null,
       reconciledAt: a.reconciled_at,
     })),
     /* Дата последней сверки — самая свежая среди платёжных счетов. */

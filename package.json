@@ -1,7 +1,7 @@
 {
   "name": "finances",
   "productName": "GREENFOX",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "GREENFOX — домашняя бухгалтерия",
   "author": "Valeriy Babenko",
   "license": "GPL-3.0-or-later",
@@ -73,11 +73,16 @@
       ],
       "identity": null,
       "hardenedRuntime": false,
-      "icon": "build/icon.icns"
+      "icon": "build/icon.icns",
+      "electronLanguages": [
+        "ru",
+        "en"
+      ]
     },
     "dmg": {
       "title": "GREENFOX",
-      "icon": "build/icon.icns"
+      "icon": "build/icon.icns",
+      "format": "UDBZ"
     },
     "npmRebuild": false,
     "electronFuses": {

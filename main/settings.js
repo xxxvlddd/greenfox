@@ -109,7 +109,14 @@ function build(db, todayIso, ctx) {
                                   value: ov.dayLimit, nextIncome: ov.nextIncome } : null,
     loan: loanRow ? { creditor: loanRow.creditor, rateBp: loanRow.rate_bp } : null,
     card: card ? Object.assign({ name: card.name, limit: card.credit_limit === null ? null : String(card.credit_limit),
-                   graceDay: graceRule ? graceRule.day_of_month : null, statementDay: card.statement_day || null },
+                   graceDay: graceRule ? graceRule.day_of_month : null, statementDay: card.statement_day || null,
+                   /* Свободный лимит в «доступно»: режим, сумма на карте, сколько свободно и сколько идёт в доступное. */
+                   use: card.credit_use || 'off', keep: card.credit_keep === null ? null : String(card.credit_keep),
+                   free: (() => {
+                     if (card.credit_limit === null || !B.hist.length) return null;
+                     return String(BigInt(card.credit_limit) + (R.balanceOn(B.hist, today).bal[card.id] || 0n));
+                   })(),
+                   spendable: B.hist.length ? String(R.cardSpendable(card, R.balanceOn(B.hist, today).bal[card.id] || 0n)) : '0' },
                    /* Как приложение сейчас считает грейс — для подписи под полем. */
                    (() => {
                      const G = B.hist.length ? book.schedule(db, accAll.filter(a => !a.archived), B, today).grace : null;

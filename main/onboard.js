@@ -168,7 +168,8 @@ function apply(db, p, todayIso) {
         try {
           entry.saveAccount(db, { name, type: a.type, bal: a.bal === '' ? (a.type === 'credit' && a.avail ? '' : '0') : String(a.bal), balDate: date,
             isPay: !!a.isPay, limit: a.limit, graceDay: a.graceDay, bank: '', cur: a.type === 'credit' ? 'RUB' : (a.cur || 'RUB'),
-            avail: a.avail, statementDay: a.statementDay, graceLeft: a.graceLeft }, today);
+            avail: a.avail, statementDay: a.statementDay, graceLeft: a.graceLeft,
+            creditUse: a.type === 'credit' && a.creditUse ? a.creditUse : undefined }, today);
         } catch (e) { if (e.user) fail('Шаг 1, счёт «' + (name || 'без названия') + '»: ' + e.message); throw e; }
       }
     }

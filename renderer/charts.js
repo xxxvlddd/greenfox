@@ -290,15 +290,16 @@ function drawBars(){
   var per  = document.getElementById('barsPeriod');
   if (!host) return;
 
+  /* 14, 30, 60 — не больше стольких дней. Учёт моложе — показываются
+     все дни, что есть. */
   var ALL = DATA.daily;
-  if (barsDays > ALL.length){
-    host.innerHTML = '<div class="bars-empty">Учёт начат ' + humanDate(ALL[0] ? ALL[0].iso : DATA.today) +
-      ' — данных за ' + nDays(barsDays) + ' пока нет.</div>';
-    per.textContent = 'Период пока недоступен';
-    note.textContent = 'Период станет доступен, когда наберётся история. Сейчас в журнале ' +
-      nDays(ALL.length) + ' наблюдений.';
+  if (!ALL.length){
+    host.innerHTML = '<div class="bars-empty">Учёт начат ' + humanDate(DATA.today) + ' — первый столбец появится завтра.</div>';
+    per.textContent = 'Пока ни одного дня';
+    note.textContent = '';
     return;
   }
+  var short = ALL.length < barsDays;
 
   host.innerHTML =
     '<div class="bars-wrap">' +
@@ -311,7 +312,7 @@ function drawBars(){
       '</div>' +
     '</div>';
 
-  var days = ALL.slice(ALL.length - barsDays).map(function(d){
+  var days = ALL.slice(Math.max(0, ALL.length - barsDays)).map(function(d){
     return { date:d.date, dow:d.dow, full:d.full, value:rub(d.value),
              ops:d.ops, weekend:d.weekend, bd:d.bd, more:d.more };
   });
@@ -325,7 +326,8 @@ function drawBars(){
   var maxVal = Math.max.apply(null, vals);
   var H = 170;
 
-  per.textContent = days[0].date + ' — ' + days[days.length-1].date + ' · среднее ' + fmtR(avg) + (RUB + ' в день');
+  per.textContent = (days.length > 1 ? days[0].date + ' — ' + days[days.length-1].date : days[0].date) +
+    ' · среднее ' + fmtR(avg) + (RUB + ' в день');
 
   var axis = document.getElementById('barsAxis');
   var grid = document.getElementById('barsGrid');
@@ -347,10 +349,15 @@ function drawBars(){
 
   var bars = document.getElementById('bars');
   var labels = document.getElementById('barsLabels');
+  /* Дней меньше недели — колонки шириной как у недели, слева направо:
+     два дня не растягиваются на всю ширину. */
+  if (days.length < 7){
+    bars.style.gridTemplateColumns = labels.style.gridTemplateColumns = 'repeat(7, minmax(0, 1fr))';
+  }
 
   /* Прореживаем подписи по фактической ширине колонки, а не по числу
      дней: в узкой колонке даже 14 дат сливаются в сплошную строку. */
-  var colW = (bars.clientWidth || 460) / days.length;
+  var colW = (bars.clientWidth || 460) / Math.max(days.length, 7);
   var labelStep = colW < 26 ? 3 : (colW < 38 ? 2 : 1);
   var dense = colW < 34;
   if (dense) labels.className = 'bars-labels is-dense';
@@ -402,8 +409,9 @@ function drawBars(){
 
   placeTips(bars);
 
-  var parts = ['Средний день ' + fmtR(avg) + (RUB + ' выше, чем ') + below + ' из ' +
-               nDays(days.length) + '. Медиана — ' + fmtR(med) + (RUB + '.')];
+  var parts = short ? ['Учёт идёт ' + nDays(ALL.length) + ' — показаны все. Период дорастёт до ' + nDays(barsDays) + ' сам.'] : [];
+  parts.push('Средний день ' + fmtR(avg) + (RUB + ' выше, чем ') + below + ' из ' +
+               nDays(days.length) + '. Медиана — ' + fmtR(med) + (RUB + '.'));
   if (clipped.length){
     parts.push((clipped.length === 1 ? 'Один столбец не помещается' : clipped.length + ' столбца не помещаются') +
       ' в шкалу и обрезаны сверху: ' +

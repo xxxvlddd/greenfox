@@ -75,6 +75,18 @@ function cardExtra(a, graceDay, debt, asOf) {
   }
   return out;
 }
+/* Кредитка: входит ли свободный лимит в «доступно» (core/report.js,
+   cardSpendable). 'half' — оставить на карте половину того, что свободно
+   сейчас (free), остальное — в доступное. undefined — не менять. */
+const CREDIT_USE = ['off', 'all', 'part', 'half'];
+function creditUseFields(a, free) {
+  if (a.creditUse === undefined || a.creditUse === null) return {};
+  const use = String(a.creditUse);
+  if (CREDIT_USE.indexOf(use) < 0) fail('Свободный лимит: не считать, весь или часть');
+  if (use === 'off' || use === 'all') return { credit_use: use, credit_keep: null };
+  const keep = use === 'half' ? (free > 0n ? free / 2n : 0n) : cents(a.creditKeep, 'Оставлять на карте', true);
+  return { credit_use: 'part', credit_keep: String(keep) };
+}
 function text(v, max) { return String(v || '').replace(/\s+/g, ' ').trim().slice(0, max || 200); }
 function now() { return new Date().toISOString(); }
 const ruDay = iso => iso.slice(8, 10) + '.' + iso.slice(5, 7) + '.' + iso.slice(0, 4);
@@ -179,6 +191,9 @@ function formData(db, todayIso) {
       graceNote: a.grace_note || '',
       graceDay: a.type === 'кредитная карта' ? ((graceRuleFor(db, a) || {}).day_of_month || null) : null,
       statementDay: a.statement_day || null,
+      /* Свободный лимит в «доступно»: off / all / part и сколько оставлять на карте. */
+      creditUse: a.credit_use || 'off', creditKeep: a.credit_keep === null || a.credit_keep === undefined ? null : String(a.credit_keep),
+      spendable: a.type === 'кредитная карта' ? String(R.cardSpendable(a, snap.bal[a.id] || 0n)) : null,
       /* Сказанное «осталось внести до грейса» — на сегодня, за вычетом внесённого. */
       graceLeft: G && G.cardId === a.id && G.source === 'manual' ? String(G.left) : null,
     })),
@@ -538,7 +553,7 @@ function saveAccount(db, a, todayIso) {
     limit = lim;
     graceDay = Number(a.graceDay);
     if (!(Number.isInteger(graceDay) && graceDay >= 1 && graceDay <= 28)) fail('День грейса: от 1 до 28');
-    extra = cardExtra(a, graceDay, -bal, a.balDate);
+    extra = Object.assign(cardExtra(a, graceDay, -bal, a.balDate), creditUseFields(a, limit + bal));
   }
   let id = slug(name), n = 2;
   while (db.prepare('SELECT 1 FROM accounts WHERE id = ?').get(id)) id = slug(name) + '_' + n++;
@@ -804,7 +819,7 @@ function editAccount(db, a) {
     /* «Осталось внести до грейса» — на сегодня, к ближайшему дню грейса. */
     const today = a.today || R.iso(new Date());
     const owe = balanceNow(db, prev.id, today);
-    Object.assign(fields, cardExtra(a, day, owe < 0n ? -owe : 0n, today));
+    Object.assign(fields, cardExtra(a, day, owe < 0n ? -owe : 0n, today), creditUseFields(a, BigInt(fields.credit_limit) + owe));
     rule = graceRuleFor(db, prev);
     if (rule) {
       ruleFields = { day_of_month: day };
@@ -841,6 +856,20 @@ function setCardTerms(db, t) {
   if (!card) fail('Кредитной карты в учёте нет');
   return editAccount(db, { id: card.id, name: card.name, bank: card.bank, limit: t.limit, graceDay: t.graceDay,
                           statementDay: t.statementDay, graceLeft: t.graceLeft, today: t.today });
+}
+
+/* Свободный лимит кредитки в «доступно»: не считать, весь или всё сверх
+   суммы, которую оставляете на карте. Из «Расчётов», окна счёта, «Обзора». */
+function setCardUse(db, t) {
+  const card = t.id ? accountById(db, t.id)
+    : db.prepare("SELECT * FROM accounts WHERE type = 'кредитная карта' AND archived = 0 ORDER BY sort_order").get();
+  if (!card || card.type !== 'кредитная карта') fail('Кредитной карты в учёте нет');
+  if (card.credit_limit === null && t.mode !== 'off') fail('Сначала задайте кредитный лимит карты');
+  const today = t.today || R.iso(new Date());
+  const free = card.credit_limit === null ? 0n : BigInt(card.credit_limit) + balanceNow(db, card.id, today);
+  const fields = creditUseFields({ creditUse: t.mode, creditKeep: t.keep }, free);
+  const back = patch(db, 'accounts', 'id', card.id, fields);
+  return { ok: true, id: card.id, mode: fields.credit_use, keep: fields.credit_keep, undo: remember(back) };
 }
 
 function reorderAccounts(db, ids) {
@@ -1006,6 +1035,6 @@ function setLoanRate(db, raw) {
 
 module.exports = { formData, reconCalc, addOperation, addOperations, checkOp, addCategory, savePlan, setAside, saveRecurring, saveGoal,
                    saveAccount, saveLoan, saveRecon, loanPreview, dropPlan, pauseRecurring, undo, TAGS,
-                   editAccount, setCardTerms, reorderAccounts, archiveAccount, restoreAccount,
+                   editAccount, setCardTerms, setCardUse, reorderAccounts, archiveAccount, restoreAccount,
                    editCategory, mergeCategory, archiveCategory, restoreCategory, deleteCategory, catUsage,
                    resumeRecurring, setLoanRate, remember, graceRuleFor, SYSTEM_CATS, CAT_TYPES };

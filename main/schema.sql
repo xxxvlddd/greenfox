@@ -30,6 +30,8 @@ CREATE TABLE IF NOT EXISTS accounts (
   grace_need     INTEGER,                   -- кредитка: сколько осталось внести до грейса, копейки…
   grace_need_at  TEXT,                      -- …на какую дату это сказано…
   grace_need_due TEXT,                      -- …и к какому дню грейса
+  credit_use     TEXT NOT NULL DEFAULT 'off', -- кредитка: свободный лимит в «доступно» — off / all / part
+  credit_keep    INTEGER,                   -- кредитка, part: сколько оставлять на карте нетронутым, копейки
   reconciled_balance INTEGER,
   reconciled_at      TEXT,
   sort_order    INTEGER NOT NULL DEFAULT 0,

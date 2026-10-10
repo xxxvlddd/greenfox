@@ -286,8 +286,8 @@ function obAccRowHTML(a, i){
       : '<span class="ac-cur"><select class="inp" data-oa="' + i + ':cur" aria-label="Валюта счёта">' + OB_CURS.map(function(c){
           return '<option value="' + c[0] + '"' + (c[0] === (a.cur || 'RUB') ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') +
         '</select></span>') +
-    (obIsCredit(a) ? '<span class="ac-pay is-na" title="Доступное по кредитке — деньги банка: в дневной лимит они не входят, ' +
-        'а пополнение карты к грейсу заранее вычитается из лимита">деньги банка</span>'
+    (obIsCredit(a) ? '<span class="ac-pay is-na" title="Доступное по кредитке — деньги банка. Входят ли они в дневной лимит, ' +
+        'решаете вы — полем «В доступные деньги» под строкой">деньги банка</span>'
       : '<button type="button" class="ac-pay" data-oapay="' + i + '" role="switch" aria-checked="' + (a.isPay ? 'true' : 'false') + '">' +
           '<span class="tg' + (a.isPay ? ' is-on' : '') + '">' + OB_TICK + '</span>в дневной лимит</button>') +
     '<button type="button" class="ac-x" data-oadel="' + i + '" title="Убрать счёт" aria-label="Убрать счёт">' + OB_X + '</button>' +
@@ -307,9 +307,14 @@ function obAccRowHTML(a, i){
       fld('graceDay', 'Грейс до … числа', '1–28', 'numeric', 'День грейса') +
       fld('statementDay', 'День выписки', 'не обяз.', 'numeric', 'День выписки') +
       fld('graceLeft', 'Осталось до грейса', 'не обяз.', 'decimal', 'Осталось внести до грейса') +
+      '<div class="f"><div class="l">В доступные деньги</div><select class="inp ob-use" data-oa="' + i + ':use" ' +
+        'aria-label="Свободный лимит в доступных деньгах">' + OB_CARD_USE.map(function(o){
+          return '<option value="' + o[0] + '"' + ((a.use || 'off') === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') +
+      '</select></div>' +
       '<div class="why">«Доступно», лимит и долг — хватит двух любых, третье посчитается. «Осталось до грейса» — ' +
         'сумма из приложения банка «внесите до …, чтобы не платить проценты»: по ней приложение будет следить за ' +
-        'грейсом с первого дня.</div></div>';
+        'грейсом с первого дня. «В доступные деньги» — считать ли свободный лимит в дневном лимите и прогнозах; ' +
+        'меняется потом в «Настройках» → «Расчёты».</div></div>';
   }
   return h;
 }
@@ -812,6 +817,9 @@ function obCardHint(i){
   put(el('limit'), obCardPh(n, 'l', ''));
   put(el('bal'), obCardPh(n, 'd', ''));
 }
+/* Свободный лимит кредитки в «доступно»: «половину» записываем суммой,
+   которая остаётся на карте (main/entry.js, creditUseFields). */
+var OB_CARD_USE = [['off', 'не считать'], ['all', 'весь свободный'], ['half', 'половину свободного']];
 function obPayload(){
   var steps = { s1: obFilled('s1'), s2: obFilled('s2'), s3: obFilled('s3') };
   var date = exParseDate(exRuDate(OB.date)) || OB.today;
@@ -823,7 +831,7 @@ function obPayload(){
         bal: isFinite(c) && String(a.bal).trim() !== '' ? String(obIsCredit(a) ? -Math.abs(c) : c) : '',
         limit: obIsCredit(a) ? obCentsStr(a.limit) : null, graceDay: obIsCredit(a) ? Number(a.graceDay) : null,
         avail: obIsCredit(a) ? obCentsStr(a.avail) : null, statementDay: obIsCredit(a) ? String(a.statementDay || '').trim() : null,
-        graceLeft: obIsCredit(a) ? obCentsStr(a.graceLeft) : null };
+        graceLeft: obIsCredit(a) ? obCentsStr(a.graceLeft) : null, creditUse: obIsCredit(a) ? (a.use || 'off') : null };
     }),
     cats: OB.cats.map(function(c){ return { name: c.name, type: c.type, on: !!c.on, custom: !!c.custom }; }),
     recurring: OB.recurring.map(function(r){
@@ -1038,7 +1046,9 @@ function obInit(){
   });
   layer.addEventListener('input', function(e){
     var t = e.target, f = t.getAttribute && (t.getAttribute('data-oa') || t.getAttribute('data-orf'));
-    if (!f) return;
+    /* Выпадающие списки — только в «change»: «input» приходит раньше, и
+       записанное здесь сбило бы сравнение «было — стало» там. */
+    if (!f || t.tagName === 'SELECT') return;
     var p = f.split(':'), i = Number(p[0]), key = p[1];
     if (t.getAttribute('data-oa') !== null){
       OB.accounts[i][key] = t.value;
@@ -1061,6 +1071,7 @@ function obInit(){
     if (f){
       var p = f.split(':'), i = Number(p[0]), key = p[1];
       /* Тип счёта меняет набор полей: у кредитки — лимит и грейс. */
+      if (t.getAttribute('data-oa') !== null && key === 'use') OB.accounts[i].use = t.value;
       if (t.getAttribute('data-oa') !== null && key === 'type'){
         var a = OB.accounts[i], wasCredit = obIsCredit(a);
         a.type = t.value;
@@ -1104,7 +1115,7 @@ function obInit(){
         }
       }
       /* Сумма — с пробелами между разрядами, когда из поля ушли. */
-      if ((t.getAttribute('data-oa') !== null && (key === 'bal' || key === 'limit')) ||
+      if ((t.getAttribute('data-oa') !== null && (key === 'bal' || key === 'limit' || key === 'avail' || key === 'graceLeft')) ||
           (t.getAttribute('data-orf') !== null && key === 'amount')){
         var pr = fmParse(t.value);
         if (pr.ok && !pr.empty){

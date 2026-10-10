@@ -238,7 +238,8 @@ function sgCalc(){
         '', C.card.grace ? '<div class="row-prev is-same">Сейчас: до ' + humanDate(C.card.grace.due) + ' осталось внести ' +
           money0(C.card.grace.left) + (C.card.grace.source === 'manual' ? ' — по вашей сумме'
             : C.card.grace.source === 'statement' ? ' — по выписке ' + C.card.grace.statementDay + ' числа' : ' — по долгу на начало цикла') +
-          '</div>' : '', 'cardLeft')
+          '</div>' : '', 'cardLeft') +
+      sgCardUseRow(C.card)
     : sgRow('Кредитка: лимит, выписка и грейс', 'Кредитной карты в учёте нет.', sgInp('readonly', '—'))) +
   sgFxRow(C.fx) +
   sgRow('Пороги уровней трат', 'Границы ступеней тепловой шкалы в календаре и в поведенческих срезах, в рублях через дробь. ' +
@@ -248,6 +249,37 @@ function sgCalc(){
   sgRow('Границы зон запаса прочности', 'Сколько месяцев жизни на сбережениях считается критичным и сколько — тонким, через дробь.',
     sgInp('data-pref-inp="calc.zones"', String(P['calc.zones']).replace(/\./g, ','), '1/2'),
     sgGo('Капитал и долги', 'capital') + ' · ' + sgGo('Планы', 'plans'), '', 'calc.zones');
+}
+
+/* Свободный лимит кредитки в доступных деньгах: не считать, весь или часть —
+   всё сверх суммы, которую оставляете на карте (core/report.js, cardSpendable). */
+var SG_CARD_USE = [['off', 'Не считать'], ['all', 'Весь'], ['part', 'Часть']];
+function sgCardUseRow(c){
+  var use = c.use || 'off';
+  var ctl = '<div class="seg">' + SG_CARD_USE.map(function(o){
+      return '<button type="button" class="' + (use === o[0] ? 'is-active' : '') + '" data-sgact="card-use" data-mode="' + o[0] + '">' +
+        o[1] + '</button>';
+    }).join('') + '</div>' +
+    (use === 'part'
+      ? '<div style="display:flex;gap:8px;width:100%;margin-top:8px;align-items:center">' +
+          sgInp('data-sg-inp="cardKeep" aria-label="Оставлять на карте"', c.keep ? sgRubText(c.keep) : '0', 'оставить на карте', ' inputmode="decimal"') +
+          (c.free !== null && Number(c.free) > 0 ? sgBtn('Половина', 'card-half') : '') + '</div>'
+      : '');
+  var prev = c.free === null ? '' : '<div class="row-prev is-same">Свободно ' + money0(c.free) + ' · в доступное ' +
+    (use === 'off' ? 'не входит' : 'идёт ' + money0(c.spendable)) + '</div>';
+  return sgRow('Кредитка в доступных деньгах',
+    'Свободный лимит — деньги банка. «Не считать» — дневной лимит и прогнозы только по вашим деньгам. «Весь» — свободный ' +
+    'лимит считается, как деньги на карте. «Часть» — на карте остаётся сумма, которую вы укажете, в доступное идёт всё, ' +
+    'что свободно сверх неё: так долг гасится постепенно. Трата с карты уменьшает доступное ровно на себя; пополнение ' +
+    'карты к грейсу его уменьшает только в той части, что не вернулась в доступное.',
+    ctl, sgGo('Обзор', 'overview') + ' · ' + sgGo('Прогнозы', 'forecast') + ' · ' + sgGo('Календарь', 'calendar'), prev, 'cardUse');
+}
+function sgCardUse(mode, keep){
+  window.api.setCardUse({ mode: mode, keep: keep }).then(function(r){
+    if (!r || !r.ok){ sgSay('cardUse', (r && r.error) || 'не сохранено', true); sgRenderBody(false); return; }
+    sgSay('cardUse', 'сохранено');
+    sgReload(false);
+  });
 }
 
 function sgRecItem(r){
@@ -533,6 +565,13 @@ function sgAct(btn){
       sgReload(false);
     });
   }
+  /* «Часть» без суммы — для начала половина свободного. */
+  if (act === 'card-use'){
+    var mode = btn.getAttribute('data-mode');
+    if (SG.calc.card && SG.calc.card.use === mode) return;
+    return sgCardUse(mode === 'part' ? 'half' : mode);
+  }
+  if (act === 'card-half') return sgCardUse('half');
   if (act === 'acc-add') return fmOpen('account');
   if (act === 'acc-edit') return fmOpen('account', { id: id });
   if (act === 'acc-archive') return window.api.archiveAccount(id).then(done('Счёт отправлен в архив'));
@@ -769,6 +808,12 @@ function sgChange(el){
     return true;
   }
   if (own === 'cardLimit' || own === 'cardDay' || own === 'cardStmt' || own === 'cardLeft'){ sgCardTerms(own); return true; }
+  if (own === 'cardKeep'){
+    var kp = fmParse(el.value);
+    if (!kp.ok || kp.cents < 0){ sgSay('cardUse', 'оставлять на карте: сумма в рублях, например 30 000', true); sgRenderBody(false); return true; }
+    sgCardUse('part', kp.empty ? '0' : String(kp.cents));
+    return true;
+  }
   if (own && own.indexOf('fx:') === 0){
     window.api.fxManual(own.slice(3), el.value).then(function(r){
       if (!r || !r.ok){ sgSay('fx', (r && r.error) || 'не сохранено', true); sgRenderBody(false); return; }
