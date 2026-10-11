@@ -11,7 +11,7 @@
    операции разрушил бы проверяемость: любая ошибка записи осталась бы
    незамеченной навсегда.
    ============================================================ */
-const { parseAmount, fmt, mulRate, divHalfEven } = require('./money');
+const { parseAmount, fmt, mulRate, divHalfEven, say } = require('./money');
 
 /* Короткая подпись: всё до первой открывающей скобки. */
 function short(desc) {
@@ -122,6 +122,9 @@ function replay(rows, start, fxIn) {
   const fx = fxIn && fxIn.cur && Object.keys(fxIn.cur).length ? fxIn : null;
   const dates = new Set(rows.map(r => r.d));
   for (const id of Object.keys(s.opening)) if (s.opening[id].date) dates.add(s.opening[id].date);
+  /* День, с которого в учёте кредит, — тоже точка прогона: кредит,
+     заведённый в день без операций, иначе в расчёт не попадал вовсе. */
+  if (s.loan && s.loan.date) dates.add(s.loan.date);
   const days = Array.from(dates).sort();
   const first = days[0] || null;
   const st = startState(Object.assign({}, s, { first }));
@@ -159,14 +162,20 @@ function replay(rows, start, fxIn) {
 /* Сверка расчёта со справочниками. Возвращает список расхождений —
    пустой список означает, что учёт сходится.                        */
 /* opts — что известно о счетах помимо самих остатков: какие счета
-   вообще есть (known) и какие из них кредитки с лимитом (cards). */
+   вообще есть (known) и какие из них кредитки с лимитом (cards).
+   Тексты — для человека: счёт и кредит по названию (name), суммы — как
+   на экранах, с датой сверки. Без названия — по коду. */
+const ddmm = d => (d ? d.slice(8, 10) + '.' + d.slice(5, 7) : '');
+const CUR_SIGN = { USD: '$', EUR: '€' };
+function sum(c, cur) { const t = say(c); return cur && CUR_SIGN[cur] ? t.replace(/ ₽$/, ' ' + CUR_SIGN[cur]) : t; }
+function absC(c) { return c < 0n ? -c : c; }
 function check(rows, hist, accounts, liabilities, opts) {
   const o = opts || {};
   const known = o.known || new Set();
   const cards = o.cards || [];
   const problems = [];
   const warnings = [];
-  if (!hist.length) return { problems: ['нет ни одной операции'], warnings };
+  if (!hist.length) return { problems: ['В учёте нет ни одной операции'], warnings };
   const final = hist[hist.length - 1].bal;
   const loan = hist[hist.length - 1].loan;
 
@@ -184,10 +193,12 @@ function check(rows, hist, accounts, liabilities, opts) {
     const snapA = at(a.at);
     const got = (snapA.nat || snapA.bal)[a.id];
     const want = parseAmount(a.balance);
+    const nm = '«' + (a.name || a.id) + '»';
     if (got === undefined) {
-      problems.push(`счёт ${a.id} есть в справочнике, но нет в расчёте`);
+      problems.push(`Счёт ${nm} есть в списке счетов, но не попал в расчёт`);
     } else if (got - want > 1n || want - got > 1n) {
-      problems.push(`${a.id}: расчёт ${fmt(got)}, в справочнике ${fmt(want)} (Δ ${fmt(got - want)})`);
+      problems.push(`${nm}: по операциям на ${ddmm(a.at) || 'сегодня'} выходит ${sum(got, a.cur)}, а сверено ${sum(want, a.cur)} — ` +
+        `разница ${sum(absC(got - want), a.cur)}. Проверьте, все ли операции внесены, или сверьте счёт заново`);
     }
   }
 
@@ -199,7 +210,9 @@ function check(rows, hist, accounts, liabilities, opts) {
     const snap = at(l.at);
     const got = accId ? -(snap.bal[accId] || 0n) : snap.loan;
     if (got - want > 1n || want - got > 1n) {
-      problems.push(`${l.id}: расчёт ${fmt(got)}, в справочнике ${fmt(want)} (Δ ${fmt(got - want)})`);
+      const what = accId ? 'Кредитка «' + (l.name || accId) + '»' : 'Кредит «' + (l.name || l.id) + '»';
+      problems.push(`${what}: по платежам на ${ddmm(l.at) || 'сегодня'} выходит долг ${say(got)}, а подтверждено ${say(want)} — ` +
+        `разница ${say(absC(got - want))}. Проверьте платежи по нему или поправьте остаток`);
     }
   }
 
@@ -217,14 +230,14 @@ function check(rows, hist, accounts, liabilities, opts) {
   for (const r of rows) { if (r.from) seen.add(r.from); if (r.to) seen.add(r.to); }
   for (const a of seen) {
     if (!known.has(a)) {
-      problems.push(`неизвестный счёт в операциях: ${a}`);
+      problems.push(`В операциях есть счёт «${a}», которого нет в списке счетов`);
     }
   }
 
   for (const r of rows) {
-    if (r.dir === 'расход' && !r.from) problems.push(`${r.d} ${r.t}: расход без счёта списания`);
-    if (r.dir === 'перевод' && !(r.from && r.to)) problems.push(`${r.d} ${r.t}: перевод без обоих счетов`);
-    if (r.dir === 'доход' && !r.to) problems.push(`${r.d} ${r.t}: доход без счёта зачисления`);
+    if (r.dir === 'расход' && !r.from) problems.push(`Расход ${ddmm(r.d)} «${r.t}» — без счёта списания`);
+    if (r.dir === 'перевод' && !(r.from && r.to)) problems.push(`Перевод ${ddmm(r.d)} «${r.t}» — не указан один из счетов`);
+    if (r.dir === 'доход' && !r.to) problems.push(`Доход ${ddmm(r.d)} «${r.t}» — без счёта зачисления`);
   }
   return { problems, warnings };
 }

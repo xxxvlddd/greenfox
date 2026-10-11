@@ -168,10 +168,14 @@ function build(db, todayIso) {
   /* Проверка сходимости — то же, что делает аудит: если расчёт разошёлся
      со справочником, экран обязан сказать об этом, а не показать число. */
   /* Сверка сравнивается на дату сверки: после неё учёт продолжается. */
+  /* Названия — чтобы предупреждение называло счёт и кредит, а не код. */
+  const accName = {};
+  for (const a of accounts) accName[a.id] = a.name;
   const accCsvLike = accounts.filter(a => a.reconciled_balance !== null).map(a => ({
-    id: a.id, balance: fmt(BigInt(a.reconciled_balance)), at: a.reconciled_at }));
+    id: a.id, name: a.name, cur: a.currency || 'RUB', balance: fmt(BigInt(a.reconciled_balance)), at: a.reconciled_at }));
   const liabLike = liabilities.filter(l => l.reconciled_debt !== null).map(l => ({
     id: l.id, type: l.type, account_id: l.account_id, at: l.reconciled_at,
+    name: l.account_id ? accName[l.account_id] || l.creditor : l.creditor,
     current_debt: fmt(BigInt(l.reconciled_debt)) }));
   const allAcc = db.prepare('SELECT id, type, credit_limit FROM accounts').all();
   const verdict = L.check(rows, hist, accCsvLike, liabLike, {

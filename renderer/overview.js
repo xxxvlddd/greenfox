@@ -28,7 +28,7 @@ function alertsHTML(d){
     items.push(['var(--' + a.tone + ')', a.lead, a.text]);
   });
   (d.problems || []).forEach(function(p){
-    items.push(['var(--danger)', 'Расчёт разошёлся с подтверждённым остатком.', p]);
+    items.push(['var(--danger)', 'Учёт не сходится.', p]);
   });
   if (!items.length) return '';
   return '<div class="alerts" id="alerts">' + items.map(function(a){
