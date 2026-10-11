@@ -3,14 +3,13 @@
    ============================================================
    Перенесено из макета Main App/screens/04-prognozy.html как есть:
    каждое правило макета получило приставку .scr-forecast, и только.
-   Участок между метками ПЕРЕНОС пишет tools/scope-css.js; добавления
-   — ниже метки КОНЕЦ.
+   Перенесённое — между метками ПЕРЕНОС, добавления — ниже метки КОНЕЦ.
 
    Область нужна по той же причине, что у «Расходов» и «Капитала»: у
    экранов разные варианты одних и тех же элементов, и без неё значения
    одного экрана переписывали бы другой.
    ============================================================ */
-/* ▼ ПЕРЕНОС ИЗ МАКЕТА — пишется tools/scope-css.js, руками не править */
+/* ▼ ПЕРЕНОС ИЗ МАКЕТА */
 .scr-forecast .btn-sm{background:var(--bg);color:var(--text-2);border:1px solid var(--border);padding:5px 11px;font-size:12px;border-radius:var(--r-sm);}
 .scr-forecast .btn-sm:hover{background:var(--surface);color:var(--text);}
 .scr-forecast .btn-sm--acc{background:var(--accent-fill);border-color:var(--accent-fill);color:var(--accent-fg);}
@@ -96,13 +95,6 @@
 }
 .scr-forecast .badge--warn{background:var(--warning-bg);color:var(--warning);}
 .scr-forecast .badge--ok{background:var(--positive-bg);color:var(--positive);}
-.scr-forecast .note-ok{
-  display:flex;align-items:flex-start;gap:9px;
-  font-size:12px;line-height:17px;color:var(--text-2);
-  background:var(--positive-bg);border-radius:var(--r-md);padding:11px 13px;
-}
-.scr-forecast .note-ok .dot{margin-top:5px;background:var(--positive);}
-.scr-forecast .note-ok b{font-weight:600;color:var(--text);}
 .scr-forecast .mini-note{
   display:flex;align-items:flex-start;gap:9px;
   font-size:12px;line-height:17px;color:var(--text-3);

@@ -115,8 +115,7 @@
    4,3:1 в тёмной — меньше порога 4,5:1 для текста из макета состояний.
    Плашки и счётчики в меню получают текст на ступень темнее; сами
    макеты не трогаем, правило стоит последним и перекрывает их. */
-.nav-count,.badge--muted,[class*="scr-"] .badge--muted,.scr-expenses .rank,.scr-plans .tg,.scr-payments .pm-tag,
-.scr-forms .badge--soon{color:var(--text-2);}
+.nav-count,.badge--muted,[class*="scr-"] .badge--muted,.scr-expenses .rank,.scr-plans .tg,.scr-payments .pm-tag{color:var(--text-2);}
 
 /* Заглушка загрузки: серые бруски без мерцания (макет состояний). */
 .skel{padding:26px var(--pad);}

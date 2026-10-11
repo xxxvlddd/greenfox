@@ -3,13 +3,12 @@
    ============================================================
    Перенесено из макета Main App/screens/08-formy.html как есть:
    каждое правило макета получило приставку .scr-forms, и только.
-   Участок между метками ПЕРЕНОС пишет tools/scope-css.js; добавления
-   — ниже метки КОНЕЦ.
+   Перенесённое — между метками ПЕРЕНОС, добавления — ниже метки КОНЕЦ.
 
    Окна живут поверх любого экрана, поэтому их область — не экран, а
    отдельный слой в конце страницы и меню «Добавить» в шапке.
    ============================================================ */
-/* ▼ ПЕРЕНОС ИЗ МАКЕТА — пишется tools/scope-css.js, руками не править */
+/* ▼ ПЕРЕНОС ИЗ МАКЕТА */
 .scr-forms .btn-sm{background:var(--bg);color:var(--text-2);border:1px solid var(--border);padding:5px 11px;font-size:12px;border-radius:var(--r-sm);}
 .scr-forms .btn-sm:hover{background:var(--surface);color:var(--text);}
 .scr-forms .btn-sm--acc{background:var(--accent-fill);border-color:var(--accent-fill);color:var(--accent-fg);}
@@ -95,7 +94,6 @@
   :root:not([data-theme="light"]) .scr-forms .badge--forecast{color:var(--accent);}
 }
 .scr-forms .badge--warn{background:var(--warning-bg);color:var(--warning);}
-.scr-forms .badge--soon{background:var(--surface-2);color:var(--text-3);}
 
 /* Таблица — та же, что в сверке на «Капитале и долгах». Держим правила
    явно: общий блок дизайн-системы их не несёт, и однажды таблица уже
@@ -126,13 +124,6 @@
 .scr-forms .q-meta{font-size:12px;line-height:17px;color:var(--text-3);margin-top:4px;}
 .scr-forms .q-acts{display:flex;gap:7px;flex:none;}
 
-/* ============================================================
-   ВИТРИНА
-   ============================================================ */
-.scr-forms .card-row{display:flex;flex-direction:column;gap:10px;height:100%;}
-.scr-forms .card-row .nm{font-size:14px;font-weight:600;letter-spacing:-.01em;}
-.scr-forms .card-row .ds{font-size:12px;line-height:17px;color:var(--text-3);}
-.scr-forms .card-row .ft{margin-top:auto;padding-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .scr-forms .kbd{
   font-family:var(--font-mono);font-size:11px;line-height:16px;color:var(--text-3);
   border:1px solid var(--border);border-radius:4px;padding:0 5px;background:var(--surface);

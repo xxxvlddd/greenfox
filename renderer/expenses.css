@@ -79,10 +79,8 @@
    при любом переносе — не нужно чинить border-left на краях ряда. */
 .scr-expenses .grid{display:grid;gap:1px;background:var(--border);border-top:1px solid var(--border);}
 .scr-expenses .grid > *{background:var(--bg);padding:22px var(--pad);min-width:0;}
-.scr-expenses .grid--5{grid-template-columns:repeat(5,minmax(0,1fr));}
 .scr-expenses .grid--4{grid-template-columns:repeat(4,minmax(0,1fr));}
 .scr-expenses .grid--4 > *{padding:18px 20px;}
-.scr-expenses .grid--5 > *{padding:18px 20px;}
 .scr-expenses .grid--2{grid-template-columns:repeat(2,minmax(0,1fr));}
 .scr-expenses .grid--3{grid-template-columns:repeat(3,minmax(0,1fr));}
 .scr-expenses .sec{padding:22px var(--pad);border-top:1px solid var(--border);}
@@ -421,15 +419,11 @@
    АДАПТИВ — минимальное окно по ТЗ 1280×800
    ============================================================ */
 @media (max-width:1400px){
-  .scr-expenses .grid--5{grid-template-columns:repeat(3,minmax(0,1fr));}
   .scr-expenses .grid--4{grid-template-columns:repeat(2,minmax(0,1fr));}
 }
 @media (max-width:1180px){
   .scr-expenses .grid--2, .scr-expenses .grid--3{grid-template-columns:minmax(0,1fr);}
   .scr-expenses .qd{grid-template-columns:64px 1fr 1fr;}
-}
-@media (max-width:900px){
-  .scr-expenses .grid--5{grid-template-columns:repeat(2,minmax(0,1fr));}
 }
 /* Набор движения (кадры obRise/obBump/obIn и классы-переключатели)
    лежит в общем оформлении: он одинаков на всех экранах. */

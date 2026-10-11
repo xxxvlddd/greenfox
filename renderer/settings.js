@@ -83,6 +83,9 @@ function sgGeneral(){
     sgSeg('ui.theme', P['ui.theme'], [['light', 'Светлая'], ['dark', 'Тёмная'], ['system', 'Системная']]), '', '', 'ui.theme') +
   sgRow('Плотность интерфейса', 'Плотная уменьшает отступы и высоту строк — на экран помещается больше, заметнее всего в таблицах и списках.',
     sgSeg('ui.density', P['ui.density'], [['normal', 'Обычная'], ['dense', 'Плотная']]), '', '', 'ui.density') +
+  sgRow('Боковое меню', 'Только значки — больше места экрану; название появляется при наведении. Свернуть и развернуть — ' +
+      'кнопкой внизу меню или ⌘\\.',
+    sgSeg('ui.sidebar', P['ui.sidebar'], [['full', 'С подписями'], ['mini', 'Только значки']]), '', '', 'ui.sidebar') +
   sgRow('Экран при запуске', '', sgSel('ui.startScreen', P['ui.startScreen'], SG_SCREENS), '', '', 'ui.startScreen') +
   sgRow('Первый день недели', 'Влияет на сетку календаря.',
     sgSeg('ui.weekStart', P['ui.weekStart'], [['mon', 'Понедельник'], ['sun', 'Воскресенье']]),
@@ -531,7 +534,7 @@ function sgSetPref(key, value){
   return window.api.setPref(key, value).then(function(r){
     if (!r || !r.ok){ sgSay(key, (r && r.error) || 'не сохранено', true); sgRenderBody(false); return r; }
     sgSay(key, 'сохранено');
-    if (key === 'ui.theme' || key === 'ui.density') applyPrefs(Object.assign({}, SG.prefs, { [key]: r.value }));
+    if (key === 'ui.theme' || key === 'ui.density' || key === 'ui.sidebar') applyPrefs(Object.assign({}, SG.prefs, { [key]: r.value }));
     return sgReload(false).then(function(){ return r; });
   });
 }

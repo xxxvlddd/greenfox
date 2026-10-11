@@ -1046,6 +1046,7 @@ function obInit(){
   });
   layer.addEventListener('input', function(e){
     var t = e.target, f = t.getAttribute && (t.getAttribute('data-oa') || t.getAttribute('data-orf'));
+    if (t.id === 'obDate'){ dateMask(t); return; }
     /* Выпадающие списки — только в «change»: «input» приходит раньше, и
        записанное здесь сбило бы сравнение «было — стало» там. */
     if (!f || t.tagName === 'SELECT') return;

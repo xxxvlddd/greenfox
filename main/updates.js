@@ -424,7 +424,6 @@ async function install(db, current, env) {
       } catch (e) {
         /* Заплатка не подошла — ставим как раньше, полным установщиком. */
         fresh = null;
-        lastPatchError = e.message;
       }
     }
     if (!fresh) {
@@ -445,10 +444,8 @@ async function install(db, current, env) {
     return { ok: false, error: run.error };
   }
 }
-let lastPatchError = '';
-function reset() { run = null; checking = null; lastPatchError = ''; }
-function patchError() { return lastPatchError; }
+function reset() { run = null; checking = null; }
 
 module.exports = { REPO, FEED, PAGE, COMMAND, ASSET, PATCH, MANIFEST, SIG, BUNDLE_ID, PUBLIC_KEY, SWAP,
   parseVersion, newer, verifyManifest, state, check, later, download, unpack, applyPatch, swap, tidy, install, reset,
-  indexBundle, indexDiff, patchError, useFetch, useKey, useSys };
+  indexBundle, indexDiff, useFetch, useKey, useSys };

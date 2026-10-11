@@ -123,8 +123,4 @@ function migrate(db) {
   setSetting(db, 'schema_version', SCHEMA_VERSION);
 }
 
-function isEmpty(db) {
-  return db.prepare('SELECT COUNT(*) n FROM transactions').get().n === 0;
-}
-
-module.exports = { open, migrate, getSetting, setSetting, isEmpty, SCHEMA_VERSION };
+module.exports = { open, migrate, getSetting, setSetting, SCHEMA_VERSION };

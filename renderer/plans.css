@@ -3,10 +3,9 @@
    ============================================================
    Перенесено из макета Main App/screens/05-plany.html как есть:
    каждое правило макета получило приставку .scr-plans, и только.
-   Участок между метками ПЕРЕНОС пишет tools/scope-css.js; добавления
-   — ниже метки КОНЕЦ.
+   Перенесённое — между метками ПЕРЕНОС, добавления — ниже метки КОНЕЦ.
    ============================================================ */
-/* ▼ ПЕРЕНОС ИЗ МАКЕТА — пишется tools/scope-css.js, руками не править */
+/* ▼ ПЕРЕНОС ИЗ МАКЕТА */
 .scr-plans .btn-sm{background:var(--bg);color:var(--text-2);border:1px solid var(--border);padding:5px 11px;font-size:12px;border-radius:var(--r-sm);}
 .scr-plans .btn-sm:hover{background:var(--surface);color:var(--text);}
 .scr-plans .btn-sm--acc{background:var(--accent-fill);border-color:var(--accent-fill);color:var(--accent-fg);}
@@ -306,7 +305,6 @@
   .scr-plans .grid--2,.scr-plans .grid--3{grid-template-columns:minmax(0,1fr);}
   .scr-plans .grid--4{grid-template-columns:repeat(2,minmax(0,1fr));}
   .scr-plans .q-list{grid-template-columns:minmax(0,1fr);}
-  .scr-plans .imp{grid-template-columns:minmax(0,1fr);gap:20px;}
 }
 @media (max-width:900px){
   .scr-plans{--pad:20px;}

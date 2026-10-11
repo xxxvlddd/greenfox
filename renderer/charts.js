@@ -72,6 +72,44 @@ function niceAxis(min, max){
 /* ============================================================
    «НА СКОЛЬКО ХВАТИТ ДЕНЕГ»
    ============================================================ */
+var RWS = null;          /* последняя отрисовка: ряды и шкалы — для наведения */
+function rwBind(wrap, svg){
+  if (wrap.rwBound) return;
+  wrap.rwBound = true;
+  wrap.addEventListener('mousemove', function(e){ rwHover(wrap, e); });
+  wrap.addEventListener('mouseleave', function(){ rwHover(wrap, null); });
+}
+function rwHover(wrap, e){
+  var svg = document.getElementById('runwaySvg'), tip = document.getElementById('runwayTip');
+  var old = svg && svg.querySelector('.rw-cursor');
+  if (old) old.remove();
+  if (!RWS || !e || !tip){ if (tip) tip.classList.remove('is-on'); return; }
+  var r = svg.getBoundingClientRect(), x = e.clientX - r.left;
+  if (x < RWS.PL - 6 || x > RWS.PL + RWS.PWD + 6 || e.clientY - r.top > RWS.PT + RWS.PH + 4){ tip.classList.remove('is-on'); return; }
+  var d = Math.max(0, Math.min(RWS.DAYS, Math.round((x - RWS.PL) / RWS.PWD * RWS.DAYS)));
+  var g = svgEl('g', { 'class': 'rw-cursor', 'pointer-events': 'none' });
+  g.appendChild(svgEl('line', { x1: RWS.X(d), y1: RWS.PT, x2: RWS.X(d), y2: RWS.PT + RWS.PH, stroke: 'var(--text-3)', 'stroke-width': 1 }));
+  var rows = '';
+  SCENARIOS.forEach(function(s){
+    if (!activeScenarios[s.key]) return;
+    var v = RWS.series[s.key][d], color = cssVar(s.varName) || 'currentColor';
+    g.appendChild(svgEl('circle', { cx: RWS.X(d), cy: RWS.Y(v), r: 3.5, fill: 'var(--bg)', stroke: color, 'stroke-width': 2 }));
+    rows += '<div class="t-row"><span class="d" style="background:' + color + '"></span><span class="k">' + s.label + '</span>' +
+      '<span class="spacer"></span><span class="num' + (v < 0 ? ' c-neg' : '') + '">' + money0(String(Math.round(v * 100))) + '</span></div>';
+  });
+  svg.appendChild(g);
+  var ev = d > 0 && DATA.events[d];
+  tip.innerHTML = '<div class="t-date">' + (d === 0 ? 'Сегодня, ' : '') + dayLabel(d) + '</div>' +
+    '<div class="t-sum">остаток на счетах к концу дня</div><div class="t-line"></div>' + rows +
+    (ev ? '<div class="t-line"></div>' + '<div class="t-row"><span class="k">' + ev.names.map(esc).join(', ') + '</span>' +
+      '<span class="spacer"></span><span class="num ' + (rub(ev.sum) >= 0 ? 'c-pos' : 'c-warn') + '">' +
+      (rub(ev.sum) > 0 ? '+' : '') + money0(ev.sum) + '</span></div>' : '');
+  /* Справа от линии, у правого края — слева; по высоте — у верха графика. */
+  var right = RWS.X(d) + 14, w = tip.offsetWidth || 220;
+  tip.style.left = Math.max(0, right + w > r.width ? RWS.X(d) - 14 - w : right) + 'px';
+  tip.style.top = (RWS.PT + 4) + 'px';
+  tip.classList.add('is-on');
+}
 function drawRunway(){
   var wrap   = document.getElementById('runwayWrap');
   var svg    = document.getElementById('runwaySvg');
@@ -225,19 +263,26 @@ function drawRunway(){
     chip.style.left = left + 'px';
   });
 
-  /* легенда: сценарий и день, когда деньги кончатся; клик гасит линию */
-  document.getElementById('runwayLegend').innerHTML = SCENARIOS.map(function(s){
-    var z = firstZero(series[s.key]);
-    var when = z === null ? DAYS + 'д+' : dayLabel(Math.ceil(z));
-    return '<button class="legend-btn' + (activeScenarios[s.key] ? '' : ' is-off') + '" data-sc="' + s.key + '">' +
-      '<span class="legend-line" style="background:var(' + s.varName + ')"></span>' + s.label +
-      '<span class="d">' + when + '</span></button>';
-  }).join('');
+  /* Плашки сценариев под графиком: темп трат, что он значит и когда
+     кончатся деньги. Нажатие гасит или включает линию (app.js). */
+  document.getElementById('runwayRates').innerHTML = '<div class="rw-cards">' + SCENARIOS.map(function(s){
+    var z = firstZero(series[s.key]), on = activeScenarios[s.key];
+    return '<button type="button" class="rw-card' + (on ? '' : ' is-off') + '" data-sc="' + s.key + '" aria-pressed="' + on + '">' +
+      '<span class="rw-top"><span class="legend-line" style="background:var(' + s.varName + ')"></span>' +
+        '<span class="rw-name">' + s.label + '</span></span>' +
+      '<span class="rw-rate">' + fmtR(rates[s.key]) + RUB + '<small>/день</small></span>' +
+      '<span class="rw-note">' + s.note + '</span>' +
+      (z === null
+        ? '<span class="rw-when">Хватит дольше ' + nDays(DAYS) + '</span>'
+        : '<span class="rw-when is-neg">Кончатся ' + dayLabel(Math.ceil(z)) + '</span>') +
+    '</button>';
+  }).join('') + '</div><p class="rw-foot">В темп трат не входят аренда, кредит, подписки и взносы — они учтены расписанием, ' +
+    'по своим числам. Нажмите плашку, чтобы скрыть или показать линию.</p>';
 
-  /* темпы трат — то, чем сценарии отличаются друг от друга */
-  document.getElementById('runwayRates').innerHTML = SCENARIOS.map(function(s){
-    return '<span><b>' + s.label + '</b> · ' + s.note + ' — <i>' + fmtR(rates[s.key]) + (RUB + '/день</i></span>');
-  }).join('') + '<span style="color:var(--text-3)">' + DATA.ratesNote + '</span>';
+  /* Наведение: вертикальная линия на день под мышью и подсказка — остаток
+     по каждому показанному сценарию и события этого дня. */
+  RWS = { series: series, X: X, Y: Y, DAYS: DAYS, PL: PL, PT: PT, PH: PH, PWD: PWD, W: W };
+  rwBind(wrap, svg);
 }
 
 /* ============================================================

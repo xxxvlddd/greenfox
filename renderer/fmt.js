@@ -122,3 +122,20 @@ function moneyBare(cents){
   return money(cents).replace(NBSP + '₽', '');
 }
 function nAcc(n){ return n + NBSP + plural(n, 'счёт', 'счёта', 'счетов'); }
+
+/* Поле даты: набирают цифры — точки встают сами (дд.мм.гггг). Курсор
+   остаётся после той же цифры, что и до точки: иначе после «24» и точки
+   следующая цифра вставала бы перед предыдущей. Возвращает маску. */
+function dateMask(el){
+  var v = el.value, pos = el.selectionStart === null || el.selectionStart === undefined ? v.length : el.selectionStart;
+  var before = v.slice(0, pos).replace(/\D/g, '').length;
+  var raw = v.replace(/\D/g, '').slice(0, 8);
+  var out = raw.slice(0, 2);
+  if (raw.length > 2) out += '.' + raw.slice(2, 4);
+  if (raw.length > 4) out += '.' + raw.slice(4, 8);
+  var i = 0, n = 0;
+  while (i < out.length && n < Math.min(before, raw.length)){ if (out.charAt(i) !== '.') n++; i++; }
+  if (out !== v) el.value = out;
+  if (document.activeElement === el){ try { el.setSelectionRange(i, i); } catch (e) { /* поле без курсора */ } }
+  return out;
+}

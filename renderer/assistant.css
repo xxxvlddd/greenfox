@@ -3,13 +3,12 @@
    ============================================================
    Перенесено из макета Main App/screens/09-assistent.html как есть:
    каждое правило макета получило приставку .scr-asst, и только.
-   Участок между метками ПЕРЕНОС пишет tools/scope-css.js; добавления
-   — ниже метки КОНЕЦ.
+   Перенесённое — между метками ПЕРЕНОС, добавления — ниже метки КОНЕЦ.
 
    Панель — шторка поверх любого экрана, поэтому её область — не экран,
    а отдельный слой в конце страницы.
    ============================================================ */
-/* ▼ ПЕРЕНОС ИЗ МАКЕТА — пишется tools/scope-css.js, руками не править */
+/* ▼ ПЕРЕНОС ИЗ МАКЕТА */
 .scr-asst .btn-sm{background:var(--bg);color:var(--text-2);border:1px solid var(--border);padding:5px 11px;font-size:12px;border-radius:var(--r-sm);}
 .scr-asst .btn-sm:hover{background:var(--surface);color:var(--text);}
 .scr-asst .btn-sm--acc{background:var(--accent-fill);border-color:var(--accent-fill);color:var(--accent-fg);}
@@ -172,18 +171,6 @@
 .scr-asst .asst-text{font-size:13px;line-height:19px;color:var(--text-2);}
 .scr-asst .asst-text b{font-weight:600;color:var(--text);}
 .scr-asst .asst-msg--me .asst-text{color:var(--text);}
-/* Каждое число в ответе ведёт на экран с нужным фильтром: ассистент не
-   заменяет интерфейс, а показывает на него дорогу. */
-.scr-asst .asst-num{
-  font-family:var(--font-mono);font-weight:500;color:var(--accent-hover);
-  border:none;background:none;padding:0;cursor:pointer;font-size:13px;
-  border-bottom:1px dashed var(--accent-line, var(--border-strong));
-}
-.scr-asst .asst-num:hover{color:var(--accent);}
-:root[data-theme="dark"] .scr-asst .asst-num{color:var(--accent);}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]) .scr-asst .asst-num{color:var(--accent);}
-}
 .scr-asst .asst-list{margin:9px 0 0;padding-left:18px;font-size:13px;line-height:20px;color:var(--text-2);}
 .scr-asst .asst-list li{margin-bottom:4px;}
 

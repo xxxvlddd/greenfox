@@ -215,13 +215,13 @@ function chartsHTML(){
           '<button data-days="60">60д</button>' +
           '<button data-days="90">90д</button>' +
         '</div>' +
-        '<div class="legend" id="runwayLegend"></div>' +
       '</div></div>' +
       '<div class="chart-ribbon" id="runwayRibbon"></div>' +
       '<div class="chart-wrap" id="runwayWrap">' +
         '<svg id="runwaySvg" role="img" aria-label="Прогноз остатка на счетах по трём сценариям трат"></svg>' +
+        '<div class="tip rw-tip" id="runwayTip" aria-hidden="true"></div>' +
       '</div>' +
-      '<div class="rates" id="runwayRates"></div>' +
+      '<div class="rw-under" id="runwayRates"></div>' +
     '</div>' +
 
     '<div class="chart-pane">' +

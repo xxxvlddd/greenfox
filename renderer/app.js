@@ -13,14 +13,14 @@ var ICONS = {
   payments: '<circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M9 5.4V9l2.6 1.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>'
 };
 var SCREENS = [
-  { id:'overview', name:'Обзор', ready:true },
-  { id:'expenses', name:'Расходы', ready:true,
+  { id:'overview', name:'Обзор' },
+  { id:'expenses', name:'Расходы',
     sub:'Детальный разбор трат за период' },
-  { id:'capital',  name:'Капитал и долги', ready:true },
-  { id:'forecast', name:'Прогнозы', ready:true },
-  { id:'plans',    name:'Планы', ready:true },
-  { id:'calendar', name:'Календарь', ready:true },
-  { id:'payments', name:'Обязательные платежи', ready:true,
+  { id:'capital',  name:'Капитал и долги' },
+  { id:'forecast', name:'Прогнозы' },
+  { id:'plans',    name:'Планы' },
+  { id:'calendar', name:'Календарь' },
+  { id:'payments', name:'Обязательные платежи',
     title:'Обязательные и повторяющиеся платежи' }
 ];
 var current = 'overview';
@@ -34,14 +34,13 @@ function renderNav(counts){
     var n = s.id === 'overview' ? c.overview : (s.id === 'capital' ? c.capital : 0);
     var badge = n ? '<span class="nav-count' + (s.id === 'capital' ? ' is-warn' : '') + '">' + n + '</span>' : '';
     return '<button type="button" class="nav-item' + (s.id === current ? ' is-active' : '') +
-      '" data-screen="' + s.id + '"' + (s.ready ? '' : ' disabled') + '>' +
+      '" data-screen="' + s.id + '" data-tip="' + s.name + (n ? ' · ' + n : '') + '" aria-label="' + s.name + '">' +
       '<span class="ic"><svg width="18" height="18" viewBox="0 0 18 18" fill="none">' +
-        ICONS[s.id] + '</svg></span>' + s.name + badge + '</button>';
+        ICONS[s.id] + '</svg></span><span class="sb-t">' + s.name + '</span>' + badge + '</button>';
   }).join('');
 }
 
-/* Кнопки, за которыми экрана пока нет, честно об этом говорят, а не
-   молчат в ответ на нажатие. */
+/* Короткое сообщение внизу окна. */
 var toastTimer = null;
 function toast(text){
   var t = document.getElementById('toast');
@@ -189,15 +188,14 @@ async function draw(){
 
   document.getElementById('headSub').textContent = d.empty || d.error ? '—' : d.todayLabel;
   var st = document.getElementById('sbStatus');
-  if (d.problems && d.problems.length){
-    st.innerHTML = '<span class="sb-dot" style="background:var(--danger)"></span> Сверка не сошлась';
-  } else if (d.warnings && d.warnings.length){
-    st.innerHTML = '<span class="sb-dot"></span> Есть предупреждение';
-  } else if (d.staleRecon){
-    st.innerHTML = '<span class="sb-dot"></span> Требуется сверка';
-  } else {
-    st.innerHTML = '<span class="sb-dot" style="background:var(--positive)"></span> Учёт сходится';
-  }
+  var say = function(color, text){
+    st.innerHTML = '<span class="sb-dot"' + (color ? ' style="background:var(' + color + ')"' : '') + '></span><span class="sb-t">' + text + '</span>';
+    st.setAttribute('data-tip', text);
+  };
+  if (d.problems && d.problems.length) say('--danger', 'Сверка не сошлась');
+  else if (d.warnings && d.warnings.length) say('', 'Есть предупреждение');
+  else if (d.staleRecon) say('', 'Требуется сверка');
+  else say('--positive', 'Учёт сходится');
 
   /* Экран собран — дальше изменения происходят по воле человека,
      и движение получает право говорить. */
@@ -318,8 +316,6 @@ document.addEventListener('click', function(e){
   /* Переход к разделу «Настроек» — например, к условиям кредитки. */
   var toSet = t.closest('[data-goto-settings]');
   if (toSet){ sgSec = toSet.getAttribute('data-goto-settings'); goTo('settings'); return; }
-  var soon = t.closest('[data-soon]');
-  if (soon){ toast(soon.getAttribute('data-soon') + ' — экран ещё не собран'); return; }
 
   var nav = t.closest('[data-screen]');
   if (nav && !nav.disabled){
@@ -553,9 +549,9 @@ document.addEventListener('click', function(e){
     appear(document.getElementById('barsHost'));
     return;
   }
-  /* Сценарий на легенде. Последнюю включённую линию гасить не даём —
-     иначе график остаётся пустым и непонятно, что произошло. */
-  var lg = t.closest('.legend-btn');
+  /* Плашка сценария под графиком. Последнюю включённую линию гасить не
+     даём — иначе график остаётся пустым и непонятно, что произошло. */
+  var lg = t.closest('.rw-card');
   if (lg){
     var key = lg.getAttribute('data-sc');
     var on = 0;
@@ -573,14 +569,7 @@ document.addEventListener('input', function(e){
   if (current === 'settings' && e.target.closest && e.target.closest('#sgBody') && sgInput(e.target)) return;
   if (e.target.id === 'exOpsSearch'){ exSearch = e.target.value; exRenderOps(); return; }
   /* Точки в дате расставляются сами: набирать их руками утомительно. */
-  if (e.target.id === 'exFrom' || e.target.id === 'exTo'){
-    var raw = e.target.value.replace(/\D/g, '').slice(0, 8);
-    var out = raw.slice(0, 2);
-    if (raw.length > 2) out += '.' + raw.slice(2, 4);
-    if (raw.length > 4) out += '.' + raw.slice(4, 8);
-    if (out !== e.target.value) e.target.value = out;
-    return;
-  }
+  if (e.target.id === 'exFrom' || e.target.id === 'exTo'){ dateMask(e.target); return; }
   if (e.target.id === 'clNote'){ clNoteInput(e.target); return; }
   /* Доплата по кредиту пересчитывается на каждый знак, без появления:
      иначе строка выигрыша мигала бы при наборе. */
@@ -631,17 +620,74 @@ function setActive(sel, btn){
 
 /* Графики рисуются в реальных пикселях, поэтому при изменении размера
    окна их надо пересчитать, а не растянуть. */
+function redrawWidth(){
+  if (current === 'overview' && DATA) drawCharts();
+  if (current === 'expenses') redrawExpensesWidth();
+  if (current === 'capital') redrawCapitalWidth();
+  if (current === 'forecast') redrawForecastWidth();
+  if (current === 'payments') redrawPaymentsWidth();
+}
 var resizeTimer = null;
 window.addEventListener('resize', function(){
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(function(){
-    if (current === 'overview' && DATA) drawCharts();
-    if (current === 'expenses') redrawExpensesWidth();
-    if (current === 'capital') redrawCapitalWidth();
-    if (current === 'forecast') redrawForecastWidth();
-    if (current === 'payments') redrawPaymentsWidth();
-  }, 120);
+  resizeTimer = setTimeout(redrawWidth, 120);
 });
+
+/* ---------- боковое меню: с подписями или только значки ----------
+   Ширина меняется сразу — графики перерисовываются под новую ширину до
+   первого кадра, — а экран доезжает на место сдвигом (transform), без
+   анимации ширины. Подписи при развороте проявляются. */
+function sbMini(){ return document.documentElement.getAttribute('data-sidebar') === 'mini'; }
+function sbFoldLabel(){
+  var mini = sbMini(), b = document.getElementById('sbFold');
+  b.setAttribute('aria-label', mini ? 'Развернуть меню' : 'Свернуть меню');
+  b.setAttribute('aria-expanded', mini ? 'false' : 'true');
+}
+function sbFold(mini, save){
+  var root = document.documentElement, main = document.querySelector('.main');
+  if (sbMini() === mini) return;
+  sbTipHide();
+  var x0 = main.getBoundingClientRect().left;
+  root.setAttribute('data-sidebar', mini ? 'mini' : 'full');
+  sbFoldLabel();
+  redrawWidth();
+  var dx = x0 - main.getBoundingClientRect().left;
+  if (!REDUCED && main.animate && dx){
+    main.animate([{ transform: 'translateX(' + dx + 'px)' }, { transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.16, 1, .3, 1)' });
+    if (!mini){
+      var t = document.querySelectorAll('.sidebar .sb-t, .sidebar .sb-name, .sidebar .nav-count');
+      for (var i = 0; i < t.length; i++) t[i].animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, delay: 80, easing: 'ease-out', fill: 'backwards' });
+    }
+  }
+  if (save) window.api.setPref('ui.sidebar', mini ? 'mini' : 'full');
+}
+document.getElementById('sbFold').addEventListener('click', function(){ sbFold(!sbMini(), true); });
+/* Подсказка у значка свёрнутого меню — справа от него. */
+var sbTipEl = null;
+function sbTipHide(){ if (sbTipEl) sbTipEl.classList.remove('is-on'); }
+function sbTipShow(el){
+  if (!sbMini()){ sbTipHide(); return; }
+  if (!sbTipEl){
+    sbTipEl = document.createElement('div');
+    sbTipEl.className = 'sb-tip';
+    sbTipEl.setAttribute('role', 'tooltip');
+    document.body.appendChild(sbTipEl);
+  }
+  var r = el.getBoundingClientRect();
+  sbTipEl.textContent = el.getAttribute('data-tip');
+  sbTipEl.style.left = (r.right + 10) + 'px';
+  sbTipEl.style.top = (r.top + r.height / 2) + 'px';
+  sbTipEl.classList.add('is-on');
+}
+document.addEventListener('mouseover', function(e){
+  var t = e.target.closest ? e.target.closest('.sidebar [data-tip]') : null;
+  if (t) sbTipShow(t); else sbTipHide();
+});
+document.addEventListener('focusin', function(e){
+  var t = e.target.closest ? e.target.closest('.sidebar [data-tip]') : null;
+  if (t && t.matches(':focus-visible')) sbTipShow(t); else sbTipHide();
+});
+document.addEventListener('scroll', sbTipHide, true);
 
 document.getElementById('themeToggle').addEventListener('click', function(){
   var root = document.documentElement;
@@ -675,6 +721,9 @@ function applyPrefs(p){
   if (p['ui.theme'] === 'light' || p['ui.theme'] === 'dark') root.setAttribute('data-theme', p['ui.theme']);
   else root.removeAttribute('data-theme');
   root.setAttribute('data-density', p['ui.density'] === 'dense' ? 'dense' : 'normal');
+  /* Меню — сразу нужной ширины, без движения; из «Настроек» — со сдвигом. */
+  if (booted) sbFold(p['ui.sidebar'] === 'mini', false);
+  else { root.setAttribute('data-sidebar', p['ui.sidebar'] === 'mini' ? 'mini' : 'full'); sbFoldLabel(); }
 }
 /* Без ключа кнопка ассистента неактивна: при наведении — подсказка, что
    ключ добавляется в настройках, и кнопка перехода. */

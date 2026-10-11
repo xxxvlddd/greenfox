@@ -572,7 +572,8 @@ function fmInp(f, st, ph, extra){
 }
 function fmDateInp(f, st){
   return fmInp(f, st, 'дд.мм.гггг', ' inputmode="numeric"') +
-    (st[f] && !exParseDate(st[f]) ? '<div class="f-hint" style="color:var(--warning)">Дата не понята — ждём 01.10.2026</div>' : '');
+    /* Пока дата набирается, она не ошибка: подсказка — когда набрана целиком. */
+    (st[f] && st[f].length >= 10 && !exParseDate(st[f]) ? '<div class="f-hint" style="color:var(--warning)">Дата не понята — ждём 01.10.2026</div>' : '');
 }
 function fmSel(f, st, opts){
   return '<select class="inp" data-f="' + f + '">' + opts.map(function(o){
@@ -1516,14 +1517,6 @@ function fmClick(e){
     fmRender();
   }
 }
-/* Дата набирается цифрами — точки встают сами, как в поле периода
-   на «Расходах». */
-function fmMaskDate(el){
-  var raw = el.value.replace(/\D/g, '').slice(0, 8), out = raw.slice(0, 2);
-  if (raw.length > 2) out += '.' + raw.slice(2, 4);
-  if (raw.length > 4) out += '.' + raw.slice(4, 8);
-  return out;
-}
 var FM_DATE_FIELDS = { dateTxt: 1, deadlineTxt: 1, untilTxt: 1, balDateTxt: 1, closeTxt: 1 };
 function fmInput(e){
   var st = fmSt, el = e.target;
@@ -1537,7 +1530,8 @@ function fmInput(e){
      целиком обрабатывает fmChange. */
   if (el.type === 'checkbox' || el.tagName === 'SELECT') return;
   if (FM_DATE_FIELDS[f]){
-    var masked = fmMaskDate(el);
+    /* Точки встают сами, курсор — на месте (fmt.js, dateMask). */
+    var masked = dateMask(el);
     st[f] = masked;
     if (f === 'dateTxt'){
       st.date = exParseDate(masked) || '';
@@ -1549,9 +1543,10 @@ function fmInput(e){
   if (fmKind === 'loan' && /^(rest|rate|pay|day)$/.test(f)) fmLoanPreview();
   /* Изначальная сумма и уже внесённое связаны остатком: правите одно —
      второе пересчитывается. */
-  if (fmKind === 'loan' && (f === 'initial' || f === 'paid')){
+  if (fmKind === 'loan' && (f === 'initial' || f === 'paid' || f === 'rest')){
     var rest = fmNum(st.rest);
-    if (f === 'initial' && fmNum(st.initial)) st.paid = fmRaw(Math.max(0, fmNum(st.initial) - rest));
+    /* Остаток вписали после изначальной суммы — «внесено» пересчитывается от неё. */
+    if ((f === 'initial' || f === 'rest') && fmNum(st.initial)) st.paid = fmRaw(Math.max(0, fmNum(st.initial) - rest));
     if (f === 'paid' && fmNum(st.paid)) st.initial = fmRaw(rest + fmNum(st.paid));
   }
   fmRender();

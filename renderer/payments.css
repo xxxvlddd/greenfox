@@ -3,13 +3,12 @@
    ============================================================
    Перенесено из макета Main App/screens/07-platezhi.html как есть:
    каждое правило макета получило приставку .scr-payments, и только.
-   Участок между метками ПЕРЕНОС пишет tools/scope-css.js; добавления
-   — ниже метки КОНЕЦ.
+   Перенесённое — между метками ПЕРЕНОС, добавления — ниже метки КОНЕЦ.
 
    Переключатель «В этом месяце / Все» стоит в общей шапке окна, поэтому,
    пока экран открыт, шапка тоже получает класс .scr-payments.
    ============================================================ */
-/* ▼ ПЕРЕНОС ИЗ МАКЕТА — пишется tools/scope-css.js, руками не править */
+/* ▼ ПЕРЕНОС ИЗ МАКЕТА */
 .scr-payments .btn-sm{background:var(--bg);color:var(--text-2);border:1px solid var(--border);padding:5px 11px;font-size:12px;border-radius:var(--r-sm);}
 .scr-payments .btn-sm:hover{background:var(--surface);color:var(--text);}
 .scr-payments .btn-sm--acc{background:var(--accent-fill);border-color:var(--accent-fill);color:var(--accent-fg);}

@@ -208,6 +208,8 @@ function build(db, todayIso) {
     empty: false, today,
     headLabel: 'Расчёт на ' + R.human(today) + ' ' + ty + ' · горизонт ' + HORIZON + ' дней',
     scen, month, loan, grace,
+    /* Сколько свободного лимита кредитки входит в доступное — для подписи. */
+    cardSpend: (ov.accounts.filter(a => a.type === 'кредитная карта' && a.creditUse !== 'off')[0] || {}).spendable || null,
     goals,
     goalsFoot: {
       saved: String(sum(goals, g => BigInt(g.cur))),

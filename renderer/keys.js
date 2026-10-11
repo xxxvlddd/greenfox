@@ -22,6 +22,7 @@ var KEYS = [
   ['⌘J', 'Панель ассистента'],
   ['⌘F', 'Поиск по операциям'],
   ['⌘,', 'Настройки'],
+  ['⌘\\', 'Свернуть или развернуть меню'],
   ['⌘← ⌘→', 'Предыдущий и следующий период'],
   ['⌘↵', 'Сохранить в открытом окне'],
   ['Esc', 'Закрыть окно или панель'],
@@ -72,6 +73,7 @@ function keysInit(){
     if (digit && !sh){ e.preventDefault(); keyGo(KEY_SCREENS[Number(digit[1]) - 1]); return; }
     if (c === 'Slash' && !sh){ e.preventDefault(); fmMenu(false); fmOpen('keys'); return; }
     if (c === 'Comma' && !sh){ e.preventDefault(); keyGo('settings'); return; }
+    if (c === 'Backslash' && !sh){ e.preventDefault(); sbFold(!sbMini(), true); if (current === 'settings') sgReload(false); return; }
     if (c === 'KeyN' && sh){ e.preventDefault(); keyAssistInput(); return; }
     if (c === 'KeyN'){
       e.preventDefault();

@@ -27,9 +27,9 @@ const NAME = 'GREENFOX';
 const LEGACY = 'Финансы';
 app.setName(LEGACY);
 
-/* Папка данных — Application Support/GREENFOX; прежняя, «Финансы»,
-   переезжает при первом запуске (main/rename.js). */
-app.setPath('userData', require('./rename').userDataDir(app.getPath('appData'), NAME, LEGACY));
+/* Папка данных — Application Support/GREENFOX: задаётся явно, иначе из-за
+   прежнего имени при запуске она была бы «Финансы». */
+app.setPath('userData', path.join(app.getPath('appData'), NAME));
 
 /* Песочница — то же приложение со своей папкой и своей базой: посмотреть
    пустые экраны и состояния, не трогая настоящий учёт. Запуск с

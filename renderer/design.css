@@ -146,7 +146,7 @@ body{
    разъезжаются. Поджимаем пробел только в ячейках, где текст — чистое число. */
 .hero-sum .v,.metric-val,.credit-sum,.acc-item .v,
 .sum-cell,.bal-cell,.tot .v,.bars-axis span,.bars-avg b,.bar-over,
-.rates i,.evt-chip .s,.tip .t-sum,.tip .t-row .num{
+.rw-rate,.evt-chip .s,.tip .t-sum,.tip .t-row .num{
   word-spacing:-.22em;white-space:nowrap;
 }
 h1,h2,p{margin:0;}
@@ -225,6 +225,40 @@ a{color:inherit;text-decoration:none;}
 }
 .sb-user .n{font-size:13px;font-weight:500;color:var(--text);display:block;}
 .sb-user .s{font-size:11px;color:var(--text-3);display:block;}
+
+.sb-fold{
+  display:flex;align-items:center;gap:12px;width:100%;margin-bottom:6px;
+  padding:7px 12px;border-radius:var(--r-md);border:none;background:none;cursor:pointer;
+  font-family:inherit;font-size:12px;color:var(--text-3);text-align:left;
+  transition:background var(--t-fast) ease,color var(--t-fast) ease;
+}
+.sb-fold .ic{display:flex;flex:none;width:18px;justify-content:center;}
+.sb-fold:hover{background:var(--surface);color:var(--text-2);}
+.sb-fold:focus-visible,.nav-item:focus-visible,.sb-user:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
+
+/* Свёрнутое меню: только значки. Счётчик — в углу значка, подпись —
+   подсказкой справа (app.js, sbTipShow). */
+:root[data-sidebar="mini"] .sidebar{width:64px;}
+:root[data-sidebar="mini"] .sidebar .sb-t,:root[data-sidebar="mini"] .sb-name{display:none;}
+:root[data-sidebar="mini"] .sb-logo{padding:0;justify-content:center;}
+:root[data-sidebar="mini"] .nav{padding:12px 10px;}
+:root[data-sidebar="mini"] .nav-item{justify-content:center;padding:9px 0;position:relative;}
+:root[data-sidebar="mini"] .nav-count{
+  position:absolute;top:2px;right:2px;margin:0;min-width:15px;padding:0 4px;
+  font-size:9px;line-height:15px;text-align:center;
+}
+:root[data-sidebar="mini"] .sb-foot{padding:10px 10px 12px;}
+:root[data-sidebar="mini"] .sb-fold{justify-content:center;padding:7px 0;}
+:root[data-sidebar="mini"] .sb-fold .ic svg{transform:scaleX(-1);}
+:root[data-sidebar="mini"] .sb-status{justify-content:center;padding:6px 0 10px;}
+:root[data-sidebar="mini"] .sb-user{justify-content:center;padding:8px 0;}
+.sb-tip{
+  position:fixed;z-index:80;transform:translateY(-50%);pointer-events:none;white-space:nowrap;
+  background:var(--bg);border:1px solid var(--border);box-shadow:var(--shadow-lg);
+  padding:5px 9px;font-size:12px;line-height:16px;color:var(--text);
+  opacity:0;visibility:hidden;transition:opacity var(--t-fast) ease,visibility 0s linear var(--t-fast);
+}
+.sb-tip.is-on{opacity:1;visibility:visible;transition:opacity var(--t-fast) ease;}
 
 .main{flex:1;min-width:0;display:flex;flex-direction:column;}
 
@@ -410,15 +444,7 @@ a{color:inherit;text-decoration:none;}
 .seg button.is-active,.seg button.is-active:hover{background:var(--text);color:var(--bg);}
 
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:flex-end;}
-.legend-btn{
-  display:inline-flex;align-items:center;gap:6px;
-  background:none;border:none;padding:0;cursor:pointer;
-  font-size:12px;color:var(--text-2);
-  transition:opacity var(--t-fast) ease;
-}
-.legend-btn.is-off{opacity:.32;}
 .legend-line{width:16px;height:2px;border-radius:2px;flex:none;}
-.legend-btn .d{font-family:var(--font-mono);font-size:11px;color:var(--text-3);}
 .legend-sq{width:9px;height:9px;border-radius:2px;flex:none;background:var(--accent);}
 .legend-dash{width:16px;height:0;border-top:1.5px dashed var(--text-3);flex:none;}
 .legend-static{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);}
@@ -435,12 +461,32 @@ a{color:inherit;text-decoration:none;}
 .evt-chip .s{font-family:var(--font-mono);}
 .chart-wrap{position:relative;width:100%;}
 .chart-wrap svg{display:block;}
-.rates{
-  display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:14px;
-  font-size:12px;line-height:16px;color:var(--text-3);
+/* Плашки сценариев под «На сколько хватит денег»: темп, смысл, срок.
+   Нажатие гасит линию — плашка бледнеет. */
+.rw-under{margin-top:16px;}
+.rw-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+.rw-card{
+  display:flex;flex-direction:column;gap:6px;min-width:0;text-align:left;
+  padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg);
+  font-family:inherit;color:var(--text-2);cursor:pointer;
+  transition:border-color var(--t-fast) ease,background var(--t-fast) ease,opacity var(--t-fast) ease;
 }
-.rates b{font-weight:500;color:var(--text-2);}
-.rates i{font-family:var(--font-mono);font-style:normal;}
+.rw-card:hover{border-color:var(--border-strong);background:var(--surface);}
+.rw-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.rw-card.is-off{opacity:.45;}
+.rw-top{display:flex;align-items:center;gap:8px;min-width:0;}
+.rw-name{font-size:13px;font-weight:600;color:var(--text);}
+.rw-rate{font-family:var(--font-mono);font-size:17px;line-height:22px;color:var(--text);white-space:nowrap;}
+.rw-rate small{font-size:11px;color:var(--text-3);margin-left:2px;word-spacing:normal;}
+.rw-note{font-size:12px;line-height:16px;color:var(--text-3);}
+.rw-when{font-size:12px;line-height:16px;color:var(--text-2);margin-top:auto;padding-top:2px;}
+.rw-when.is-neg{color:var(--warning);}
+.rw-foot{margin-top:10px;font-size:11px;line-height:16px;color:var(--text-3);}
+/* Подсказка при наведении на график: у линии, у верха графика. */
+.tip.rw-tip{bottom:auto;left:0;top:0;width:220px;margin:0;transform:none;}
+.tip.rw-tip.is-on{opacity:1;visibility:visible;}
+.tip.rw-tip .t-sum{font-family:inherit;font-size:11px;margin-top:2px;color:var(--text-3);word-spacing:normal;white-space:normal;}
+@media (max-width:760px){ .rw-cards{grid-template-columns:minmax(0,1fr);} }
 
 /* --- столбцы «Траты по дням» --- */
 .bars-wrap{display:flex;}

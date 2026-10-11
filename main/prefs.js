@@ -17,6 +17,7 @@ const DEFAULTS = {
   'ui.density': 'normal',           /* normal | dense */
   'ui.startScreen': 'overview',
   'ui.weekStart': 'mon',            /* mon | sun */
+  'ui.sidebar': 'full',             /* full | mini — боковое меню с подписями или только значки */
   'ui.onboarded': '0',              /* мастер первого запуска пройден или пропущен */
   'calc.reserve': '0',              /* копейки */
   'calc.horizon': 'income',         /* income | 7 | 30 */
@@ -53,6 +54,7 @@ const NORMALIZE = {
   'ui.density': oneOf(['normal', 'dense'], 'Плотность: обычная или плотная'),
   'ui.startScreen': oneOf(SCREENS, 'Экран при запуске: выберите из списка'),
   'ui.weekStart': oneOf(['mon', 'sun'], 'Первый день недели: понедельник или воскресенье'),
+  'ui.sidebar': oneOf(['full', 'mini'], 'Боковое меню: с подписями или только значки'),
   'ui.onboarded': oneOf(['0', '1'], 'Мастер: пройден или нет'),
   'calc.reserve': v => {
     const c = String(v).trim() === '' ? 0n : rubToCents(v);

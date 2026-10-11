@@ -3,14 +3,13 @@
    ============================================================
    Перенесено из макета Main App/screens/06-kalendar.html как есть:
    каждое правило макета получило приставку .scr-calendar, и только.
-   Участок между метками ПЕРЕНОС пишет tools/scope-css.js; добавления
-   — ниже метки КОНЕЦ.
+   Перенесённое — между метками ПЕРЕНОС, добавления — ниже метки КОНЕЦ.
 
    Переключатель месяца и режим заливки стоят в общей шапке окна,
    вне экрана. Поэтому, пока открыт календарь, шапка тоже получает
    класс .scr-calendar — иначе их оформление до неё бы не дошло.
    ============================================================ */
-/* ▼ ПЕРЕНОС ИЗ МАКЕТА — пишется tools/scope-css.js, руками не править */
+/* ▼ ПЕРЕНОС ИЗ МАКЕТА */
 .scr-calendar .btn-sm{background:var(--bg);color:var(--text-2);border:1px solid var(--border);padding:5px 11px;font-size:12px;border-radius:var(--r-sm);}
 .scr-calendar .btn-sm:hover{background:var(--surface);color:var(--text);}
 .scr-calendar .btn-sm--acc{background:var(--accent-fill);border-color:var(--accent-fill);color:var(--accent-fg);}
@@ -304,6 +303,3 @@
 /* ============================================================
    ДОБАВЛЕНИЯ К МАКЕТУ
    ============================================================ */
-/* Ячейка соседнего месяца без данных — пустое место сетки. */
-.scr-calendar .cal-day.is-void{cursor:default;}
-.scr-calendar .cal-day.is-void:hover{filter:none;}
